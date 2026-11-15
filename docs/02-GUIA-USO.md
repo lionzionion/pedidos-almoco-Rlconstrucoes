@@ -1,48 +1,60 @@
 # Guia de uso — AMBEV | Pedidos RL
 
-## Entrar no aplicativo
+## Acesso ao aplicativo
 
-Endereço: https://lionzionion.github.io/pedidos-almoco-solutio/app/
+https://lionzionion.github.io/pedidos-almoco-solutio/app/
 
-A tela inicial possui campos **E-mail**, **Senha** e, para o primeiro cadastro, **Nome completo**. Clique em **Criar cadastro** apenas uma vez e confirme o e-mail se solicitado. Nas próximas entradas use **Entrar**.
+A página de login pede **Usuário ou e-mail do administrador** e **Senha**.
 
-> O primeiro usuário tem perfil padrão **colaborador**. Um gestor precisa ser promovido para `admin` no Supabase antes de acessar o fechamento. O restaurante precisa de permissão `restaurante`. Não é seguro conceder essas permissões apenas por um botão visível na interface.
+- **Administrador inicial:** entra pelo seu e-mail confirmado e senha pessoal já cadastrada.
+- **Colaborador:** usa login simplificado, por exemplo `joao.campos`, mais uma senha que o gestor definir.
+- **Restaurante:** usa login e senha próprios criados pelo ADM. O aplicativo identifica o papel automaticamente.
+- Não há cadastro público de funcionários no aplicativo: somente o ADM pode criar contas ativas.
 
-## Colaborador
+As senhas são tratadas pelo Supabase Auth e não ficam armazenadas em texto puro no aplicativo.
 
-1. Abra **Fazer pedido**.
-2. Selecione **Café da manhã** ou **Almoço**. O sistema apresenta apenas as opções do dia (horário de Recife).
-3. Clique no prato desejado. No almoço, marque os acompanhamentos: **arroz, feijão mulato ou macassar, macarrão, vinagrete e legumes**.
-4. Preencha observações caso necessário e clique em **Confirmar pedido**.
-5. Em **Meus pedidos**, acompanhe o status.
-6. É possível **Editar** ou **Cancelar pedido** enquanto o status for **Confirmado**. Após **Em preparo**, a edição/cancelamento pelo colaborador é bloqueada.
+## Área de administração de usuários
 
-## Restaurante
+1. Faça login como ADM e abra **👥 Cadastros**.
+2. Digite o nome, usuário (3–30 caracteres, iniciando com letra minúscula), senha inicial com **8–72 caracteres** e perfil.
+3. Escolha **Colaborador** ou **Restaurante**, depois **Cadastrar na nuvem**.
+4. Compartilhe login e senha pelo canal privado combinado com o colaborador/restaurante.
+5. Em **Usuários cadastrados** é possível **Desativar**, **Reativar**, alterar perfil entre colaborador/restaurante e **Redefinir senha**.
+6. Nunca compartilhe sua própria senha ADM, nem reutilize a mesma senha de colaboradores. O primeiro ADM não pode ser desativado por esse painel.
 
-1. Entre com o cadastro autorizado como `restaurante`.
-2. Abra **Restaurante**; filtre por data e por **Café** / **Almoço**.
-3. Consulte o nome do colaborador, prato, acompanhamentos e observações.
-4. Clique em **Iniciar preparo** quando começar a cozinhar.
-5. Clique em **Marcar entregue** após a entrega.
+## Colaborador: fazer pedido
 
-Pedidos cancelados continuam sinalizados, mas não integram o total de pedidos ativos. Os painéis recebem eventos de atualização pelo Supabase e também podem ser atualizados manualmente.
+1. Entre com usuário e senha.
+2. Abra **Fazer pedido**, escolha **Café da manhã** ou **Almoço**.
+3. Selecione prato do cardápio referente ao dia atual no horário de Recife. No almoço, personalize acompanhamentos e observações.
+4. Clique em **Confirmar pedido**.
+5. Em **Meus pedidos**, consulte o status e edite ou cancele enquanto o pedido estiver **Confirmado**.
 
-## Gestor RL
+## Restaurante: acompanhar e imprimir pedidos
 
-1. Entre com perfil `admin`.
-2. Abra **Conferência RL** e selecione data e refeição.
-3. Confira a lista nominal, quantidades, estados e valores.
-4. Use **Cancelar** para cancelamento administrativo com motivo.
-5. Use **Arquivar** para retirar um pedido ativo da apuração, preservando histórico; **Restaurar** para reexibi-lo.
-6. Clique em **Exportar CSV** para baixar a conferência.
-7. Informe o número de WhatsApp com **55 + DDD + número** e clique em **Resumo para WhatsApp**; confirme o envio na conversa aberta.
+1. Entre com a conta de perfil **Restaurante** criada pelo ADM.
+2. O painel Restaurante aparece automaticamente. Filtre pelo dia e tipo de refeição.
+3. Consulte nome, prato, acompanhamentos e observações dos funcionários.
+4. Clique em **Iniciar preparo** e depois **Marcar entregue**.
+5. Para preparar uma lista física, clique em **Baixar PDF da produção** ou **Imprimir lista**.
 
-### Regras de apuração
+## Gestão RL: conferência e relatórios
 
-A apuração padrão considera pedidos ativos, inclusive os em preparo ou entregues; exclui cancelados e arquivados e adiciona **uma entrega por refeição presente no dia**. Confira a entrega efetiva antes do pagamento e trate remessas extras ou exceções fora do modelo padrão.
+1. Entre com a conta ADM e abra **📊 Conferência RL**.
+2. Selecione **Dia** e **Refeição** (todas, café ou almoço).
+3. Confira nominalmente pedidos, valores, status e cancelamentos.
+4. **Baixar PDF:** cria documento A4 com logo RL, relação nominal, subtotal, taxas de entrega e total.
+5. **Imprimir relatório:** abre uma página de impressão; selecione impressora ou **Salvar como PDF**.
+6. **Exportar CSV:** para conferência em planilha.
+7. **Resumo para WhatsApp:** abre mensagem consolidada para envio manual.
+8. **Cancelar** e **Arquivar** preservam trilha de alterações; arquivados podem ser restaurados.
 
-## Demonstração para reunião ou apresentação
+### Apuração
 
-Abra https://lionzionion.github.io/pedidos-almoco-solutio/demo/
+O cálculo padrão considera um frete coletivo por refeição: **R$12 no café**; almoço **R$8 seg–sex / R$12 sáb–dom**. Cancelados e arquivados não são somados. Os totais são de **conferência**, não comprovante de pagamento. Remessas adicionais e cobrança de pedidos já preparados exigem registro e acerto separados.
 
-A demonstração possui **pedidos e nomes fictícios**. Selecione **Testar colaborador**, **Testar restaurante** ou **Testar gestão RL**. Tudo acontece somente no navegador do visitante, sem salvar nada no banco real.
+## Testes sem risco de pedidos reais
+
+Acesse https://lionzionion.github.io/pedidos-almoco-solutio/demo/
+
+A demonstração é **separada do banco** e contém somente nomes e pedidos fictícios. Use-a para apresentações.
