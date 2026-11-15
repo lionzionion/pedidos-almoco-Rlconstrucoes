@@ -15,7 +15,7 @@ test('tela de login é visível por padrão, sem depender de serviço externo',(
 test('nenhuma biblioteca remota bloqueia o carregamento inicial do HTML',()=>{
  const html=read('app/index.html');
  assert.doesNotMatch(html,/<script\s+src="https?:\/\//i);
- assert.match(html,/<script src="\.\/loader\.js\?v=10"><\/script>/);
+ assert.match(html,/<script src="\.\/loader\.js\?v=11"><\/script>/);
 });
 test('loader possui tentativa alternativa e mensagem de erro',()=>{
  const js=read('app/loader.js');
