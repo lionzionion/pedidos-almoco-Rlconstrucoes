@@ -61,6 +61,8 @@ BEGIN
  END IF;
 END $$;
 
+-- A extensão de proteção do Postgres exige WHERE mesmo na limpeza completa.
+-- Usar a chave primária para preservar a operação atômica em sistemas com safeupdate.
 -- Reset atômico do teste, autorizado SOMENTE pelo servidor com service_role.
 CREATE OR REPLACE FUNCTION public.rl_reset_test_records(p_actor uuid,p_confirm text)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=''
@@ -73,9 +75,9 @@ BEGIN
  SELECT count(*) INTO v_orders FROM public.orders;
  SELECT count(*) INTO v_messages FROM public.chat_messages;
  SELECT count(*) INTO v_audits FROM public.order_audit;
- DELETE FROM public.order_audit;
- DELETE FROM public.orders;
- DELETE FROM public.chat_messages;
+ DELETE FROM public.order_audit WHERE id IS NOT NULL;
+ DELETE FROM public.orders WHERE id IS NOT NULL;
+ DELETE FROM public.chat_messages WHERE id IS NOT NULL;
  INSERT INTO public.account_audit(actor,target,action,details)
  VALUES(p_actor,p_actor,'reset_test_data',
  jsonb_build_object('orders_deleted',v_orders,'messages_deleted',v_messages,'order_audit_deleted',v_audits));
