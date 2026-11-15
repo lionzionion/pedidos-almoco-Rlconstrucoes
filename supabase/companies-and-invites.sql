@@ -33,12 +33,14 @@ CREATE TABLE IF NOT EXISTS public.staff_invitations (
  display_name text NOT NULL,
  company text NOT NULL CHECK(company IN ('RL','SOLUTIO')),
  job_title text NOT NULL DEFAULT '',
+ role text NOT NULL DEFAULT 'colaborador' CHECK (role IN ('colaborador','restaurante')),
  token_hash text UNIQUE NOT NULL CHECK(length(token_hash)=64),
  expires_at timestamptz NOT NULL,
  redeemed_at timestamptz,
  auth_user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
  created_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE public.staff_invitations ADD COLUMN IF NOT EXISTS role text NOT NULL DEFAULT 'colaborador' CHECK(role IN ('colaborador','restaurante'));
 ALTER TABLE public.staff_invitations ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.staff_invitations FROM PUBLIC, anon, authenticated;
 DROP POLICY IF EXISTS staff_invitations_deny_clients ON public.staff_invitations;
