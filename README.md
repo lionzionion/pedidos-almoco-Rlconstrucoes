@@ -85,6 +85,16 @@ Gestão RL ──> Edge Function manage-users ──> Supabase Auth Admin (servi
 - WhatsApp abre um texto consolidado para confirmação manual pelo usuário.
 - A versão `/demo/` **não** escreve pedidos no banco de dados.
 
+## Cadastro rápido de contas de teste
+
+No aplicativo, entre como **ADM** e abra **👥 Cadastros**. Use os botões:
+- **👷 Preencher usuário teste**: nome `Usuário Teste`, login `usuario.teste`, perfil **Colaborador**.
+- **👩‍🍳 Preencher restaurante teste**: nome `Restaurante Teste`, login `restaurante.teste`, perfil **Restaurante**.
+
+O formulário agora converte automaticamente nomes escritos com espaços, letras maiúsculas ou acentos para um login em minúsculas, sem acentos e com ponto. Defina **senhas diferentes com pelo menos 8 caracteres** e clique em **Cadastrar na nuvem** em cada perfil. As contas reais de teste só serão criadas após a confirmação feita pelo ADM; os botões não fazem cadastro automático.
+
+Depois, entre em **outro navegador ou janela anônima** com `usuario.teste` e `restaurante.teste`, usando as respectivas senhas. O usuário testa o pedido; o restaurante vê o recebimento e inicia o preparo. Não compartilhe senhas no repositório.
+
 ## Como entrar e cadastrar colaboradores
 
 1. O **ADM inicial** faz login em [AMBEV Pedidos RL](https://lionzionion.github.io/pedidos-almoco-solutio/app/) com seu e-mail já confirmado e senha existente; sua permissão `admin` está ativa.
