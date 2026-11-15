@@ -23,7 +23,7 @@ test('rota amigável usa o mesmo app autenticado, sem duplicar regras',()=>{
 test('loader resolve o aplicativo em relação a seu próprio arquivo',()=>{
   const loader=read('app/loader.js');
   assert.match(loader,/document\.currentScript\?\.src/);
-  assert.match(loader,/new URL\('app\.js\?v=9', new URL\('\.', loaderURL\)\)/);
+  assert.match(loader,/new URL\('app\.js\?v=10', new URL\('\.', loaderURL\)\)/);
 });
 test('páginas publicadas referenciam arquivos internos existentes',()=>{
   for(const page of ['index.html','produto/index.html','acesso/index.html','app/index.html','demo/index.html','legado/index.html']){
