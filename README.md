@@ -2,7 +2,7 @@
 
 Sistema de refeições exclusivo da **RL Engenharia — obra AMBEV Itapissuma/PE**.
 
-> **Estado desta ramificação:** interface e lógica de pedidos implementadas; **ambiente de demonstração local** enquanto um projeto Supabase próprio da RL não for configurado. **Não utilize a prévia para pedidos reais**: em modo demonstração os dados permanecem somente no navegador e não são compartilhados com o restaurante.
+> **Estado desta ramificação (15/11/2026):** projeto Supabase dedicado à RL criado em São Paulo, esquema aplicado e atualizações Realtime habilitadas. A configuração pública de conexão já está em `config.js`. **O site público (ramo `main`) continua antigo; esta versão só estará acessível à equipe após publicação e testes de login.**
 
 ## Funcionalidades
 
@@ -17,10 +17,10 @@ Sistema de refeições exclusivo da **RL Engenharia — obra AMBEV Itapissuma/PE
 
 ## Configuração para funcionar com vários celulares
 
-1. **Crie um projeto Supabase dedicado** chamado `AMBEV Pedidos RL`. Não reutilize projetos empresariais sem uma decisão explícita de separação de dados.
-2. No **SQL Editor** do projeto, aplique `supabase/schema.sql` (o arquivo estabelece tabelas, validações, auditoria e políticas RLS).
-3. Em **Project Settings / API**, copie apenas a **Project URL** e a chave **publishable** (ou `anon`, se necessária). Em `config.js`, preencha `supabaseUrl` e `supabaseAnonKey`. **NUNCA publique service_role ou secret key**.
-4. Em **Authentication > URL Configuration**, configure o URL do site publicado. Em **Authentication**, configure confirmação de e-mail de acordo com a rotina de cadastramento da equipe.
+1. ✅ **Já executado:** projeto Supabase exclusivo `AMBEV Pedidos RL` (`dpmofhdaefcqxohuhkfr`), São Paulo, criado na organização existente.
+2. ✅ **Já executado:** `supabase/schema.sql` e `supabase/realtime.sql` aplicados (RLS, histórico e pedidos em tempo real).
+3. ✅ **Já executado:** `config.js` aponta para o projeto, usando **somente chave publishable**, que pode constar no site público com RLS. **NUNCA publique service_role ou secret key.**
+4. **A fazer:** em **Authentication > URL Configuration**, configure o URL do site publicado. Configure confirmação de e-mail conforme a rotina da equipe.
 5. Crie seu usuário pela tela inicial e confirme o e-mail. Promova seu usuário para gestor no SQL Editor (substitua pelo seu e-mail real):
    ```sql
    update public.profiles set role='admin'
@@ -31,7 +31,7 @@ Sistema de refeições exclusivo da **RL Engenharia — obra AMBEV Itapissuma/PE
    update public.profiles set role='restaurante'
    where id=(select id from auth.users where email='EMAIL_DO_RESTAURANTE');
    ```
-7. Em **Database > Replication**, habilite `orders` para realtime (caso deseje eventos instantâneos); o app também faz atualizações periódicas e possui botão Atualizar.
+7. ✅ **Já executado:** `orders` habilitado na publicação `supabase_realtime` (a interface também faz atualizações periódicas e dispõe de botão Atualizar).
 8. Teste em **dois dispositivos distintos**, com um colaborador e o restaurante autenticados em contas diferentes, incluindo confirmação, edição, cancelamento, preparo e conferência de totais.
 9. Somente depois de validar os fluxos reais, faça merge desta ramificação para `main` e publique com GitHub Pages.
 
@@ -60,4 +60,6 @@ No painel **Conferência RL**, informe `55 + DDD + número`, inicialmente o núm
 
 O fechamento calcula **uma taxa de entrega por refeição/dia**, caso exista pelo menos um pedido ativo. Se o restaurante realizar **mais de uma remessa no mesmo período**, o controle de remessas deverá ser ampliado para registrar taxas adicionais. O cardápio está fixo conforme a tabela enviada em 15/11/2026; a edição de cardápio pelo restaurante é uma evolução posterior. Para exclusão de dados pessoais definitiva, deve existir um procedimento administrativo específico, separado do cancelamento financeiro.
 
-A publicação pode ser estática via **GitHub Pages** e não exige build/npm. O banco Supabase é necessário para uso em produção.
+A publicação pode ser estática via **GitHub Pages** e não exige build/npm. O banco Supabase já está provisionado; faltam cadastrar o gestor/restaurante e testar no site publicado.
+
+**Painel Supabase:** https://supabase.com/dashboard/project/dpmofhdaefcqxohuhkfr
