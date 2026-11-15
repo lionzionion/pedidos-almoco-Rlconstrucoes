@@ -159,12 +159,9 @@
     const type=meal();
     $('unitPrice').textContent=M.money(M.unitPrice(type,state.dish));
     $('feePreview').textContent=M.money(M.fee(type,today));
-    const cutoff=M.cutoff(type), closed=M.closed(type,today);
-    $('orderDeadlineInfo').textContent=closed
-      ? 'Pedidos encerrados às '+cutoff+' (horário de Recife). O total coletivo já inclui uma única taxa de entrega, se houver pedidos ativos.'
-      : 'Pedidos abertos até '+cutoff+' (horário de Recife). A taxa coletiva de R$ 8 será incluída somente no fechamento.';
-    $('orderDeadlineInfo').classList.toggle('error',closed);
-    $('placeBtn').disabled=closed;
+    $('orderDeadlineInfo').textContent='MODO DE TESTES: pedidos liberados a qualquer hora. Frete único de R$ 8 por tipo de refeição, sem cobrança individual.';
+    $('orderDeadlineInfo').classList.remove('error');
+    $('placeBtn').disabled=false;
   }
   function clearEdit() {
     state.editing=null; state.dish=''; state.sides=[]; $('notes').value='';
@@ -196,7 +193,6 @@
   function renderAll() { renderTabs(); renderMenu(); renderMine(); renderRestaurant(); renderAdmin(); renderUsers(); }
   async function saveOrder() {
     if(!isStaff()) return;
-    if(M.closed(meal(),today)) return inform('Prazo de pedidos encerrado. Café até 08:00; almoço até 13:00 (horário de Recife).',true);
     const type=meal(), dish=state.dish, sides=type==='almoco'?[...state.sides]:[], notes=$('notes').value.trim();
     if(!M.items(type,today).includes(dish)) return inform('Escolha uma opção válida do cardápio de hoje.',true);
     const feedback=$('orderFeedback');
@@ -224,7 +220,7 @@
       clearEdit(); await reload();
       chooseTab('mine');
     } catch(err) { feedback.textContent=err.message||String(err); feedback.classList.add('error'); }
-    finally { $('placeBtn').disabled=M.closed(meal(),today); }
+    finally { $('placeBtn').disabled=false; }
   }
   async function updateOrder(id, changes) {
     try {
@@ -463,6 +459,31 @@
       }catch(error){fail(error);}finally{b.disabled=false;}
     }));
   }
+  function displayNewInvite(result){
+    generatedInvite={link:result.link,name:result.display_name,username:result.username,role:result.role};
+    $('generatedInviteLink').value=result.link;
+    $('generatedInviteInfo').textContent=result.display_name+' • '+result.username+
+      ' • '+(result.role==='restaurante'?'Restaurante':'Colaborador')+
+      '. Válido até '+new Date(result.expires_at).toLocaleDateString('pt-BR',{timeZone:'America/Recife'})+'.';
+    $('generatedInviteBox').hidden=false;
+    $('usersFeedback').classList.remove('error');
+    $('usersFeedback').textContent='Convite pronto. Copie ou envie individualmente pelo WhatsApp.';
+    $('generatedInviteBox').scrollIntoView({behavior:'smooth',block:'center'});
+  }
+  async function renewInvitation(invitation,button){
+    if(!isManager()||invitation.redeemed_at)return;
+    if(!confirm('Gerar link individual para '+invitation.display_name+
+      '? O link anterior desta pessoa deixará de funcionar. Continuar?'))return;
+    button.disabled=true;
+    clearGeneratedInvite();
+    try{
+      const result=await userApi('renew_invite',{username:invitation.username});
+      displayNewInvite(result);
+      await loadUsers();
+      inform('Link individual gerado para '+invitation.display_name+'. Copie ou envie pelo WhatsApp.');
+    }catch(error){fail(error);}
+    finally{button.disabled=false;}
+  }
   function renderInvitations(){
     if(!isManager())return;
     const invitations=state.invitations||[];
@@ -475,8 +496,19 @@
       return '<article class="entry user-account"><div class="entry-top"><div><strong>'+
         esc(i.display_name)+'</strong><br><small>'+esc(i.username)+' • '+
         (i.company==='SOLUTIO'?'Solutio':'RL Construções')+' • '+esc(i.job_title||'')+
-        '</small></div><span class="status '+(used?'entregue':expired?'cancelado':'confirmado')+'">'+status+'</span></div></article>';
+        '</small></div><span class="status '+(used?'entregue':expired?'cancelado':'confirmado')+'">'+status+'</span></div>'+
+        (!used?'<div class="actions"><button type="button" class="secondary compact" data-invite-username="'+esc(i.username)+'">'+
+          '🔗 Gerar link para WhatsApp</button><small class="muted">'+
+          (expired?'Convite expirado: gere outro.':'Será gerado um novo link de uso único.')+
+          '</small></div>':'<p class="small muted">Acesso ativado. Para senha, use o cadastro do usuário.</p>')+
+        '</article>';
     }).join(''):'<div class="empty">Nenhum convite preparado.</div>';
+    list.querySelectorAll('[data-invite-username]').forEach(button=>{
+      button.addEventListener('click',()=>{
+        const item=state.invitations.find(i=>i.username===button.dataset.inviteUsername);
+        if(item)renewInvitation(item,button);
+      });
+    });
   }
   // Converte um nome de exibição em login fácil, ex.: João Campos → joao.campos.
   function normalizeLogin(input){
@@ -561,15 +593,8 @@
     const button=$('createInviteBtn');button.disabled=true;
     try{
       const result=await userApi('create_invite',{display_name,username,role,company,job_title});
-      generatedInvite={link:result.link,name:result.display_name,username:result.username,role:result.role};
-      $('generatedInviteLink').value=result.link;
-      $('generatedInviteInfo').textContent=result.display_name+' • '+username+' • '+(role==='restaurante'?'Restaurante':'Colaborador')+
-        '. Válido até '+new Date(result.expires_at).toLocaleDateString('pt-BR',{timeZone:'America/Recife'})+'.';
-      $('generatedInviteBox').hidden=false;
-      $('usersFeedback').classList.remove('error');
-      $('usersFeedback').textContent='Convite gerado. Use o WhatsApp para enviar somente ao destinatário.';
+      displayNewInvite(result);
       await loadUsers();
-      $('generatedInviteBox').scrollIntoView({behavior:'smooth',block:'nearest'});
     }catch(error){
       $('usersFeedback').textContent=error.message;
       $('usersFeedback').classList.add('error');
