@@ -55,10 +55,38 @@
     const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,canvas.width,canvas.height);
     return canvas.toDataURL('image/png');
   }
+  let pdfLoading=null;
+  function loadLibrary(src) {
+    return new Promise((resolve,reject)=>{
+      const script=document.createElement('script');
+      let settled=false;
+      const timer=setTimeout(()=>finish(new Error('Tempo de download excedido')),12000);
+      function finish(error){
+        if(settled)return;
+        settled=true;clearTimeout(timer);script.onload=null;script.onerror=null;
+        if(error){script.remove();reject(error);}else resolve();
+      }
+      script.async=true;
+      script.src=src;
+      script.onload=()=>finish();
+      script.onerror=()=>finish(new Error('Não foi possível baixar biblioteca PDF'));
+      document.head.appendChild(script);
+    });
+  }
+  async function ensurePDF(){
+    if(window.jspdf?.jsPDF && typeof window.jspdf.jsPDF.API.autoTable==='function')return;
+    if(!pdfLoading)pdfLoading=(async()=>{
+      if(!window.jspdf?.jsPDF)await loadLibrary('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+      if(typeof window.jspdf?.jsPDF?.API?.autoTable!=='function')
+        await loadLibrary('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js');
+    })().catch(error=>{pdfLoading=null;throw error;});
+    await pdfLoading;
+  }
   async function download(payload){
+    await ensurePDF();
     const r=build(payload);
     const jsPDF=window.jspdf?.jsPDF;
-    if(!jsPDF)throw Error('O gerador de PDF não carregou. Utilize Imprimir e escolha “Salvar como PDF”.');
+    if(!jsPDF)throw Error('Biblioteca PDF não carregou. Use Imprimir e escolha “Salvar como PDF”.');
     const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
     const W=doc.internal.pageSize.getWidth();
     doc.setFillColor(6,52,80);doc.rect(0,0,W,38,'F');
