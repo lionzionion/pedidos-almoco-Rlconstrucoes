@@ -265,7 +265,7 @@
     if(controls==='restaurant' && !o.archived && o.status==='preparo')
       buttons='<button class="primary compact" data-act="deliver" data-id="'+esc(o.id)+'">Marcar entregue</button>';
     const sides=(o.accompaniments||[]).join(', ');
-    return '<article class="entry"><div class="entry-top"><div><strong>'+esc(o.employee_name)+'</strong><br><small>'+esc(o.order_day.split('-').reverse().join('/'))+' • '+mealTitle(o.meal)+'</small></div>'+statusBadge(o)+'</div><p><b>'+esc(o.dish)+'</b> — '+M.money(o.price)+'</p>'+(sides?'<p class="small">Acompanhamentos: '+esc(sides)+'</p>':'')+(o.notes?'<p class="small">Observações: '+esc(o.notes)+'</p>':'')+(o.cancel_reason?'<p class="small">Motivo: '+esc(o.cancel_reason)+'</p>':'')+(buttons?'<div class="actions">'+buttons+'</div>':'')+'</article>';
+    return '<article class="entry"><div class="entry-top"><div><strong>'+esc(o.employee_name)+'</strong><br><small>'+esc(o.order_day.split('-').reverse().join('/'))+' • '+mealTitle(o.meal)+' • '+(o.company==='SOLUTIO'?'Solutio':'RL Construções')+'</small></div>'+statusBadge(o)+'</div><p><b>'+esc(o.dish)+'</b> — '+M.money(o.price)+'</p>'+(sides?'<p class="small">Acompanhamentos: '+esc(sides)+'</p>':'')+(o.notes?'<p class="small">Observações: '+esc(o.notes)+'</p>':'')+(o.cancel_reason?'<p class="small">Motivo: '+esc(o.cancel_reason)+'</p>':'')+(buttons?'<div class="actions">'+buttons+'</div>':'')+'</article>';
   }
   function bindActions(root) {
     root.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()=>{
@@ -295,41 +295,79 @@
   function metric(label,value){return '<div class="metric"><small>'+esc(label)+'</small><strong>'+esc(value)+'</strong></div>';}
   function renderRestaurant() {
     const day=$('restaurantDate').value||today, type=$('restaurantMeal').value;
+    // Restaurante único: visualiza TODOS os pedidos de ambas empresas.
     const rows=state.orders.filter(o=>o.order_day===day && !o.archived && (type==='todos'||o.meal===type));
-    const s=M.summary(rows,day);
-    $('restaurantStats').innerHTML=metric('Cafés ativos',s.coffee)+metric('Almoços ativos',s.lunch)+metric('Total da remessa (taxa após corte)',M.money(s.total));
-    const el=$('restaurantList'); el.innerHTML=rows.length?rows.map(o=>orderCard(o,'restaurant')).join(''):'<div class="empty">Nenhum pedido para esta data e refeição.</div>';
+    const s=M.summary(rows,day), companies=M.companyBreakdown(rows,day);
+    const rl=companies.RL.coffee+companies.RL.lunch;
+    const sol=companies.SOLUTIO.coffee+companies.SOLUTIO.lunch;
+    $('restaurantStats').innerHTML=metric('Pedidos RL',rl)+metric('Pedidos Solutio',sol)+
+      metric('Cafés ativos',s.coffee)+metric('Almoços ativos',s.lunch)+
+      metric('Total da remessa conjunta',M.money(s.total));
+    const el=$('restaurantList');
+    el.innerHTML=rows.length?rows.map(o=>orderCard(o,'restaurant')).join(''):'<div class="empty">Nenhum pedido para esta data e refeição.</div>';
     bindActions(el);
   }
   function filteredAdmin() {
-    const day=$('adminDate').value||today,type=$('adminMeal').value;
-    return {day,rows:state.orders.filter(o=>o.order_day===day && (type==='todos'||o.meal===type))};
+    const day=$('adminDate').value||today, type=$('adminMeal').value, company=$('adminCompany').value;
+    const allRows=state.orders.filter(o=>o.order_day===day && (type==='todos'||o.meal===type));
+    const rows=company==='todos'?allRows:allRows.filter(o=>(o.company==='SOLUTIO'?'SOLUTIO':'RL')===company);
+    return {day,company,rows,allRows};
+  }
+  function adminSummary(info){
+    return info.company==='todos'?M.summary(info.allRows,info.day):
+      M.companyBreakdown(info.allRows,info.day)[info.company];
   }
   function renderAdmin(){
-    const {day,rows}=filteredAdmin(), s=M.summary(rows,day);
-    $('adminStats').innerHTML=metric('Cafés',s.coffee)+metric('Almoços',s.lunch)+metric('Refeições',M.money(s.subtotal))+metric('Taxa coletiva (após corte)',M.money(s.delivery))+metric('TOTAL A CONFERIR',M.money(s.total));
-    const body=$('adminRows'); const billing=rows.filter(active);
-    body.innerHTML=billing.length?billing.map(o => '<tr><td><b>'+esc(o.employee_name)+'</b></td><td>'+mealTitle(o.meal)+'</td><td>'+esc(o.dish)+(o.accompaniments?.length?'<br><small>'+esc(o.accompaniments.join(', '))+'</small>':'')+'</td><td>'+statusBadge(o)+'</td><td>'+M.money(o.price)+'</td><td><button class="danger compact" data-act="admincancel" data-id="'+esc(o.id)+'">Cancelar</button><button class="secondary compact" data-act="archive" data-id="'+esc(o.id)+'">Arquivar</button></td></tr>').join(''):'<tr><td colspan="6">Sem pedidos ativos.</td></tr>';
+    const info=filteredAdmin(), {rows,day,company}=info;
+    const s=adminSummary(info), b=M.companyBreakdown(info.allRows,day);
+    const companyTotals=company==='todos'
+      ?metric('RL Construções (com frete rateado)',M.money(b.RL.total))
+       +metric('Solutio (com frete rateado)',M.money(b.SOLUTIO.total))
+      :'';
+    $('adminStats').innerHTML=metric('Cafés',s.coffee)+metric('Almoços',s.lunch)+
+      metric('Refeições',M.money(s.subtotal))+metric('Frete proporcional',M.money(s.delivery))+
+      metric(company==='todos'?'TOTAL GERAL':'TOTAL '+(company==='RL'?'RL':'SOLUTIO'),M.money(s.total))
+      +companyTotals;
+    const body=$('adminRows'),billing=rows.filter(active);
+    body.innerHTML=billing.length?billing.map(o=>'<tr><td><b>'+esc(o.employee_name)+'</b><br><small>'+(o.company==='SOLUTIO'?'Solutio':'RL Construções')+'</small></td><td>'+
+      mealTitle(o.meal)+'</td><td>'+esc(o.dish)+(o.accompaniments?.length?'<br><small>'+esc(o.accompaniments.join(', '))+'</small>':'')+
+      '</td><td>'+statusBadge(o)+'</td><td>'+M.money(o.price)+'</td><td>'+
+      '<button class="danger compact" data-act="admincancel" data-id="'+esc(o.id)+'">Cancelar</button>'+
+      '<button class="secondary compact" data-act="archive" data-id="'+esc(o.id)+'">Arquivar</button></td></tr>').join('')
+      :'<tr><td colspan="6">Sem pedidos ativos para esta empresa.</td></tr>';
     bindActions(body);
-    const audit=rows.filter(o=>!active(o)), el=$('adminAudit');
-    el.innerHTML=audit.length?audit.map(o=>orderCard(o,'audit')+'<div class="actions"><button class="secondary compact" data-act="restore" data-id="'+esc(o.id)+'" '+(!o.archived?'disabled':'')+'>Restaurar arquivado</button></div>').join(''):'<div class="empty">Nenhum cancelamento ou arquivamento no dia.</div>';
+    const audit=rows.filter(o=>!active(o)),el=$('adminAudit');
+    el.innerHTML=audit.length?audit.map(o=>orderCard(o,'audit')+
+      '<div class="actions"><button class="secondary compact" data-act="restore" data-id="'+esc(o.id)+'" '+(!o.archived?'disabled':'')+'>Restaurar arquivado</button></div>').join('')
+      :'<div class="empty">Nenhum cancelamento ou arquivamento no dia.</div>';
     bindActions(el);
   }
-  function downloadCsv() {
-    const {day,rows}=filteredAdmin(), s=M.summary(rows,day);
-    const header=['Data','Colaborador','Refeição','Prato','Acompanhamentos','Observações','Status','Arquivado','Valor'];
-    const lines=[header,...rows.map(o=>[o.order_day,o.employee_name,mealTitle(o.meal),o.dish,(o.accompaniments||[]).join(' / '),o.notes||'',statusLabels[o.status]||o.status,o.archived?'Sim':'Não',Number(o.price).toFixed(2).replace('.',',')]),[],['Subtotal','', '', '', '', '', '', '',s.subtotal.toFixed(2).replace('.',',')],['Entregas','','','','','','','',s.delivery.toFixed(2).replace('.',',')],['TOTAL','','','','','','','',s.total.toFixed(2).replace('.',',')]];
-    const csv='\ufeff'+lines.map(row=>row.map(cell=>'"'+String(cell??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');
+  function downloadCsv(){
+    const info=filteredAdmin(), {day,rows,company}=info, s=adminSummary(info);
+    const header=['Data','Empresa','Colaborador','Refeição','Prato','Acompanhamentos','Observações','Status','Arquivado','Valor'];
+    const lines=[header,...rows.map(o=>[o.order_day,o.company==='SOLUTIO'?'Solutio':'RL Construções',
+      o.employee_name,mealTitle(o.meal),o.dish,(o.accompaniments||[]).join(' / '),o.notes||'',
+      statusLabels[o.status]||o.status,o.archived?'Sim':'Não',Number(o.price).toFixed(2).replace('.',',')])];
+    for(const [label,value] of [['Subtotal',s.subtotal],['Frete proporcional',s.delivery],['TOTAL',s.total]]){
+      const row=Array(10).fill('');row[0]=label;row[9]=Number(value).toFixed(2).replace('.',',');lines.push(row);
+    }
+    const csv='\\ufeff'+lines.map(row=>row.map(cell=>'"'+String(cell??'').replace(/"/g,'""')+'"').join(';')).join('\\r\\n');
     const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
-    const a=document.createElement('a'); a.href=url; a.download='RL_pedidos_'+day+'.csv'; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1500);
+    const a=document.createElement('a');a.href=url;
+    a.download='RL_pedidos_'+(company==='todos'?'geral':company)+'_'+day+'.csv';a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
   }
   function sendSummary(){
-    const phone=$('whatsPhone').value.replace(/\D/g,'');
-    if(phone.length<12 || phone.length>15) return inform('Informe o número completo do WhatsApp com 55 + DDD + número.',true);
+    const phone=$('whatsPhone').value.replace(/\\D/g,'');
+    if(phone.length<12||phone.length>15)return inform('Informe o número completo do WhatsApp com 55 + DDD + número.',true);
     localStorage.setItem('rl-whats-dest',phone);
-    const {day,rows}=filteredAdmin(), s=M.summary(rows,day);
+    const info=filteredAdmin(),{day,company}=info,s=adminSummary(info);
     const entries=s.active.map(o=>'• '+o.employee_name+' — '+mealTitle(o.meal)+': '+o.dish+' ('+M.money(o.price)+')');
-    const msg='*AMBEV | PEDIDOS RL*\nData: '+day.split('-').reverse().join('/')+'\n\n'+entries.join('\n')+'\n\nCafés: '+s.coffee+' | Almoços: '+s.lunch+'\nRefeições: '+M.money(s.subtotal)+'\nEntregas: '+M.money(s.delivery)+'\n*TOTAL: '+M.money(s.total)+'*\n\nConferir quantidades e entrega antes do pagamento.';
+    const companyLabel=company==='todos'?'RL + Solutio':company==='RL'?'RL Construções':'Solutio';
+    const msg='*PEDIDOS RL | '+companyLabel.toUpperCase()+'*\\nData: '+day.split('-').reverse().join('/')+
+      '\\n\\n'+entries.join('\\n')+'\\n\\nCafés: '+s.coffee+' | Almoços: '+s.lunch+
+      '\\nRefeições: '+M.money(s.subtotal)+'\\nFrete proporcional: '+M.money(s.delivery)+
+      '\\n*TOTAL: '+M.money(s.total)+'*\\n\\nEntrega cobrada uma vez por evento, rateada por quantidade de pedidos.';
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener,noreferrer');
   }
 
@@ -372,13 +410,18 @@
           <option value="restaurante" ${u.role==='restaurante'?'selected':''}>Restaurante</option>
         </select>
         <button class="secondary compact" data-user-action="set_role" data-id="${esc(u.id)}">Salvar perfil</button>
+        <select data-company-for="${esc(u.id)}" aria-label="Empresa de ${esc(u.display_name)}">
+          <option value="RL" ${u.company!=='SOLUTIO'?'selected':''}>RL Construções</option>
+          <option value="SOLUTIO" ${u.company==='SOLUTIO'?'selected':''}>Solutio</option>
+        </select>
+        <button class="secondary compact" data-user-action="set_company" data-id="${esc(u.id)}">Salvar empresa</button>
         <button class="secondary compact" data-user-action="reset_password" data-id="${esc(u.id)}">Redefinir senha</button>
         <button class="${u.active?'danger':'primary'} compact" data-user-action="set_active" data-id="${esc(u.id)}">${u.active?'Desativar':'Reativar'}</button>
         <button class="danger compact" data-user-action="delete_user" data-id="${esc(u.id)}" title="Exclusão definitiva somente para usuários sem pedidos">Excluir usuário</button>
       </div>`;
       return `<article class="entry user-account">
         <div class="entry-top"><div><strong>${esc(u.display_name)}</strong>
-        <br><small>Usuário: ${esc(u.username||'e-mail do primeiro ADM')} • ${esc(role)}</small></div>
+        <br><small>Usuário: ${esc(u.username||'e-mail do primeiro ADM')} • ${esc(role)} • ${u.company==='SOLUTIO'?'Solutio':'RL Construções'} • ${esc(u.job_title||'')}</small></div>
         <span class="status ${u.active?'entregue':'cancelado'}">${u.active?'Ativo':'Inativo'}</span></div>
         ${controls}
       </article>`;
@@ -389,6 +432,7 @@
       const action=b.dataset.userAction;
       let params={id};
       if(action==='set_role')params.role=el.querySelector('[data-role-for="'+id+'"]').value;
+      if(action==='set_company')params.company=el.querySelector('[data-company-for="'+id+'"]').value;
       if(action==='set_active'){
         if(!confirm((u.active?'Desativar':'Reativar')+' acesso de '+u.display_name+'?'))return;
         params.active=!u.active;
@@ -457,6 +501,7 @@
       catch(e){return fail(e);}
     }
     const role=$('newRole').value;
+    const company=$('newCompany').value, job_title=$('newJobTitle').value.trim();
     if(display_name.length<3)return inform('Informe o nome completo.',true);
     if(!/^[a-z][a-z0-9._-]{2,29}$/.test(username)) {
       $('usersFeedback').textContent='Digite um nome de pelo menos 3 letras. Exemplos: usuario.teste ou restaurante.teste.';
@@ -466,8 +511,8 @@
     if(password.length<8)return inform('Use senha provisória com pelo menos 8 caracteres.',true);
     const btn=$('createUserBtn');btn.disabled=true;
     try{
-      const result=await userApi('create',{display_name,username,password,role});
-      $('newFullName').value='';$('newUsername').value='';$('newPassword').value='';loginEdited=false;
+      const result=await userApi('create',{display_name,username,password,role,company,job_title});
+      $('newFullName').value='';$('newUsername').value='';$('newPassword').value='';$('newJobTitle').value='';loginEdited=false;
       $('usersFeedback').classList.remove('error');
       $('usersFeedback').textContent='Conta de '+display_name+' cadastrada. Copie as credenciais abaixo e entregue-as por mensagem privada.';
       showOneTime(username,result.password||password,'Conta criada: '+display_name);
@@ -659,7 +704,7 @@
         if(data.length>=1000)throw Error('O período ultrapassa 999 pedidos. Solicite a exportação completa para evitar valores incompletos.');
         orders=data;
       }
-      const payload={date:day,meal:filter,kind:kind==='admin'?'admin':'restaurante',orders};
+      const payload={date:day,meal:filter,company:kind==='admin'?$('adminCompany').value:'todos',kind:kind==='admin'?'admin':'restaurante',orders};
       if(format==='print')window.RL_REPORTS.print(payload,popup);
       else await window.RL_REPORTS.download(payload);
     }catch(error){
@@ -689,7 +734,7 @@
   $('restaurantPdfBtn').addEventListener('click',()=>reportAction('restaurante','pdf'));
   $('restaurantPrintBtn').addEventListener('click',()=>reportAction('restaurante','print'));
   ['restaurantDate','restaurantMeal'].forEach(id => $(id).addEventListener('change',renderRestaurant));
-  ['adminDate','adminMeal'].forEach(id => $(id).addEventListener('change',renderAdmin));
+  ['adminDate','adminMeal','adminCompany'].forEach(id => $(id).addEventListener('change',renderAdmin));
   $('csvBtn').addEventListener('click',downloadCsv);
   $('whatsBtn').addEventListener('click',sendSummary);
   try { $('whatsPhone').value=localStorage.getItem('rl-whats-dest')||''; }
