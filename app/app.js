@@ -10,7 +10,7 @@
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const localKey = 'rl-demo-pedidos-v1';
   const today = M.today();
-  const state = {role: 'colaborador', user: null, profile: null, orders: [], dish:'', sides:[], editing:null, tab:'order', demoName:'Colaborador de teste'};
+  const state = {role: 'colaborador', user: null, profile: null, orders: [], users: [], dish:'', sides:[], editing:null, tab:'order', demoName:'Colaborador de teste'};
   const name = () => state.profile?.display_name || state.demoName;
   const ownId = () => state.user?.id || 'demo-user';
   const meal = () => document.querySelector('input[name="meal"]:checked')?.value || 'almoco';
@@ -57,29 +57,34 @@
       return;
     }
     try {
-      const {data,error}=await client.from('profiles').select('id,display_name,role').eq('id',user.id).single();
-      if(error) throw error;
+      const {data,error}=await client.from('profiles').select('id,display_name,role,username,active').eq('id',user.id).single();
+      if(error || !data?.active) {
+        await client.auth.signOut();
+        inform('Seu usuário não está ativo. Procure a administração RL para liberação.',true);
+        return;
+      }
       state.profile=data; state.role=data.role;
+      state.tab=data.role==='admin'?'admin':data.role==='restaurante'?'restaurant':'order';
       $('login').hidden=true; $('app').hidden=false;
       await reload();
+      if(data.role==='admin') await loadUsers();
     } catch(error) { fail(error); }
   }
-  async function authAction(signup) {
-    const email=$('loginEmail').value.trim(), password=$('loginPassword').value, fullName=$('loginName').value.trim();
-    if(!email || password.length<6) return inform('Informe e-mail e senha com pelo menos 6 caracteres.',true);
-    if(signup && fullName.length<3) return inform('Informe seu nome completo para criar o cadastro.',true);
-    const {data,error} = signup
-      ? await client.auth.signUp({email,password,options:{data:{full_name:fullName},emailRedirectTo:location.origin+location.pathname}})
-      : await client.auth.signInWithPassword({email,password});
-    if(error) return fail(error);
-    if(signup && !data.session) inform('Cadastro criado. Confirme o e-mail recebido antes de entrar.');
-    else if(data.user) await setUser(data.user);
+  async function authAction() {
+    const login=$('loginEmail').value.trim().toLowerCase();
+    const password=$('loginPassword').value;
+    if(!login || !password) return inform('Informe usuário e senha.',true);
+    const email = login.includes('@') ? login : login+'@acesso.rl-pedidos.invalid';
+    const {data,error}=await client.auth.signInWithPassword({email,password});
+    if(error) return inform('Usuário ou senha inválidos. Confira os dados cadastrados pela gestão RL.',true);
+    if(data.user) await setUser(data.user);
   }
   function chooseTab(tab) {
     if(tab === 'order' && !isStaff()) return;
     if(tab === 'mine' && !isStaff()) return;
     if(tab === 'restaurant' && !isRestaurant() && !isManager()) return;
     if(tab === 'admin' && !isManager()) return;
+    if(tab === 'users' && !isManager()) return;
     state.tab=tab;
     document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('active',b.dataset.tab===tab));
     document.querySelectorAll('.pane').forEach(p => p.hidden=(p.id!==tab));
@@ -87,11 +92,11 @@
   function renderTabs() {
     document.querySelectorAll('[data-tab]').forEach(b => {
       const t=b.dataset.tab;
-      b.hidden=(['order','mine'].includes(t) && !isStaff()) || (t==='restaurant' && !isManager() && !isRestaurant()) || (t==='admin' && !isManager());
+      b.hidden=(['order','mine'].includes(t) && !isStaff()) || (t==='restaurant' && !isManager() && !isRestaurant()) || (['admin','users'].includes(t) && !isManager());
     });
     $('logoutBtn').hidden=!configured;
     $('who').textContent = name() + ' • ' + ({admin:'Gestão RL',restaurante:'Restaurante',colaborador:'Colaborador'}[state.role]||'');
-    if((['order','mine'].includes(state.tab) && !isStaff()) || (state.tab==='admin' && !isManager()) || (state.tab==='restaurant' && !isRestaurant() && !isManager())) {
+    if((['order','mine'].includes(state.tab) && !isStaff()) || (['admin','users'].includes(state.tab) && !isManager()) || (state.tab==='restaurant' && !isRestaurant() && !isManager())) {
       state.tab=isRestaurant() ? 'restaurant' : isManager() ? 'admin' : 'order';
     }
     chooseTab(state.tab);
@@ -135,7 +140,7 @@
       renderAll();
     } catch(error){ fail(error); }
   }
-  function renderAll() { renderTabs(); renderMenu(); renderMine(); renderRestaurant(); renderAdmin(); }
+  function renderAll() { renderTabs(); renderMenu(); renderMine(); renderRestaurant(); renderAdmin(); renderUsers(); }
   async function saveOrder() {
     if(!isStaff()) return;
     const type=meal(), dish=state.dish, sides=type==='almoco'?[...state.sides]:[], notes=$('notes').value.trim();
@@ -273,6 +278,124 @@
     const msg='*AMBEV | PEDIDOS RL*\nData: '+day.split('-').reverse().join('/')+'\n\n'+entries.join('\n')+'\n\nCafés: '+s.coffee+' | Almoços: '+s.lunch+'\nRefeições: '+M.money(s.subtotal)+'\nEntregas: '+M.money(s.delivery)+'\n*TOTAL: '+M.money(s.total)+'*\n\nConferir quantidades e entrega antes do pagamento.';
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener,noreferrer');
   }
+
+  // Gestão de identidades: API Edge Function com JWT e checagem de administrador.
+  async function userApi(action, params={}) {
+    if(!configured || !isManager())throw Error('Acesso restrito ao administrador RL.');
+    const {data,error}=await client.functions.invoke('manage-users',{body:{action,...params}});
+    if(error)throw Error(data?.error || error.message || 'Não foi possível acessar o servidor.');
+    if(data?.error)throw Error(data.error);
+    return data;
+  }
+  async function loadUsers() {
+    if(!isManager())return;
+    try{
+      const result=await userApi('list');
+      state.users=result.accounts||[];
+      renderUsers();
+    }catch(error){$('usersFeedback').textContent='Não foi possível carregar usuários: '+error.message; $('usersFeedback').classList.add('error');}
+  }
+  function renderUsers(){
+    if(!isManager())return;
+    $('usersCount').textContent=String(state.users.length);
+    const el=$('usersList');
+    el.innerHTML=state.users.length?state.users.map(u=>{
+      const mine=u.id===ownId(), protectedAccount=mine||u.role==='admin';
+      const role=u.role==='admin'?'Administrador':u.role==='restaurante'?'Restaurante':'Colaborador';
+      const controls=protectedAccount?'':`<div class="user-actions">
+        <select data-role-for="${esc(u.id)}" aria-label="Perfil de ${esc(u.display_name)}">
+          <option value="colaborador" ${u.role==='colaborador'?'selected':''}>Colaborador</option>
+          <option value="restaurante" ${u.role==='restaurante'?'selected':''}>Restaurante</option>
+        </select>
+        <button class="secondary compact" data-user-action="set_role" data-id="${esc(u.id)}">Salvar perfil</button>
+        <button class="secondary compact" data-user-action="reset_password" data-id="${esc(u.id)}">Redefinir senha</button>
+        <button class="${u.active?'danger':'primary'} compact" data-user-action="set_active" data-id="${esc(u.id)}">${u.active?'Desativar':'Reativar'}</button>
+      </div>`;
+      return `<article class="entry user-account">
+        <div class="entry-top"><div><strong>${esc(u.display_name)}</strong>
+        <br><small>Usuário: ${esc(u.username||'e-mail do primeiro ADM')} • ${esc(role)}</small></div>
+        <span class="status ${u.active?'entregue':'cancelado'}">${u.active?'Ativo':'Inativo'}</span></div>
+        ${controls}
+      </article>`;
+    }).join(''):'<div class="empty">Nenhum usuário encontrado.</div>';
+    el.querySelectorAll('[data-user-action]').forEach(b=>b.addEventListener('click',async()=>{
+      const id=b.dataset.id, u=state.users.find(x=>x.id===id);
+      if(!u || u.role==='admin')return;
+      const action=b.dataset.userAction;
+      let params={id};
+      if(action==='set_role')params.role=el.querySelector('[data-role-for="'+id+'"]').value;
+      if(action==='set_active'){
+        if(!confirm((u.active?'Desativar':'Reativar')+' acesso de '+u.display_name+'?'))return;
+        params.active=!u.active;
+      }
+      if(action==='reset_password'){
+        const password=prompt('Digite uma NOVA senha provisória (8 a 72 caracteres) para '+u.display_name+':');
+        if(password===null)return;
+        if(password.length<8 || password.length>72)return inform('Senha precisa ter no mínimo 8 caracteres.',true);
+        params.password=password;
+      }
+      b.disabled=true;
+      try{
+        const result=await userApi(action,params);
+        inform(result.message||'Alteração concluída.');
+        await loadUsers();
+      }catch(error){fail(error);}finally{b.disabled=false;}
+    }));
+  }
+  async function createUser(){
+    if(!isManager())return;
+    const display_name=$('newFullName').value.trim();
+    const username=$('newUsername').value.trim().toLowerCase();
+    const password=$('newPassword').value;
+    const role=$('newRole').value;
+    if(display_name.length<3)return inform('Informe o nome completo.',true);
+    if(!/^[a-z][a-z0-9._-]{2,29}$/.test(username))return inform('Usuário deve ter 3 a 30 caracteres, começando por letra minúscula.',true);
+    if(password.length<8)return inform('Use senha provisória com pelo menos 8 caracteres.',true);
+    const btn=$('createUserBtn');btn.disabled=true;
+    try{
+      const result=await userApi('create',{display_name,username,password,role});
+      $('newFullName').value='';$('newUsername').value='';$('newPassword').value='';
+      $('usersFeedback').classList.remove('error');
+      $('usersFeedback').textContent='Conta de '+display_name+' criada. Informe ao usuário o login "'+username+'" e a senha provisória por canal privado.';
+      inform(result.message||'Conta cadastrada na nuvem.');
+      await loadUsers();
+    }catch(error){
+      $('usersFeedback').textContent=error.message;
+      $('usersFeedback').classList.add('error');
+    }finally{btn.disabled=false;}
+  }
+
+  // Imprimir ou salvar PDF: consulta todos os pedidos do DIA, não apenas o histórico carregado.
+  async function reportAction(kind,format){
+    const canRead=kind==='admin'?isManager():(isManager()||isRestaurant());
+    if(!canRead)return inform('Sem permissão para emitir este relatório.',true);
+    const day=(kind==='admin'?$('adminDate'):$('restaurantDate')).value;
+    const filter=(kind==='admin'?$('adminMeal'):$('restaurantMeal')).value;
+    if(!day)return inform('Selecione o dia do relatório.',true);
+    let popup=null;
+    if(format==='print'){
+      popup=window.open('','_blank');
+      if(!popup)return inform('Permita pop-ups para impressão.',true);
+      popup.document.body.textContent='Preparando relatório de impressão...';
+    }
+    try{
+      let orders=state.orders.filter(o=>o.order_day===day);
+      if(configured){
+        const {data,error}=await client.from('orders').select('*').eq('order_day',day)
+          .order('created_at',{ascending:true}).limit(1000);
+        if(error)throw error;
+        if(data.length>=1000)throw Error('O período ultrapassa 999 pedidos. Solicite a exportação completa para evitar valores incompletos.');
+        orders=data;
+      }
+      const payload={date:day,meal:filter,kind:kind==='admin'?'admin':'restaurante',orders};
+      if(format==='print')window.RL_REPORTS.print(payload,popup);
+      else await window.RL_REPORTS.download(payload);
+    }catch(error){
+      if(popup&&!popup.closed)popup.close();
+      fail(error);
+    }
+  }
+
   document.addEventListener('click', e => {
     const b=e.target.closest('[data-tab]'); if(b) chooseTab(b.dataset.tab);
     const d=e.target.closest('[data-demo-role]');
@@ -282,12 +405,17 @@
   $('demoName').addEventListener('input',e=>{state.demoName=e.target.value.trim()||'Colaborador de teste';if(state.role==='colaborador'){state.profile.display_name=state.demoName;renderTabs();}});
   $('placeBtn').addEventListener('click',saveOrder);
   $('clearEditBtn').addEventListener('click',clearEdit);
-  $('loginBtn').addEventListener('click',()=>authAction(false));
-  $('signupBtn').addEventListener('click',()=>authAction(true));
+  $('loginBtn').addEventListener('click',authAction);
   $('logoutBtn').addEventListener('click',()=>client?.auth.signOut());
   $('mineRefresh').addEventListener('click',reload);
   $('restaurantRefresh').addEventListener('click',reload);
   $('adminRefresh').addEventListener('click',reload);
+  $('usersRefresh').addEventListener('click',loadUsers);
+  $('createUserBtn').addEventListener('click',createUser);
+  $('pdfBtn').addEventListener('click',()=>reportAction('admin','pdf'));
+  $('printBtn').addEventListener('click',()=>reportAction('admin','print'));
+  $('restaurantPdfBtn').addEventListener('click',()=>reportAction('restaurante','pdf'));
+  $('restaurantPrintBtn').addEventListener('click',()=>reportAction('restaurante','print'));
   ['restaurantDate','restaurantMeal'].forEach(id => $(id).addEventListener('change',renderRestaurant));
   ['adminDate','adminMeal'].forEach(id => $(id).addEventListener('change',renderAdmin));
   $('csvBtn').addEventListener('click',downloadCsv);
