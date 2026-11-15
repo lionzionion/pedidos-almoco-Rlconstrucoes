@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#073a60">
+<meta name="description" content="AMBEV | Pedidos RL — gestão de refeições, restaurante e conferência diária.">
+<title>Demo interativa | AMBEV Pedidos RL</title>
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<header class="hero">
+  <div class="container headrow">
+    <div class="brand"><div class="brandmark"><span>R</span><span>L</span></div><div><strong>RL Engenharia</strong><small>Fazendo Acontecer</small></div></div>
+    <div class="brandright"><span class="tag">Obra AMBEV • Itapissuma</span><div class="userhead" id="who"></div></div>
+  </div>
+  <div class="container hero-content"><div class="eyebrow">GESTÃO DE REFEIÇÕES</div><h1>AMBEV | PEDIDOS RL</h1><p>DEMONSTRAÇÃO INTERATIVA • Dados fictícios, sem pedidos reais.</p><span id="todayLabel" class="date-pill"></span></div>
+</header>
+<main class="container">
+  <div id="notice" class="notice" hidden></div>
+  <section id="login" class="card auth-card" hidden>
+    <h2>Acesso ao sistema</h2>
+    <p class="muted">Entre com seu cadastro para acompanhar seus pedidos e receber confirmação.</p>
+    <label for="loginEmail">E-mail</label><input id="loginEmail" type="email" autocomplete="email" placeholder="voce@exemplo.com">
+    <label for="loginPassword">Senha</label><input id="loginPassword" type="password" autocomplete="current-password" minlength="6" placeholder="Sua senha">
+    <label for="loginName">Nome completo (somente no primeiro cadastro)</label><input id="loginName" type="text" autocomplete="name" placeholder="Seu nome completo" maxlength="80">
+    <div class="actions"><button id="loginBtn" class="primary">Entrar</button><button id="signupBtn" class="secondary">Criar cadastro</button></div>
+    <p class="small muted">Apenas a administração poderá conceder acesso ao painel do restaurante ou à gestão.</p>
+  </section>
+  <section id="demo" class="card demo-card" hidden>
+    <strong>Prévia local — ainda não conectada ao banco de dados.</strong>
+    <p>Os pedidos de teste ficam somente neste navegador e <b>não aparecem em outros celulares</b>. Não use esta prévia para encomendar refeições reais.</p>
+    <div class="actions"><button data-demo-role="colaborador" class="secondary">Testar colaborador</button><button data-demo-role="restaurante" class="secondary">Testar restaurante</button><button data-demo-role="admin" class="secondary">Testar gestão RL</button></div>
+    <label for="demoName">Nome do colaborador de teste</label><input id="demoName" value="Colaborador de teste" maxlength="80">
+  </section>
+  <div id="app" hidden>
+    <nav class="tabs" aria-label="Áreas do sistema">
+      <button class="tab active" data-tab="order">🍽️ Fazer pedido</button>
+      <button class="tab" data-tab="mine">🧾 Meus pedidos</button>
+      <button class="tab" data-tab="restaurant">👩‍🍳 Restaurante</button>
+      <button class="tab" data-tab="admin">📊 Conferência RL</button>
+      <button id="logoutBtn" class="tab logout" hidden>Sair</button>
+    </nav>
+    <section id="order" class="pane">
+      <div class="sectionhead"><div><div class="eyebrow blue">COLABORADOR</div><h2>Monte sua refeição</h2><p class="muted">Escolha uma refeição por período. Você pode alterar ou cancelar antes do preparo.</p></div></div>
+      <div class="card">
+        <div class="group"><span class="fieldtitle">Refeição</span><div class="toggle-row"><label class="meal-option"><input name="meal" value="cafe" type="radio"> ☀️ Café da manhã</label><label class="meal-option"><input name="meal" value="almoco" type="radio" checked> 🍛 Almoço</label></div></div>
+        <div class="group"><span class="fieldtitle">Data e cardápio</span><div class="dayname" id="menuDay"></div><div id="menuCards" class="menu-cards"></div></div>
+        <div id="sideSection" class="group"><span class="fieldtitle">Acompanhamentos</span><p class="muted small">Escolha o que deseja. Selecione apenas um tipo de feijão.</p><div id="sides" class="checkgrid"></div></div>
+        <div class="group"><label for="notes">Observações para a cozinha</label><textarea id="notes" rows="3" maxlength="250" placeholder="Ex.: sem cebola, pouco arroz..."></textarea></div>
+        <div class="order-total"><div><span>Valor unitário</span><strong id="unitPrice">R$ 22,00</strong></div><div><span>Taxa da entrega coletiva</span><strong id="feePreview">R$ 8,00</strong></div></div>
+        <p class="muted small">A taxa de entrega é cobrada uma vez por remessa, não por funcionário. O fechamento final é calculado no painel da gestão.</p>
+        <div id="orderFeedback" class="feedback" role="status" aria-live="polite"></div>
+        <div class="actions"><button id="placeBtn" class="primary">Confirmar pedido</button><button id="clearEditBtn" class="secondary" hidden>Cancelar edição</button></div>
+      </div>
+    </section>
+    <section id="mine" class="pane" hidden>
+      <div class="sectionhead"><div><div class="eyebrow blue">MEUS PEDIDOS</div><h2>Histórico e cancelamentos</h2><p class="muted">Edite ou cancele pedidos com status confirmado. Pedidos em preparo não podem mais ser alterados.</p></div><button id="mineRefresh" class="secondary compact">Atualizar</button></div>
+      <div id="mineList" class="stack"></div>
+    </section>
+    <section id="restaurant" class="pane" hidden>
+      <div class="sectionhead"><div><div class="eyebrow blue">PAINEL DO RESTAURANTE</div><h2>Pedidos recebidos</h2><p class="muted">Os pedidos aparecem aqui sem envio individual pelo WhatsApp.</p></div><button id="restaurantRefresh" class="secondary compact">Atualizar</button></div>
+      <div class="toolbar"><label for="restaurantDate">Dia</label><input id="restaurantDate" type="date"><label for="restaurantMeal">Refeição</label><select id="restaurantMeal"><option value="todos">Todas</option><option value="cafe">Café</option><option value="almoco">Almoço</option></select></div>
+      <div id="restaurantStats" class="metricrow"></div><div id="restaurantList" class="stack"></div>
+    </section>
+    <section id="admin" class="pane" hidden>
+      <div class="sectionhead"><div><div class="eyebrow blue">ADMINISTRAÇÃO RL</div><h2>Conferência e pagamento</h2><p class="muted">Listagem nominal, conferência das remessas, cancelamentos e registros arquivados.</p></div><button id="adminRefresh" class="secondary compact">Atualizar</button></div>
+      <div class="toolbar"><label for="adminDate">Dia da conferência</label><input id="adminDate" type="date"><label for="adminMeal">Refeição</label><select id="adminMeal"><option value="todos">Todas</option><option value="cafe">Café</option><option value="almoco">Almoço</option></select></div>
+      <div id="adminStats" class="metricrow"></div>
+      <div class="card"><h3>Relação nominal</h3><div class="table-scroll"><table><thead><tr><th>Colaborador</th><th>Refeição</th><th>Pedido</th><th>Status</th><th>Valor</th><th>Ação</th></tr></thead><tbody id="adminRows"></tbody></table></div><p class="small muted">Arquivar remove da lista ativa, mas mantém histórico para auditoria. O pedido pode ser restaurado.</p>
+      <div class="actions"><button id="csvBtn" class="secondary">Exportar CSV</button><button id="whatsBtn" class="secondary">Resumo para WhatsApp</button></div>
+      <label for="whatsPhone">WhatsApp do destinatário (DDI + DDD + número)</label><input id="whatsPhone" type="tel" inputmode="numeric" placeholder="55DDDNUMERO"><p class="small muted">Por enquanto, o resumo abre uma conversa para confirmação manual do envio.</p></div>
+      <div class="card"><h3>Pedidos cancelados e arquivados</h3><div id="adminAudit" class="stack"></div></div>
+    </section>
+  </div>
+</main>
+<footer>RL Engenharia • AMBEV Itapissuma • Horário de Recife/PE</footer>
+<script src="./config.js"></script>
+<script src="./menu.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/dist/umd/supabase.min.js"></script>
+<script src="./app.js" defer></script>
+</body>
+</html>
