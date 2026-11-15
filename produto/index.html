@@ -8,18 +8,23 @@
 <link rel="stylesheet" href="./style.css">
 <link rel="icon" type="image/webp" href="../assets/rl-logo.webp">
 <meta property="og:image" content="https://lionzionion.github.io/pedidos-almoco-solutio/assets/rl-logo.webp">
+<link rel="canonical" href="https://lionzionion.github.io/pedidos-almoco-solutio/produto/">
+<meta property="og:title" content="RL Engenharia | Gestão digital de refeições em obras">
+<meta property="og:description" content="Pedidos por colaborador, painel de restaurante e conferência diária com relatórios PDF.">
+<meta property="og:type" content="website">
+<script src="../assets/clean-links.js" defer></script>
 </head>
 <body>
 <header class="topbar">
   <div class="container topinner"><a class="brand" href="#inicio" aria-label="RL Engenharia — início"><img src="../assets/rl-logo.webp" alt="RL Engenharia — Fazendo Acontecer" width="220" height="64"></a>
-  <nav><a href="#solucao">Solução</a><a href="#funcionamento">Como funciona</a><a href="#conferencia">Conferência</a><a class="navcta" href="../app/">Acessar app</a></nav></div>
+  <nav><a href="#solucao">Solução</a><a href="#funcionamento">Como funciona</a><a href="#conferencia">Conferência</a><a class="navcta" href="../acesso/">Acessar app</a></nav></div>
 </header>
 <main id="inicio">
   <section class="hero"><div class="container hero-grid"><div class="herotext">
     <div class="eyebrow"><span class="dot"></span> UMA SOLUÇÃO DIGITAL DA RL ENGENHARIA</div>
     <h1>Refeições na obra.<br><span>Pedidos organizados.</span><br>Gestão sob controle.</h1>
     <p>Do café da manhã ao almoço: cada colaborador faz seu pedido, o restaurante recebe em um painel único e a gestão da obra confere nomes, refeições e valores antes de pagar.</p>
-    <div class="buttons"><a class="button mainbtn" href="../app/">Entrar no aplicativo <span aria-hidden="true">↗</span></a><a class="button outline" href="../demo/">Testar demonstração <span aria-hidden="true">→</span></a></div>
+    <div class="buttons"><a class="button mainbtn" href="../acesso/">Entrar no aplicativo <span aria-hidden="true">↗</span></a><a class="button outline" href="../demo/">Testar demonstração <span aria-hidden="true">→</span></a></div>
     <p class="smallnote"><span class="bullet">●</span> Aplicativo em fase de testes operacionais. A demonstração usa dados fictícios.</p>
     <div class="mini-stats"><span><b>3</b> perfis de acesso</span><span><b>7</b> dias de cardápio</span><span><b>1</b> fechamento consolidado</span></div>
   </div><div class="visual" aria-label="Exemplo ilustrativo dos painéis de pedidos">
@@ -55,7 +60,47 @@
     <p>Cancelamentos e arquivamentos são identificados e retirados do total ativo para conferência.</p>
   </div></div></section>
   <section class="section tinted"><div class="container"><div class="section-eyebrow">TECNOLOGIA E RASTREABILIDADE</div><h2>Da planilha improvisada a um sistema com permissões.</h2><div class="grid3"><div class="techcard"><b>Frontend responsivo</b><p>HTML, CSS e JavaScript, acessível de celular ou computador.</p></div><div class="techcard"><b>Supabase PostgreSQL</b><p>Armazenamento compartilhado de usuários, pedidos e histórico de mudanças.</p></div><div class="techcard"><b>Autenticação e RLS</b><p>Regras de acesso para colaborador, restaurante e administração da RL.</p></div></div><p class="smallnote">O banco de dados foi provisionado. A operação com usuários reais exige testes completos de acesso, preparo, cancelamento e fechamento.</p></div></section>
-  <section class="cta"><div class="container"><span class="section-eyebrow">CONHEÇA NA PRÁTICA</span><h2>Veja a solução funcionando.</h2><p>Você pode entrar no aplicativo com cadastro ou explorar uma demonstração interativa com pedidos fictícios.</p><div class="buttons center"><a class="button mainbtn" href="../app/">Acessar o aplicativo ↗</a><a class="button outline light" href="../demo/">Explorar demonstração →</a><a class="button outline light" href="https://github.com/lionzionion/pedidos-almoco-solutio">Ver projeto no GitHub →</a></div></div></section>
+  <section id="compartilhar" class="share-section">
+  <div class="container share-grid">
+    <div>
+      <div class="section-eyebrow">ACESSO À PLATAFORMA</div>
+      <h2>Um único endereço para toda a equipe.</h2>
+      <p>O colaborador, a proprietária do restaurante e a administração entram pelo mesmo link. Cada usuário vê somente as funções autorizadas para seu perfil.</p>
+      <p class="share-note">Para entrar é necessário receber usuário e senha da gestão RL. O acesso é protegido por autenticação.</p>
+    </div>
+    <div class="share-card">
+      <label for="shareLink">Link para colaboradores e restaurante</label>
+      <input id="shareLink" type="text" readonly value="https://lionzionion.github.io/pedidos-almoco-solutio/acesso/" aria-label="Link de acesso do aplicativo">
+      <div class="share-actions">
+        <button type="button" class="button mainbtn" id="copyShareLink">Copiar link</button>
+        <button type="button" class="button share-whatsapp" id="sendWhatsapp">Enviar pelo WhatsApp</button>
+      </div>
+      <p class="share-feedback" id="shareFeedback" role="status" aria-live="polite">Use esse endereço para compartilhar o acesso — sem dados de login incluídos.</p>
+    </div>
+  </div>
+</section>
+<section class="cta"><div class="container"><span class="section-eyebrow">CONHEÇA NA PRÁTICA</span><h2>Veja a solução funcionando.</h2><p>Você pode entrar no aplicativo com cadastro ou explorar uma demonstração interativa com pedidos fictícios.</p><div class="buttons center"><a class="button mainbtn" href="../acesso/">Acessar o aplicativo ↗</a><a class="button outline light" href="../demo/">Explorar demonstração →</a><a class="button outline light" href="https://github.com/lionzionion/pedidos-almoco-solutio">Ver projeto no GitHub →</a></div></div></section>
 </main>
 <footer><div class="container footerinner"><img src="../assets/rl-logo.webp" alt="RL Engenharia — Fazendo Acontecer" width="220" height="64"><span>AMBEV | Pedidos RL • Projeto demonstrativo 2026</span></div></footer>
+<script>
+(() => {
+  const input=document.getElementById('shareLink');
+  const status=document.getElementById('shareFeedback');
+  const accessURL=new URL(document.querySelector('.navcta').getAttribute('href'),location.href).href;
+  input.value=accessURL;
+  document.getElementById('copyShareLink').addEventListener('click',async()=>{
+    try {
+      await navigator.clipboard.writeText(accessURL);
+      status.textContent='Link copiado! Envie pelo WhatsApp ou pelo grupo da equipe.';
+    } catch {
+      input.select();
+      status.textContent='Copie o endereço selecionado e envie ao colaborador.';
+    }
+  });
+  document.getElementById('sendWhatsapp').addEventListener('click',()=>{
+    const text='RL Engenharia | Pedidos de refeições\nAcesse o sistema para solicitar café da manhã ou almoço:\n'+accessURL+'\nUse o usuário e a senha fornecidos pela administração RL.';
+    window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank','noopener,noreferrer');
+  });
+})();
+</script>
 </body></html>
