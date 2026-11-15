@@ -39,14 +39,14 @@ Deno.serve(async req=>{
   const tokenHash=await digestToken(token);
   try{
     const {data:invitation,error:lookupError}=await admin.from('staff_invitations')
-      .select('username,display_name,company,job_title,expires_at,redeemed_at')
+      .select('username,display_name,company,job_title,role,expires_at,redeemed_at')
       .eq('token_hash',tokenHash).maybeSingle();
     if(lookupError)throw lookupError;
     if(!invitation||invitation.redeemed_at||Date.parse(invitation.expires_at)<=Date.now())
       return reply({error:'Convite utilizado ou expirado. Solicite outro ao ADM.'},410);
     if(action==='inspect'){
       return reply({username:invitation.username,display_name:invitation.display_name,
-        company:invitation.company,job_title:invitation.job_title});
+        company:invitation.company,job_title:invitation.job_title,role:invitation.role});
     }
     if(action!=='redeem')return reply({error:'Ação desconhecida'},400);
     const password=String(body.password||'');
@@ -76,7 +76,7 @@ Deno.serve(async req=>{
       createdId=created.user.id;
       const {data:profile,error:updateError}=await admin.from('profiles')
         .update({display_name:invitation.display_name,username:invitation.username,
-          company:invitation.company,job_title:invitation.job_title,role:'colaborador',active:true})
+          company:invitation.company,job_title:invitation.job_title,role:invitation.role==='restaurante'?'restaurante':'colaborador',active:true})
         .eq('id',createdId).select('id').single();
       if(updateError||!profile)throw updateError||new Error('Não foi possível concluir cadastro');
       const {error:finishError}=await admin.from('staff_invitations')
