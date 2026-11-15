@@ -8,26 +8,34 @@
   const statusName = o => o.archived?'ARQUIVADO':({confirmado:'Confirmado',preparo:'Em preparo',entregue:'Entregue',cancelado:'Cancelado'}[o.status]||o.status);
   const nowBR = () => new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Recife',dateStyle:'short',timeStyle:'short'}).format(new Date());
   function build(payload) {
-    const {date,meal='todos',kind='admin'}=payload;
+    const {date,meal='todos',kind='admin',company='todos'}=payload;
     const restaurant=kind==='restaurante';
-    const rows=(payload.orders||[]).filter(o=>o.order_day===date && (meal==='todos'||meal===o.meal));
-    rows.sort((a,b)=>a.meal.localeCompare(b.meal)||String(a.employee_name).localeCompare(String(b.employee_name),'pt-BR'));
-    const summary=M.summary(rows,date,payload.now||new Date());
-    const columns=['Colaborador','Refeição','Prato','Acompanhamentos / Observações','Situação'];
-    if(!restaurant) columns.push('Valor');
+    const selected=restaurant?'todos':company;
+    // O rateio sempre considera o conjunto original da remessa,
+    // NUNCA só as linhas da empresa selecionada.
+    const allRows=(payload.orders||[]).filter(o=>o.order_day===date && (meal==='todos'||meal===o.meal));
+    const rows=(selected==='todos'?allRows:allRows.filter(o=>(o.company==='SOLUTIO'?'SOLUTIO':'RL')===selected)).slice();
+    rows.sort((x,y)=>x.meal.localeCompare(y.meal)||String(x.employee_name).localeCompare(String(y.employee_name),'pt-BR'));
+    const summary=selected==='todos'?M.summary(allRows,date,payload.now||new Date()):
+      M.companyBreakdown(allRows,date,payload.now||new Date())[selected];
+    const columns=['Colaborador','Empresa','Refeição','Prato','Acompanhamentos / Observações','Situação'];
+    if(!restaurant)columns.push('Valor');
     const values=rows.map(o=>{
       const details=[(o.accompaniments||[]).join(', '),o.notes||''].filter(Boolean).join(' | ');
-      const base=[o.employee_name,mealName(o.meal),o.dish,details,statusName(o)];
+      const base=[o.employee_name,o.company==='SOLUTIO'?'Solutio':'RL Construções',
+        mealName(o.meal),o.dish,details,statusName(o)];
       if(!restaurant)base.push(M.money(o.price));
       return base;
     });
-    return {rows,columns,values,summary,date,meal,kind,restaurant,
-      title:restaurant?'MAPA DE PRODUÇÃO DO RESTAURANTE':'CONFERÊNCIA DIÁRIA DE REFEIÇÕES',
-      filename:(restaurant?'RL_RESTAURANTE_':'RL_CONFERENCIA_')+date+(meal==='todos'?'':'_'+meal)+'.pdf'};
+    const suffix=selected==='todos'?'GERAL':selected;
+    return {rows,columns,values,summary,date,meal,kind,restaurant,company:selected,
+      title:restaurant?'MAPA DE PRODUÇÃO DO RESTAURANTE':
+        'CONFERÊNCIA '+(selected==='todos'?'GERAL':selected==='RL'?'RL CONSTRUÇÕES':'SOLUTIO'),
+      filename:(restaurant?'RL_RESTAURANTE_':'RL_CONFERENCIA_')+suffix+'_'+date+(meal==='todos'?'':'_'+meal)+'.pdf'};
   }
   function totalsHTML(r) {
     return '<section class="totals"><div><b>Cafés ativos</b> '+r.summary.coffee+'</div><div><b>Almoços ativos</b> '+r.summary.lunch+'</div>'+
-      (r.restaurant?'':'<div><b>Subtotal refeições</b> '+M.money(r.summary.subtotal)+'</div><div><b>Taxas de entrega</b> '+M.money(r.summary.delivery)+'</div><div class="grand"><b>Total a conferir</b> '+M.money(r.summary.total)+'</div>')+
+      (r.restaurant?'':'<div><b>Subtotal refeições</b> '+M.money(r.summary.subtotal)+'</div><div><b>Frete proporcional</b> '+M.money(r.summary.delivery)+'</div><div class="grand"><b>Total a conferir</b> '+M.money(r.summary.total)+'</div>')+
       '</section>';
   }
   function reportHTML(r){
@@ -93,7 +101,7 @@
     try{const png=await logoPNG();doc.addImage(png,'PNG',13,4,99,28);}catch(_){doc.setTextColor(255,255,255);doc.setFontSize(18);doc.text('RL ENGENHARIA',14,20);}
     doc.setTextColor(23,47,63);doc.setFontSize(15);doc.setFont('helvetica','bold');doc.text(r.title,13,49);
     doc.setFont('helvetica','normal');doc.setFontSize(9);
-    doc.text('Obra AMBEV Itapissuma | '+dateBR(r.date)+' | '+(r.meal==='todos'?'Todas as refeições':mealName(r.meal)),13,56);
+    doc.text('Obra AMBEV Itapissuma | '+dateBR(r.date)+' | '+(r.meal==='todos'?'Todas as refeições':mealName(r.meal))+' | '+(r.company==='todos'?'RL + Solutio':r.company),13,56);
     doc.text('Emitido em '+nowBR(),W-14,56,{align:'right'});
     if(typeof doc.autoTable!=='function')throw Error('O gerador de tabelas PDF não carregou. Use Imprimir / Salvar como PDF.');
     doc.autoTable({
@@ -105,7 +113,7 @@
     });
     let y=(doc.lastAutoTable?.finalY||65)+10;
     const items=[['Cafés ativos',String(r.summary.coffee)],['Almoços ativos',String(r.summary.lunch)]];
-    if(!r.restaurant)items.push(['Subtotal refeições',M.money(r.summary.subtotal)],['Taxas de entrega',M.money(r.summary.delivery)],['TOTAL A CONFERIR',M.money(r.summary.total)]);
+    if(!r.restaurant)items.push(['Subtotal refeições',M.money(r.summary.subtotal)],['Frete proporcional',M.money(r.summary.delivery)],['TOTAL A CONFERIR',M.money(r.summary.total)]);
     if(y+items.length*7+16>doc.internal.pageSize.getHeight()){doc.addPage();y=18;}
     for(const [label,value] of items){doc.setFontSize(10);doc.setFont('helvetica',label==='TOTAL A CONFERIR'?'bold':'normal');doc.text(label,13,y);doc.text(value,W-14,y,{align:'right'});y+=7;}
     const pages=doc.internal.getNumberOfPages();
