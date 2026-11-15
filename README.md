@@ -40,6 +40,7 @@ Aplicativo web de gestão de refeições da **RL Engenharia na obra AMBEV Itapis
 ## Estrutura do repositório
 
 ```text
+├── assets/          # logomarca oficial RL em WebP e cópia SVG
 ├── app/             # aplicação conectada a Supabase
 ├── demo/            # demonstração local e fictícia
 ├── produto/         # vitrine comercial do software
@@ -55,7 +56,7 @@ Aplicativo web de gestão de refeições da **RL Engenharia na obra AMBEV Itapis
 O sistema web **não exige npm nem build** para funcionar. Abra `app/index.html` ou execute servidor estático (por exemplo, `python -m http.server 8000`) na pasta do repositório e visite `http://localhost:8000/app/`. Para testes Node.js do cardápio:
 
 ```powershell
-node --test tests/menu.test.cjs
+node --test tests/*.test.cjs
 ```
 
 A configuração do projeto Supabase dedicado está em `app/config.js`. Contém **somente URL e chave publicável** do Supabase (não é segredo). Nunca coloque `service_role` ou `sb_secret` no frontend.
@@ -90,3 +91,9 @@ Gestão RL ──> CSV / resumo WhatsApp (envio manual)
 ---
 
 **RL Engenharia — Fazendo Acontecer.** Projeto demonstrativo e sistema interno de gestão de refeições • 2026.
+
+## Identidade visual oficial
+
+A logomarca oficial **RL Engenharia — Fazendo Acontecer**, enviada pelo proprietário, foi incorporada ao repositório em `assets/rl-logo.webp` (imagem com fundo transparente). O arquivo é usado no cabeçalho de **todas as telas do app**, login, demonstração, site de apresentação e formulário anterior. O favicon também usa a marca.
+
+Para validar todas as referências da imagem antes de publicar, execute `node --test tests/logo.test.cjs`.
