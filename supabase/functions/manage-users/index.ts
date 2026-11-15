@@ -225,8 +225,16 @@ Deno.serve(async (req) => {
       const { error: deleteError } = await admin.auth.admin.deleteUser(id);
       if (deleteError) {
         console.error('manage-users delete_user:', deleteError.message);
-        return reply({ error: 'Não foi possível excluir este usuário. Confira se há registros vinculados e tente novamente.' }, 409);
+        return reply({
+          error: 'Não foi possível excluir esta conta. O servidor identificou um impedimento no cadastro ou em dados vinculados. A conta foi preservada. Contate a administração técnica.'
+        }, 409);
       }
+      // O convite de ativação dessa mesma conta foi usado e não serve mais.
+      // Removê-lo evita convite "Ativado" apontando para um usuário apagado,
+      // permitindo que o ADM crie um novo convite com o mesmo login.
+      const {error:inviteError}=await admin.from('staff_invitations')
+        .delete().eq('username',target.username);
+      if(inviteError)console.error('manage-users delete invite cleanup:',inviteError.message);
       // target=null intencional: a FK de auditoria é SET NULL após a remoção.
       // Guardar identificador e nome histórico evita perder a identificação da exclusão.
       const { error: auditError } = await admin.from('account_audit').insert({
