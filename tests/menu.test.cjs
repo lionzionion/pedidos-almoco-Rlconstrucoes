@@ -20,10 +20,17 @@ test('café do rodízio R$17, pão simples R$10, almoço R$22',()=>{
   assert.equal(M.unitPrice('cafe','Cuscuz com salsichinha'),17);
   assert.equal(M.unitPrice('almoco','Parmegiana de carne'),22);
 });
-test('entrega de almoço de semana R$8; fim de semana e café R$12',()=>{
+test('frete coletivo único de R$8 tanto no café quanto no almoço, inclusive finais de semana',()=>{
   assert.equal(M.fee('almoco','2026-11-16'),8);
-  assert.equal(M.fee('almoco','2026-11-15'),12);
-  assert.equal(M.fee('cafe','2026-11-16'),12);
+  assert.equal(M.fee('almoco','2026-11-15'),8);
+  assert.equal(M.fee('cafe','2026-11-16'),8);
+});
+test('fechamento começa exatamente às 08h e 13h, hora de Recife',()=>{
+  const d='2026-11-16';
+  assert.equal(M.closed('cafe',d,new Date('2026-11-16T10:59:00Z')),false);
+  assert.equal(M.closed('cafe',d,new Date('2026-11-16T11:00:00Z')),true);
+  assert.equal(M.closed('almoco',d,new Date('2026-11-16T15:59:00Z')),false);
+  assert.equal(M.closed('almoco',d,new Date('2026-11-16T16:00:00Z')),true);
 });
 test('taxa é somada uma vez por refeição, nunca por pessoa',()=>{
   const rows=[
@@ -32,10 +39,10 @@ test('taxa é somada uma vez por refeição, nunca por pessoa',()=>{
     {order_day:'2026-11-15',meal:'almoco',price:22,status:'entregue',archived:false},
     {order_day:'2026-11-15',meal:'almoco',price:22,status:'confirmado',archived:false}
   ];
-  const s=M.summary(rows,'2026-11-15');
+  const s=M.summary(rows,'2026-11-15',new Date('2026-11-15T17:00:00Z'));
   assert.equal(s.subtotal,71);
-  assert.equal(s.delivery,24);
-  assert.equal(s.total,95);
+  assert.equal(s.delivery,16);
+  assert.equal(s.total,87);
   assert.equal(s.coffee,2);
   assert.equal(s.lunch,2);
 });
