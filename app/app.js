@@ -351,23 +351,23 @@
     for(const [label,value] of [['Subtotal',s.subtotal],['Frete proporcional',s.delivery],['TOTAL',s.total]]){
       const row=Array(10).fill('');row[0]=label;row[9]=Number(value).toFixed(2).replace('.',',');lines.push(row);
     }
-    const csv='\\ufeff'+lines.map(row=>row.map(cell=>'"'+String(cell??'').replace(/"/g,'""')+'"').join(';')).join('\\r\\n');
+    const csv='\ufeff'+lines.map(row=>row.map(cell=>'"'+String(cell??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');
     const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
     const a=document.createElement('a');a.href=url;
     a.download='RL_pedidos_'+(company==='todos'?'geral':company)+'_'+day+'.csv';a.click();
     setTimeout(()=>URL.revokeObjectURL(url),1500);
   }
   function sendSummary(){
-    const phone=$('whatsPhone').value.replace(/\\D/g,'');
+    const phone=$('whatsPhone').value.replace(/\D/g,'');
     if(phone.length<12||phone.length>15)return inform('Informe o número completo do WhatsApp com 55 + DDD + número.',true);
     localStorage.setItem('rl-whats-dest',phone);
     const info=filteredAdmin(),{day,company}=info,s=adminSummary(info);
     const entries=s.active.map(o=>'• '+o.employee_name+' — '+mealTitle(o.meal)+': '+o.dish+' ('+M.money(o.price)+')');
     const companyLabel=company==='todos'?'RL + Solutio':company==='RL'?'RL Construções':'Solutio';
-    const msg='*PEDIDOS RL | '+companyLabel.toUpperCase()+'*\\nData: '+day.split('-').reverse().join('/')+
-      '\\n\\n'+entries.join('\\n')+'\\n\\nCafés: '+s.coffee+' | Almoços: '+s.lunch+
-      '\\nRefeições: '+M.money(s.subtotal)+'\\nFrete proporcional: '+M.money(s.delivery)+
-      '\\n*TOTAL: '+M.money(s.total)+'*\\n\\nEntrega cobrada uma vez por evento, rateada por quantidade de pedidos.';
+    const msg='*PEDIDOS RL | '+companyLabel.toUpperCase()+'*\nData: '+day.split('-').reverse().join('/')+
+      '\n\n'+entries.join('\n')+'\n\nCafés: '+s.coffee+' | Almoços: '+s.lunch+
+      '\nRefeições: '+M.money(s.subtotal)+'\nFrete proporcional: '+M.money(s.delivery)+
+      '\n*TOTAL: '+M.money(s.total)+'*\n\nEntrega cobrada uma vez por evento, rateada por quantidade de pedidos.';
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener,noreferrer');
   }
 
