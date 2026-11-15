@@ -75,8 +75,8 @@
       <div id="restaurantList" class="stack"></div>
     </section>
     <section id="admin" class="pane" hidden>
-      <div class="sectionhead"><div><div class="eyebrow blue">ADMINISTRAÇÃO RL</div><h2>Conferência e pagamento</h2><p class="muted">Listagem nominal, conferência das remessas, cancelamentos e registros arquivados.</p></div><button id="adminRefresh" class="secondary compact">Atualizar</button></div>
-      <div class="toolbar"><label for="adminDate">Dia da conferência</label><input id="adminDate" type="date"><label for="adminMeal">Refeição</label><select id="adminMeal"><option value="todos">Todas</option><option value="cafe">Café</option><option value="almoco">Almoço</option></select></div>
+      <div class="sectionhead"><div><div class="eyebrow blue">ADMINISTRAÇÃO RL</div><h2>Conferência e pagamento</h2><p class="muted">Selecione RL ou Solutio para a cobrança separada. O único frete de R$ 8 por remessa é rateado pela quantidade de pedidos de cada empresa.</p></div><button id="adminRefresh" class="secondary compact">Atualizar</button></div>
+      <div class="toolbar"><label for="adminDate">Dia da conferência</label><input id="adminDate" type="date"><label for="adminMeal">Refeição</label><select id="adminMeal"><option value="todos">Todas</option><option value="cafe">Café</option><option value="almoco">Almoço</option></select><label for="adminCompany">Empresa</label><select id="adminCompany"><option value="todos">RL + Solutio</option><option value="RL">RL Construções</option><option value="SOLUTIO">Solutio</option></select></div>
       <div id="adminStats" class="metricrow"></div>
       <div class="card"><h3>Relação nominal</h3><div class="table-scroll"><table><thead><tr><th>Colaborador</th><th>Refeição</th><th>Pedido</th><th>Status</th><th>Valor</th><th>Ação</th></tr></thead><tbody id="adminRows"></tbody></table></div><p class="small muted">Arquivar remove da lista ativa, mas mantém histórico para auditoria. O pedido pode ser restaurado.</p>
       <div class="actions report-actions"><button id="pdfBtn" class="primary">📄 Baixar PDF</button><button id="printBtn" class="secondary">🖨️ Imprimir relatório</button><button id="csvBtn" class="secondary">Exportar CSV</button><button id="whatsBtn" class="secondary">Resumo para WhatsApp</button></div>
@@ -84,7 +84,7 @@
       <div class="card"><h3>Pedidos cancelados e arquivados</h3><div id="adminAudit" class="stack"></div></div>
     </section>
     <section id="users" class="pane" hidden>
-      <div class="sectionhead"><div><div class="eyebrow blue">ADMINISTRAÇÃO DE ACESSOS</div><h2>Colaboradores e restaurante</h2><p class="muted">Crie acessos sem exigir e-mail pessoal. Todos os cadastros ficam na nuvem e são protegidos por senha.</p></div><button id="usersRefresh" class="secondary compact">Atualizar</button></div>
+      <div class="sectionhead"><div><div class="eyebrow blue">ADMINISTRAÇÃO DE ACESSOS</div><h2>Colaboradores RL e Solutio</h2><p class="muted">Crie acessos sem exigir e-mail pessoal. Todos os cadastros ficam na nuvem e são protegidos por senha.</p></div><button id="usersRefresh" class="secondary compact">Atualizar</button></div>
       <div class="card">
         <h3>Cadastrar novo usuário</h3>
         <p class="muted small">Para fazer os primeiros testes, escolha um exemplo abaixo. O login será preenchido automaticamente; você só precisa definir uma senha diferente para cada conta.</p>
@@ -97,7 +97,7 @@
           <div><label for="newUsername">Login do usuário (gerado automaticamente)</label><input id="newUsername" type="text" maxlength="60" placeholder="Ex.: usuario.teste" autocapitalize="none" autocomplete="off">
           <p class="small muted" id="usernameHelp">Pode escrever com espaços, maiúsculas ou acentos. O aplicativo converterá para o login correto.</p></div>
           <div><label for="newPassword">Senha inicial (mínimo 8 caracteres)</label><input id="newPassword" type="password" minlength="8" maxlength="72" autocomplete="new-password" placeholder="Senha provisória"></div>
-          <div><label for="newRole">Perfil de acesso</label><select id="newRole"><option value="colaborador">Colaborador</option><option value="restaurante">Restaurante</option></select></div>
+          <div><label for="newRole">Perfil de acesso</label><select id="newRole"><option value="colaborador">Colaborador</option><option value="restaurante">Restaurante</option></select></div><div><label for="newCompany">Empresa</label><select id="newCompany"><option value="RL">RL Construções</option><option value="SOLUTIO">Solutio</option></select></div><div><label for="newJobTitle">Cargo ou função</label><input id="newJobTitle" type="text" maxlength="80" placeholder="Ex.: Engenheiro"></div>
         </div>
         <div class="actions"><button id="createUserBtn" class="primary">Cadastrar na nuvem</button></div>
         <p class="small muted">A senha só poderá ser visualizada durante o cadastro ou após uma redefinição. O ADM não consegue recuperar senhas antigas, mas pode gerar uma nova com segurança.</p>
@@ -145,8 +145,8 @@
 <footer>RL Engenharia • AMBEV Itapissuma • Horário de Recife/PE</footer>
 <noscript><div class="container notice">Ative o JavaScript no navegador para acessar os pedidos.</div></noscript>
 <script src="./config.js?v=2"></script>
-<script src="./menu.js?v=3"></script>
-<script src="./reports.js?v=3"></script>
+<script src="./menu.js?v=4"></script>
+<script src="./reports.js?v=4"></script>
 <script src="./loader.js?v=7"></script>
 </body>
 </html>
