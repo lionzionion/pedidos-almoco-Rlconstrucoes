@@ -4,7 +4,7 @@ O código, o README e a documentação já estão organizados. Para o projeto ap
 
 ## 1. Preencher os campos About
 
-Repositório: https://github.com/lionzionion/pedidos-almoco-solutio
+Repositório: https://github.com/lionzionion/pedidos-almoco-Rlconstrucoes
 
 Abra a página do repositório, procure **About** na coluna lateral direita e clique na **engrenagem**.
 
@@ -17,7 +17,7 @@ Sistema web de gestão de refeições em obras: pedidos, restaurante, controle d
 **Website**:
 
 ```text
-https://lionzionion.github.io/pedidos-almoco-solutio/
+https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/
 ```
 
 **Topics** (adicionar um por vez):
@@ -37,19 +37,15 @@ Marque a opção para mostrar o link do Website, se aparecer, e clique em **Save
 
 > Atenção: os campos About/Website/Topics são **configurações do repositório**, e não do arquivo README. O conector GitHub utilizado nesta etapa permite atualizar arquivos, mas **não permite alterar diretamente os metadados do repositório**. Esses campos precisam ser salvos no GitHub pelo proprietário.
 
-## 2. Personalizar o nome do repositório (opcional)
+## 2. Nome do repositório e endereço
 
-O nome atual `pedidos-almoco-solutio` é histórico e não reflete a identidade exclusiva RL. Sugestão de nome definitivo:
+Nome escolhido para a RL:
 
 ```text
-rl-pedidos-obra
+pedidos-almoco-Rlconstrucoes
 ```
 
-Caminho: **Settings → General → Repository name → Rename**.
-
-**Não renomeie sem conferir os efeitos nos endereços publicados.** Um projeto GitHub Pages pode exigir reconfiguração e atualização dos links após a mudança de nome, pois a URL do site passará a conter a nova rota. Verifique Actions/Pages e atualize os links do README, do portal e das mensagens antes de divulgar a nova URL.
-
-Se preferir manter o sistema operacional intocado e criar uma vitrine independente, crie um **novo repositório público de portfólio** e publique apenas a documentação, imagens e a demonstração fictícia — sem dados reais ou segredos.
+O proprietário deve salvar esse nome em **Settings → General → Repository name → Rename**. Os links do README e do site já estão preparados para o novo endereço. Como o GitHub Pages muda de caminho ao renomear o repositório, teste o acesso em **Settings → Pages** após a publicação.
 
 ## 3. Publicar um domínio próprio (opcional)
 
@@ -75,9 +71,9 @@ O primeiro bloco do `README.md` já está pronto para exibição pública e cont
 
 ## 5. Endereço limpo para divulgação
 
-- **Usuários:** https://lionzionion.github.io/pedidos-almoco-solutio/acesso/
-- **Apresentação:** https://lionzionion.github.io/pedidos-almoco-solutio/
-- **Demonstração:** https://lionzionion.github.io/pedidos-almoco-solutio/demo/
+- **Usuários:** https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/acesso/
+- **Apresentação:** https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/
+- **Demonstração:** https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/demo/
 
 O sufixo `?utm_source=...` não faz parte do nome do projeto; é um parâmetro de rastreamento que alguns sistemas acrescentam ao abrir um link. O site remove parâmetros comuns da barra de endereço, e os links acima já estão escritos sem esses parâmetros.
 
