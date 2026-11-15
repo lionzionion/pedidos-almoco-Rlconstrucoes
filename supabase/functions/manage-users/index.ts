@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
   try {
     if (action === 'list') {
       const { data, error } = await admin.from('profiles')
-        .select('id,username,display_name,role,active,created_at')
+        .select('id,username,display_name,role,active,company,job_title,created_at')
         .order('display_name', { ascending: true }).limit(500);
       if (error) throw error;
       return reply({ accounts: data || [] });
@@ -91,6 +91,8 @@ Deno.serve(async (req) => {
       const autoPassword=body.password==='AUTO' || body.password===undefined;
       const password = autoPassword ? randomPassword() : body.password;
       const role = body.role;
+      const company = body.company === 'SOLUTIO' ? 'SOLUTIO' : 'RL';
+      const jobTitle = cleanName(body.job_title).slice(0,80);
       if (!validUsername(username)) return reply({ error: 'Informe um nome de usuário com pelo menos 3 caracteres, por exemplo usuario.teste ou restaurante.teste.' }, 400);
       if (displayName.length < 3 || displayName.length > 80) return reply({ error: 'Informe nome completo com 3–80 caracteres.' }, 400);
       if (!validPassword(password)) return reply({ error: 'A senha deve ter entre 8 e 72 caracteres.' }, 400);
@@ -109,23 +111,23 @@ Deno.serve(async (req) => {
       if (createError || !created.user) return reply({ error: createError?.message || 'Não foi possível cadastrar.' }, 400);
       const target = created.user.id;
       const { data: updated, error: updateError } = await admin.from('profiles')
-        .update({ display_name: displayName, username, role, active: true })
+        .update({ display_name: displayName, username, role, company, job_title:jobTitle, active: true })
         .eq('id', target)
-        .select('id,username,display_name,role,active,created_at')
+        .select('id,username,display_name,role,active,company,job_title,created_at')
         .single();
       if (updateError || !updated) {
         // Compensa criação parcial; usuário recém-criado ainda não recebeu acesso.
         await admin.auth.admin.deleteUser(target);
         return reply({ error: 'Cadastro incompleto. Revise usuário e tente novamente.' }, 409);
       }
-      await admin.from('account_audit').insert({ actor: caller, target, action: 'create', details: { username, role } });
+      await admin.from('account_audit').insert({ actor: caller, target, action: 'create', details: { username, role, company } });
       return reply({ account: updated, password: autoPassword ? password : undefined, message: 'Usuário cadastrado na nuvem.' }, 201);
     }
 
     const id = cleanName(body.id);
     if (!/^[0-9a-fA-F-]{36}$/.test(id)) return reply({ error: 'ID inválido.' }, 400);
     const { data: target, error: targetError } = await admin.from('profiles')
-      .select('id,username,display_name,role,active').eq('id',id).single();
+      .select('id,username,display_name,role,active,company,job_title').eq('id',id).single();
     if (targetError || !target) return reply({ error: 'Usuário não encontrado.' }, 404);
     if (target.id === caller || target.role === 'admin') return reply({ error: 'Esta conta administrativa está protegida.' }, 403);
     if (!target.username) return reply({ error: 'Conta de e-mail não gerenciada por este painel.' }, 403);
@@ -159,6 +161,16 @@ Deno.serve(async (req) => {
       if (error) throw error;
       await admin.from('account_audit').insert({actor:caller,target:id,action:body.active?'activate':'deactivate'});
       return reply({ message: body.active ? 'Conta reativada.' : 'Conta desativada. Acesso aos pedidos bloqueado.' });
+    }
+    if (action === 'set_company') {
+      if (body.company !== 'RL' && body.company !== 'SOLUTIO')
+        return reply({error:'Selecione RL ou Solutio.'},400);
+      // Histórico permanece com empresa original no momento do pedido.
+      const {error}=await admin.from('profiles').update({company:body.company}).eq('id',id);
+      if(error)throw error;
+      await admin.from('account_audit').insert({actor:caller,target:id,
+        action:'change_company',details:{from:target.company,to:body.company}});
+      return reply({message:'Empresa atualizada. Pedidos anteriores não foram alterados.'});
     }
     if (action === 'set_role') {
       if (!managedRole(body.role)) return reply({ error: 'Perfil inválido.' },400);
