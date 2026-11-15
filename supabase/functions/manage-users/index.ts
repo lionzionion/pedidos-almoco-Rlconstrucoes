@@ -162,7 +162,10 @@ Deno.serve(async (req) => {
       const {data,error}=await admin.rpc('rl_reset_test_records',{
         p_actor:caller,p_confirm:body.confirm
       });
-      if(error)throw error;
+      if(error){
+        console.error('manage-users reset_test_data:',error.code,error.message);
+        return reply({error:'Não foi possível zerar testes. Detalhe do servidor: '+(error.message||'erro desconhecido')},409);
+      }
       return reply({message:'Pedidos, auditoria de pedidos e conversas de teste apagados. Usuários e trilha administrativa preservados.',counts:data});
     }
 
