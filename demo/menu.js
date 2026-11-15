@@ -26,14 +26,23 @@ window.RL_MENU = (() => {
     return type === 'cafe' ? [...breakfast[weekday(date)], 'Café só com pão'] : [...lunch[weekday(date)]];
   }
   function unitPrice(type, dish) { return type === 'almoco' ? 22 : dish === 'Café só com pão' ? 10 : 17; }
-  function fee(type, date) { return type === 'cafe' ? 12 : ([0, 6].includes(weekday(date)) ? 12 : 8); }
+  function fee(_type, _date) { return 8; } // Um único frete coletivo de R$ 8 por remessa.
+  function cutoff(type) { return type==='cafe' ? '08:00' : '13:00'; }
+  function closed(type, date, now=new Date()) {
+    const parts=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{
+      timeZone:'America/Recife',year:'numeric',month:'2-digit',day:'2-digit',
+      hour:'2-digit',minute:'2-digit',hourCycle:'h23'
+    }).formatToParts(now).map(p=>[p.type,p.value]));
+    const currentDay=parts.year+'-'+parts.month+'-'+parts.day;
+    return currentDay>date || (currentDay===date && (parts.hour+':'+parts.minute)>=cutoff(type));
+  }
   function money(amount) { return Number(amount || 0).toLocaleString('pt-BR', {style:'currency', currency:'BRL'}); }
-  function summary(orders, date) {
+  function summary(orders, date, now=new Date()) {
     const active = orders.filter(o => o.order_day === date && !o.archived && o.status !== 'cancelado');
     const count = type => active.filter(o => o.meal === type).length;
     const subtotal = active.reduce((sum,o) => sum + Number(o.price), 0);
-    const delivery = (count('cafe') ? fee('cafe',date) : 0) + (count('almoco') ? fee('almoco',date) : 0);
+    const delivery = (count('cafe') && closed('cafe',date,now) ? fee('cafe',date) : 0) + (count('almoco') && closed('almoco',date,now) ? fee('almoco',date) : 0);
     return {active, coffee:count('cafe'), lunch:count('almoco'), subtotal, delivery, total:subtotal + delivery};
   }
-  return Object.freeze({breakfast, lunch, sides, days, today, weekday, items, unitPrice, fee, money, summary});
+  return Object.freeze({breakfast, lunch, sides, days, today, weekday, items, unitPrice, fee, cutoff, closed, money, summary});
 })();
