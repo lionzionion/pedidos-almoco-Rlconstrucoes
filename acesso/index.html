@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#073a60">
 <meta name="description" content="AMBEV | Pedidos RL — gestão de refeições, restaurante e conferência diária.">
 <title>Área de acesso | RL Engenharia — Pedidos</title>
-<link rel="stylesheet" href="../app/styles.css">
+<link rel="stylesheet" href="../app/styles.css?v=3">
 <link rel="icon" type="image/webp" href="../assets/rl-logo.webp">
 <meta name="robots" content="noindex,nofollow">
 <link rel="canonical" href="https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/acesso/">
@@ -47,6 +47,8 @@
       <button class="tab" data-tab="restaurant">👩‍🍳 Restaurante</button>
       <button class="tab" data-tab="admin">📊 Conferência RL</button>
       <button class="tab" data-tab="users">👥 Cadastros</button>
+      <button class="tab" data-tab="chat">💬 Chat do restaurante</button>
+      <button class="tab" data-tab="security">🔐 Minha senha</button>
       <button id="logoutBtn" class="tab logout" hidden>Sair</button>
     </nav>
     <section id="order" class="pane">
@@ -56,8 +58,9 @@
         <div class="group"><span class="fieldtitle">Data e cardápio</span><div class="dayname" id="menuDay"></div><div id="menuCards" class="menu-cards"></div></div>
         <div id="sideSection" class="group"><span class="fieldtitle">Acompanhamentos</span><p class="muted small">Escolha o que deseja. Selecione apenas um tipo de feijão.</p><div id="sides" class="checkgrid"></div></div>
         <div class="group"><label for="notes">Observações para a cozinha</label><textarea id="notes" rows="3" maxlength="250" placeholder="Ex.: sem cebola, pouco arroz..."></textarea></div>
-        <div class="order-total"><div><span>Valor unitário</span><strong id="unitPrice">R$ 22,00</strong></div><div><span>Taxa da entrega coletiva</span><strong id="feePreview">R$ 8,00</strong></div></div>
-        <p class="muted small">A taxa de entrega é cobrada uma vez por remessa, não por funcionário. O fechamento final é calculado no painel da gestão.</p>
+        <div class="order-total"><div><span>Valor unitário</span><strong id="unitPrice">R$ 22,00</strong></div><div><span>Frete da remessa (cobrado no fechamento)</span><strong id="feePreview">R$ 8,00</strong></div></div>
+        <p class="muted small">Uma única taxa de R$ 8,00 para todos os pedidos de café (fechamento às 08h) e outra para o almoço (fechamento às 13h). A cobrança entra apenas após o horário de fechamento, não por funcionário.</p>
+        <p class="small" id="orderDeadlineInfo" role="status"></p>
         <div id="orderFeedback" class="feedback" role="status" aria-live="polite"></div>
         <div class="actions"><button id="placeBtn" class="primary">Confirmar pedido</button><button id="clearEditBtn" class="secondary" hidden>Cancelar edição</button></div>
       </div>
@@ -99,12 +102,44 @@
           <div><label for="newRole">Perfil de acesso</label><select id="newRole"><option value="colaborador">Colaborador</option><option value="restaurante">Restaurante</option></select></div>
         </div>
         <div class="actions"><button id="createUserBtn" class="primary">Cadastrar na nuvem</button></div>
-        <p class="small muted">A senha não será exibida novamente. Para recuperar o acesso, a gestão poderá redefinir uma nova senha. Não utilize a mesma senha para funcionários diferentes.</p>
+        <p class="small muted">A senha só poderá ser visualizada durante o cadastro ou após uma redefinição. O ADM não consegue recuperar senhas antigas, mas pode gerar uma nova com segurança.</p>
+        <div class="actions"><button type="button" id="generatePassword" class="secondary compact">🎲 Gerar senha forte</button><button type="button" id="toggleNewPassword" class="secondary compact">👁️ Mostrar / ocultar senha</button></div>
+        <div id="oneTimePassword" class="credential-box" hidden>
+          <strong id="oneTimeTitle">Credenciais criadas</strong>
+          <p id="oneTimeCredentials" class="credentials" aria-live="polite"></p>
+          <div class="actions"><button type="button" class="secondary compact" id="copyCredentials">Copiar usuário e senha</button><button type="button" class="secondary compact" id="closeCredentials">Ocultar senha</button></div>
+          <p class="small muted">Mostrada somente nesta tela. Copie e entregue ao funcionário por mensagem privada.</p>
+        </div>
         <div id="usersFeedback" class="feedback" aria-live="polite"></div>
       </div>
       <div class="card">
         <h3>Usuários cadastrados <span id="usersCount" class="counter">0</span></h3>
         <div id="usersList" class="stack"><div class="empty">Carregando lista de usuários...</div></div>
+      </div>
+      <div class="card">
+        <h3>🧹 Zerar registros de teste</h3>
+        <p class="muted">Apaga definitivamente os pedidos, o histórico das alterações dos pedidos e as mensagens do chat para iniciar a operação limpa. Preserva sua conta ADM, os demais cadastros e o registro administrativo da limpeza. Não apaga os logs técnicos mantidos pelo Supabase.</p>
+        <div id="resetPreview" class="small">Clique em Verificar dados para saber quantos registros existem.</div>
+        <div class="actions"><button type="button" id="resetPreviewBtn" class="secondary">Verificar dados</button><button type="button" id="resetDataBtn" class="danger">Apagar pedidos e conversas de teste</button></div>
+        <p class="small muted">Exige confirmação digitando ZERAR TESTES. Use somente antes da entrada em produção. Operação irreversível.</p>
+      </div>
+    </section>
+    <section id="chat" class="pane" hidden>
+      <div class="sectionhead"><div><div class="eyebrow blue">COMUNICAÇÃO DA OBRA</div><h2>Chat com o restaurante</h2><p class="muted">Mensagens privadas entre colaborador, restaurante e gestão RL. Os colaboradores não veem conversas de outros funcionários.</p></div><button id="chatRefresh" class="secondary compact">Atualizar</button></div>
+      <div class="card">
+        <label for="chatThread">Conversa</label><select id="chatThread"><option value="management">RL ↔ Restaurante</option></select>
+        <div id="chatMessages" class="chat-messages" role="log" aria-live="polite"><p class="empty">Abra uma conversa para ver as mensagens.</p></div>
+        <label for="chatInput">Sua mensagem</label><textarea id="chatInput" rows="2" maxlength="1000" placeholder="Digite sua mensagem para o restaurante..."></textarea>
+        <div class="actions"><button type="button" id="chatSend" class="primary">Enviar mensagem</button><span class="small muted" id="chatStatus"></span></div>
+      </div>
+    </section>
+    <section id="security" class="pane" hidden>
+      <div class="sectionhead"><div><div class="eyebrow blue">SEGURANÇA DA CONTA</div><h2>Alterar minha senha</h2><p class="muted">Informe sua senha atual e escolha uma nova. Por segurança, o ADM não pode consultar a senha atual de outras contas.</p></div></div>
+      <div class="card user-form-grid">
+        <div><label for="currentPassword">Senha atual</label><input type="password" id="currentPassword" autocomplete="current-password"></div>
+        <div><label for="ownNewPassword">Nova senha (mínimo 8 caracteres)</label><input type="password" id="ownNewPassword" autocomplete="new-password" minlength="8" maxlength="72"></div>
+        <div><label for="confirmOwnPassword">Confirmar nova senha</label><input type="password" id="confirmOwnPassword" autocomplete="new-password"></div>
+        <div class="actions"><button type="button" id="changeOwnPassword" class="primary">Salvar nova senha</button></div>
       </div>
     </section>
   </div>
@@ -112,8 +147,8 @@
 <footer>RL Engenharia • AMBEV Itapissuma • Horário de Recife/PE</footer>
 <noscript><div class="container notice">Ative o JavaScript no navegador para acessar os pedidos.</div></noscript>
 <script src="../app/config.js?v=2"></script>
-<script src="../app/menu.js?v=2"></script>
-<script src="../app/reports.js?v=2"></script>
-<script src="../app/loader.js?v=4"></script>
+<script src="../app/menu.js?v=3"></script>
+<script src="../app/reports.js?v=3"></script>
+<script src="../app/loader.js?v=5"></script>
 </body>
 </html>
