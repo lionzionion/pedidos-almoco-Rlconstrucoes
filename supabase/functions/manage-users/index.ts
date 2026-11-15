@@ -66,10 +66,47 @@ Deno.serve(async (req) => {
       return reply({ accounts: data || [] });
     }
 
+    if (action === 'create_invite') {
+      const username=normalizedUsername(body.username || body.display_name);
+      const displayName=cleanName(body.display_name);
+      const jobTitle=cleanName(body.job_title).slice(0,80);
+      const company=body.company === 'SOLUTIO' ? 'SOLUTIO' : 'RL';
+      const role=body.role;
+      if(!validUsername(username))return reply({error:'Use um login de 3 a 30 caracteres começando por uma letra.'},400);
+      if(displayName.length<3||displayName.length>80)return reply({error:'Informe o nome com 3 a 80 caracteres.'},400);
+      if(!managedRole(role))return reply({error:'Selecione colaborador ou restaurante.'},400);
+      const {data:existing,error:findError}=await admin.from('profiles')
+        .select('id').eq('username',username).maybeSingle();
+      if(findError)throw findError;
+      if(existing)return reply({error:'Já existe uma conta ativa ou cadastrada com esse login. Use a opção de redefinir senha.'},409);
+      const {data:previous,error:oldError}=await admin.from('staff_invitations')
+        .select('username,redeemed_at').eq('username',username).maybeSingle();
+      if(oldError)throw oldError;
+      if(previous?.redeemed_at)return reply({error:'Este convite já foi utilizado. Verifique o cadastro antes de gerar outro.'},409);
+      // O segredo nunca é gravado em texto, apenas SHA-256 dos 32 bytes aleatórios.
+      const bytes=crypto.getRandomValues(new Uint8Array(32));
+      const token=[...bytes].map(v=>v.toString(16).padStart(2,'0')).join('');
+      const digest=await crypto.subtle.digest('SHA-256',bytes);
+      const token_hash=[...new Uint8Array(digest)].map(v=>v.toString(16).padStart(2,'0')).join('');
+      const expires_at=new Date(Date.now()+7*86400000).toISOString();
+      const {error:saveError}=await admin.from('staff_invitations').upsert({
+        username,display_name:displayName,job_title:jobTitle,company,role,token_hash,
+        expires_at,redeemed_at:null,auth_user_id:null
+      },{onConflict:'username'});
+      if(saveError)throw saveError;
+      await admin.from('account_audit').insert({
+        actor:caller,target:caller,action:'create_invite',
+        details:{username,display_name:displayName,company,role,expires_at}
+      });
+      const link='https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/convite/#convite='+token;
+      return reply({username,display_name:displayName,company,role,link,expires_at,
+        message:'Convite gerado. Copie o link e envie em mensagem privada. O link só será exibido nesta resposta.'},201);
+    }
+
     if (action === 'list_invites') {
       // Nunca devolver token de convite ao navegador, somente estado administrativo.
       const {data,error}=await admin.from('staff_invitations')
-        .select('username,display_name,company,job_title,expires_at,redeemed_at')
+        .select('username,display_name,company,job_title,role,expires_at,redeemed_at')
         .order('company',{ascending:true}).order('display_name',{ascending:true}).limit(500);
       if(error)throw error;
       return reply({invitations:data||[]});
