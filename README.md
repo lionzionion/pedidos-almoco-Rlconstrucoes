@@ -13,7 +13,7 @@ Aplicativo web de gestão de refeições da **RL Engenharia na obra AMBEV Itapis
 | **Demonstração interativa** | [Testar sistema](https://lionzionion.github.io/pedidos-almoco-solutio/demo/) | Pedidos **fictícios**, sem usar o banco real |
 | **Versão anterior** | [Abrir formulário legado](https://lionzionion.github.io/pedidos-almoco-solutio/) | Mantida temporariamente na raiz |
 
-> **ATENÇÃO:** o aplicativo conectado tem backend real, mas ainda precisa da criação dos perfis administrativos e testes end-to-end antes de ser adotado para cobrança de refeições. Para apresentar a solução, utilize `/demo/`.
+> **SITUAÇÃO EM 15/11/2026:** o primeiro acesso ADM foi ativado no Supabase para a conta confirmada de Leandro Dias. A área **Cadastros** já permite criar usuários do restaurante e colaboradores com login e senha. Ainda faltam testes completos com contas separadas e impressões reais antes de usar em cobranças. Para apresentar a solução, utilize `/demo/`.
 
 ## O que já foi implementado
 
@@ -22,10 +22,14 @@ Aplicativo web de gestão de refeições da **RL Engenharia na obra AMBEV Itapis
 - Café completo R$ 17, pão simples R$ 10 e almoço R$ 22.
 - Acompanhamentos de almoço e campo de observações.
 - Painel de preparo do restaurante e atualização Realtime.
-- Perfis de acesso colaborador, restaurante e administrador.
+- Perfis de acesso colaborador, restaurante e administrador (ADM existente liberado no banco).
+- **Cadastro centralizado pelo ADM**, com usuário simples e senha temporária; criação e redefinição protegidas por função Supabase, sem e-mail pessoal dos colaboradores.
+- Desativação, reativação e alteração de perfil com auditoria administrativa.
 - Edição e cancelamento antes do preparo.
 - Arquivamento/restauração administrativos (exclusão lógica e auditada).
 - Relação nominal e fechamento financeiro por data/refeição.
+- **Relatórios diários PDF A4** com logomarca RL, nomes, itens, cancelamentos, subtotal, taxas e total; opção de **Imprimir / Salvar como PDF**.
+- Mapa de produção do restaurante em PDF (pedidos, acompanhamentos, observações e status).
 - Exportação CSV e resumo consolidado para envio manual por WhatsApp.
 - Banco Supabase separado, autenticado, com PostgreSQL e políticas RLS.
 - Demonstração com dados fictícios para reuniões e apresentação no canteiro.
@@ -44,9 +48,9 @@ Aplicativo web de gestão de refeições da **RL Engenharia na obra AMBEV Itapis
 ├── app/             # aplicação conectada a Supabase
 ├── demo/            # demonstração local e fictícia
 ├── produto/         # vitrine comercial do software
-├── supabase/        # schema.sql e realtime.sql
+├── supabase/        # schema, migrações e Edge Function segura manage-users
 ├── docs/            # guias funcionais, técnicos e implantação
-├── tests/           # testes de cardápio e cálculo financeiro
+├── tests/           # testes de cardápio, logo, relatórios e financeiro
 ├── index.html       # formulário anterior preservado
 └── README.md
 ```
@@ -68,7 +72,8 @@ Colaborador ─┐
 Restaurante ─┼──> GitHub Pages (/app) ──> Supabase Auth + API ──> PostgreSQL (RLS)
 Gestão RL  ──┘                               │
                                             └──> Realtime + auditoria
-Gestão RL ──> CSV / resumo WhatsApp (envio manual)
+Gestão RL ──> PDF, impressão, CSV / resumo WhatsApp (envio manual)
+Gestão RL ──> Edge Function manage-users ──> Supabase Auth Admin (servidor)
 ```
 
 ## Regras importantes
@@ -80,13 +85,31 @@ Gestão RL ──> CSV / resumo WhatsApp (envio manual)
 - WhatsApp abre um texto consolidado para confirmação manual pelo usuário.
 - A versão `/demo/` **não** escreve pedidos no banco de dados.
 
-## Próxima etapa para usar na obra
+## Como entrar e cadastrar colaboradores
 
-1. Ajustar URLs de confirmação de e-mail no Supabase.
-2. Cadastrar e promover o gestor à função `admin`.
-3. Cadastrar e promover a proprietária à função `restaurante`.
-4. Fazer testes com dois celulares e validar cancelamento, preparo, entrega, conferência e fechamento.
-5. Definir horário de corte de pedidos e tratamento de remessas extraordinárias.
+1. O **ADM inicial** faz login em [AMBEV Pedidos RL](https://lionzionion.github.io/pedidos-almoco-solutio/app/) com seu e-mail já confirmado e senha existente; sua permissão `admin` está ativa.
+2. Acesse a aba **Cadastros** e cadastre o nome completo, o usuário (ex.: `joao.campos`), uma **senha temporária de pelo menos 8 caracteres** e o perfil `colaborador` ou `restaurante`.
+3. Entregue o usuário e a senha por canal privado; o colaborador entra pelo **usuário + senha**, de qualquer aparelho, sem fornecer e-mail pessoal.
+4. A proprietária do restaurante entra pelo mesmo link e verá automaticamente a aba **Restaurante**.
+5. O ADM pode desativar, reativar, alterar entre os perfis de colaborador/restaurante e redefinir senhas. O primeiro administrador não pode ser desativado pela interface.
+6. A senha nunca é recuperada em texto puro. Quando esquecida, deve ser **redefinida** pela gestão. Alterações ficam no histórico `account_audit`.
+
+**Servidor de gestão:** `supabase/functions/manage-users/index.ts` — autentica o token, confere papel e estado ativo do administrador e usa credenciais privilegiadas **somente no servidor**. O frontend possui apenas chave publicável.
+
+## Relatórios
+
+- **ADM:** Conferência RL → selecione o dia e a refeição → **Baixar PDF** ou **Imprimir relatório**. O documento contém a lista nominal, situação dos pedidos, valores e taxas do dia. Pedidos cancelados ou arquivados são identificados e excluídos da soma.
+- **Restaurante:** painel Restaurante → escolha o dia e a refeição → **Baixar PDF da produção** ou **Imprimir lista**, com acompanhantes e observações.
+- A opção Imprimir permite escolher **Salvar como PDF** no navegador.
+- Os PDFs são gerados no próprio navegador; o arquivo não é publicado automaticamente na internet. Os dados vêm do Supabase, protegidos pelas políticas de acesso.
+
+## Pendências antes de usar em cobrança real
+
+1. Criar no painel ADM um usuário **restaurante** e um usuário **colaborador de teste** com senhas individuais (não existem contas fictícias no banco).
+2. Entrar simultaneamente em dois celulares distintos, validar status em tempo real, edição, cancelamento e saída.
+3. Verificar download e impressão PDF em Android, iOS e computador; conferir valores e nomes.
+4. Definir horários de corte e regra financeira de pedidos em preparo cancelados e de remessas extras.
+5. Recomendado: habilitar proteção contra senhas vazadas em Supabase Auth → segurança de senhas.
 
 ---
 
