@@ -1,197 +1,106 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#102a25">
-  <meta name="description" content="Escolha seu almoço e envie o pedido pelo WhatsApp.">
-  <title>Almoço do dia | Solutio & RL</title>
-  <style>
-    :root { --bg:#f5f7f5; --ink:#173a33; --deep:#102a25; --muted:#63716d; --accent:#167c58; --line:#dae3dd; --white:#fff; --good:#dff3e8; --warn:#fff1da; }
-    * { box-sizing:border-box; }
-    body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; color:var(--ink); background:var(--bg); line-height:1.42; }
-    header { background:linear-gradient(135deg,#102a25,#1d604d); color:white; padding:30px 18px 76px; }
-    .wrap { max-width:620px; margin:0 auto; }
-    .eyebrow { font-size:12px; letter-spacing:.14em; text-transform:uppercase; font-weight:800; color:#b4dec7; }
-    h1 { font-size:clamp(26px,6vw,36px); line-height:1.1; margin:10px 0 8px; letter-spacing:-.04em; }
-    header p { margin:0; color:#dfede6; font-size:15px; }
-    main { padding:0 14px 40px; margin-top:-48px; }
-    .panel { background:white; padding:24px 20px; border:1px solid var(--line); border-radius:20px; box-shadow:0 12px 40px rgba(15,43,33,.08); }
-    h2 { margin:0 0 6px; font-size:20px; letter-spacing:-.02em; }
-    .help { font-size:13px; color:var(--muted); margin:0 0 20px; }
-    label.field { display:block; font-weight:750; font-size:14px; margin:16px 0 8px; }
-    input[type=text], select { display:block; width:100%; border:1px solid #cddcd3; border-radius:12px; padding:14px; font-size:16px; background:white; color:var(--ink); outline-offset:3px; }
-    select { appearance:auto; }
-    .choices-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:26px; }
-    .choices-head h2 { margin:0; }
-    .counter { background:#ecf4ef; border-radius:30px; padding:6px 10px; font-size:12px; font-weight:800; white-space:nowrap; }
-    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:16px 0 4px; }
-    .choice { position:relative; display:flex; align-items:center; gap:10px; padding:14px 12px; border:1.5px solid var(--line); border-radius:14px; cursor:pointer; min-height:67px; font-weight:650; font-size:14px; transition:.12s ease; }
-    .choice.selected { border-color:#1d8b61; background:#e8f7ee; }
-    .choice input { width:20px; height:20px; flex-shrink:0; accent-color:var(--accent); }
-    .footnote { font-size:12px; color:var(--muted); padding:5px 0 0; }
-    .preview { white-space:pre-line; border-radius:14px; background:#f2f6f3; padding:16px; font-size:14px; color:#244138; margin-top:16px; border:1px solid var(--line); }
-    .btn { border:0; border-radius:14px; min-height:53px; padding:14px 18px; font-size:16px; font-weight:800; width:100%; cursor:pointer; }
-    .primary { background:#1d9b5a; color:white; margin-top:18px; }
-    .primary:disabled { opacity:.45; cursor:not-allowed; }
-    .secondary { background:#eaf2ec; color:var(--ink); margin-top:9px; }
-    .message { padding:13px 15px; border-radius:12px; font-size:14px; font-weight:600; margin-top:12px; display:none; }
-    .message.show { display:block; }
-    .error { background:#fff0e9; color:#8b3b21; }
-    .success { background:var(--good); color:#17613e; }
-    .smallprint { margin-top:16px; color:var(--muted); font-size:12px; text-align:center; }
-    .pill { display:inline-block; padding:5px 9px; border-radius:30px; background:#2c755a; color:white; font-size:13px; font-weight:750; margin-top:18px; }
-    .rl-legacy-logo{display:block;width:220px;max-width:85%;height:auto;margin:0 0 18px;object-fit:contain}
-    @media (max-width:380px) { .grid{grid-template-columns:1fr;} .panel{padding:20px 15px} }
-  </style>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="AMBEV Pedidos RL: gestão digital de café da manhã e almoço para equipes de obra, com cardápio, restaurante em tempo real e conferência de pagamentos.">
+<meta name="theme-color" content="#052f4e">
+<title>RL Engenharia | Pedidos, restaurante e conferência de refeições</title>
+<link rel="stylesheet" href="./produto/style.css">
 <link rel="icon" type="image/webp" href="./assets/rl-logo.webp">
+<meta property="og:image" content="https://lionzionion.github.io/pedidos-almoco-solutio/assets/rl-logo.webp">
+<link rel="canonical" href="https://lionzionion.github.io/pedidos-almoco-solutio/">
+<meta property="og:title" content="RL Engenharia | Gestão digital de refeições em obras">
+<meta property="og:description" content="Pedidos por colaborador, painel de restaurante e conferência diária com relatórios PDF.">
+<meta property="og:type" content="website">
+<script src="./assets/clean-links.js" defer></script>
 </head>
 <body>
-  <header><div class="wrap">
-    <img class="rl-legacy-logo" src="./assets/rl-logo.webp" alt="RL Engenharia — Fazendo Acontecer" width="220" height="64">
-    <div class="eyebrow">FORMULÁRIO ANTERIOR • RL ENGENHARIA</div>
-    <h1>🍽️ Pedido de almoço</h1>
-    <p>Preencha em menos de um minuto e envie seu pedido pelo WhatsApp.</p>
-    <div class="pill" id="datePill"></div>
-  </div></header>
-
-  <main><div class="wrap"><section class="panel">
-    <h2>Seus dados</h2>
-    <p class="help">Informe seu nome e a empresa para identificar corretamente o pedido.</p>
-    <label class="field" for="fullName">Nome do funcionário</label>
-    <input id="fullName" type="text" maxlength="80" autocomplete="name" placeholder="Digite seu nome completo">
-    <label class="field" for="company">Empresa</label>
-    <select id="company">
-      <option value="">Selecione sua empresa</option>
-      <option value="SOLUTIO">SOLUTIO</option>
-      <option value="RL">RL</option>
-    </select>
-
-    <div class="choices-head">
-      <h2>Escolha as carnes</h2><span class="counter" id="counter">0 de 2 selecionadas</span>
+<header class="topbar">
+  <div class="container topinner"><a class="brand" href="#inicio" aria-label="RL Engenharia — início"><img src="./assets/rl-logo.webp" alt="RL Engenharia — Fazendo Acontecer" width="220" height="64"></a>
+  <nav><a href="#solucao">Solução</a><a href="#funcionamento">Como funciona</a><a href="#conferencia">Conferência</a><a class="navcta" href="./acesso/">Acessar app</a></nav></div>
+</header>
+<main id="inicio">
+  <section class="hero"><div class="container hero-grid"><div class="herotext">
+    <div class="eyebrow"><span class="dot"></span> UMA SOLUÇÃO DIGITAL DA RL ENGENHARIA</div>
+    <h1>Refeições na obra.<br><span>Pedidos organizados.</span><br>Gestão sob controle.</h1>
+    <p>Do café da manhã ao almoço: cada colaborador faz seu pedido, o restaurante recebe em um painel único e a gestão da obra confere nomes, refeições e valores antes de pagar.</p>
+    <div class="buttons"><a class="button mainbtn" href="./acesso/">Entrar no aplicativo <span aria-hidden="true">↗</span></a><a class="button outline" href="./demo/">Testar demonstração <span aria-hidden="true">→</span></a></div>
+    <p class="smallnote"><span class="bullet">●</span> Aplicativo em fase de testes operacionais. A demonstração usa dados fictícios.</p>
+    <div class="mini-stats"><span><b>3</b> perfis de acesso</span><span><b>7</b> dias de cardápio</span><span><b>1</b> fechamento consolidado</span></div>
+  </div><div class="visual" aria-label="Exemplo ilustrativo dos painéis de pedidos">
+    <div class="phone">
+      <div class="phone-top"><span>9:41</span><span>◕ ◔ ▮</span></div>
+      <div class="phone-brand"><img src="./assets/rl-logo.webp" alt="RL Engenharia" width="220" height="64"></div>
+      <div class="mock-head"><small>AMBEV | PEDIDOS RL</small><h3>Café e almoço</h3><p>Cardápio do dia</p></div>
+      <div class="mock-choice"><span class="mealicon">🍛</span><span>Almoço<br><small>R$ 22,00</small></span><span class="mock-check">✓</span></div>
+      <div class="mock-choice"><span class="mealicon">☀️</span><span>Café completo<br><small>R$ 17,00</small></span><span class="plus">+</span></div>
+      <div class="mock-cta">Confirmar pedido <span>→</span></div>
+      <div class="mock-confirm">✓ Pedido registrado com sucesso!</div>
     </div>
-    <p class="help" style="margin-top:6px">Selecione <strong>uma ou duas</strong> opções do cardápio.</p>
-    <div class="grid" id="meatGrid"></div>
-    <p class="footnote">Máximo de 2 opções por funcionário.</p>
-
-    <label class="field" style="margin-top:23px">Resumo do pedido</label>
-    <div id="preview" class="preview" aria-live="polite"></div>
-    <div id="feedback" class="message" role="status" aria-live="polite"></div>
-    <button class="btn primary" id="sendBtn" type="button">📲 Enviar pedido pelo WhatsApp</button>
-    <button class="btn secondary" id="copyBtn" type="button">📋 Copiar mensagem do pedido</button>
-    <p class="smallprint">O envio só é concluído quando você confirma a mensagem no WhatsApp. Este formulário não armazena pedidos em servidor.</p>
-  </section></div></main>
-
-  <script>
-    (() => {
-      const meats = [
-        'Frango assado', 'Linguiça toscana', 'Porco assado',
-        'Fraldinha', 'Maminha', 'Galinha guisada',
-        'Fígado acebolado', 'Guisado de boi', 'Carneiro assado'
-      ];
-      const now = new Date();
-      const dateLabel = new Intl.DateTimeFormat('pt-BR', {
-        timeZone: 'America/Recife', day: '2-digit', month: '2-digit', year: 'numeric'
-      }).format(now);
-      const fullDateLabel = new Intl.DateTimeFormat('pt-BR', {
-        timeZone: 'America/Recife', weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
-      }).format(now);
-      document.getElementById('datePill').textContent =
-        fullDateLabel.charAt(0).toUpperCase() + fullDateLabel.slice(1);
-      const params = new URLSearchParams(location.search);
-      const phone = (params.get('dest') || '').replace(/\D/g, '');
-      const fullName = document.getElementById('fullName');
-      const company = document.getElementById('company');
-      const grid = document.getElementById('meatGrid');
-      const preview = document.getElementById('preview');
-      const counter = document.getElementById('counter');
-      const sendBtn = document.getElementById('sendBtn');
-      const copyBtn = document.getElementById('copyBtn');
-      const feedback = document.getElementById('feedback');
-      const selected = new Set();
-      const clean = t => t.replace(/\s+/g, ' ').trim();
-
-      function showFeedback(text, isError = false) {
-        feedback.textContent = text;
-        feedback.className = `message show ${isError ? 'error' : 'success'}`;
-      }
-      function orderText() {
-        const name = clean(fullName.value) || '(não informado)';
-        const org = company.value || '(não informada)';
-        const choices = [...selected];
-        return `🍽️ *PEDIDO DE ALMOÇO – ${dateLabel}*\n\n👤 *Nome:* ${name}\n🏢 *Empresa:* ${org}\n🥩 *1ª opção:* ${choices[0] || '(não selecionada)'}${choices[1] ? '\n🥩 *2ª opção:* ' + choices[1] : ''}\n\n✅ Pedido preenchido`;
-      }
-      function render() {
-        counter.textContent = `${selected.size} de 2 selecionadas`;
-        preview.textContent = orderText();
-        document.querySelectorAll('.choice').forEach(label => {
-          const checkbox = label.querySelector('input');
-          label.classList.toggle('selected', selected.has(checkbox.value));
-          checkbox.checked = selected.has(checkbox.value);
-          checkbox.disabled = selected.size >= 2 && !selected.has(checkbox.value);
-        });
-      }
-      function validate() {
-        if (clean(fullName.value).length < 2) { fullName.focus(); showFeedback('Informe seu nome para identificar o pedido.', true); return false; }
-        if (!company.value) { company.focus(); showFeedback('Escolha SOLUTIO ou RL.', true); return false; }
-        if (selected.size === 0) { showFeedback('Selecione pelo menos uma carne.', true); return false; }
-        feedback.className = 'message';
-        return true;
-      }
-      meats.forEach((meat, i) => {
-        const label = document.createElement('label');
-        label.className = 'choice';
-        const input = document.createElement('input');
-        input.type = 'checkbox'; input.value = meat; input.name = 'carne'; input.id = `meat-${i}`;
-        const span = document.createElement('span'); span.textContent = meat;
-        label.append(input, span);
-        input.addEventListener('change', () => {
-          if (input.checked) {
-            if (selected.size >= 2) { input.checked = false; showFeedback('Você pode escolher no máximo duas opções.', true); return; }
-            selected.add(meat);
-          } else selected.delete(meat);
-          feedback.className = 'message';
-          render();
-        });
-        grid.appendChild(label);
-      });
-      fullName.addEventListener('input', render);
-      company.addEventListener('change', render);
-      sendBtn.addEventListener('click', async () => {
-        if (!validate()) return;
-        const message = orderText();
-        if (phone.length >= 12 && phone.length <= 15) {
-          location.href = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-          showFeedback('Confirme o envio da mensagem no WhatsApp.');
-          return;
-        }
-        // No destination defined: share sheet lets employee choose the organizer's WhatsApp chat.
-        if (navigator.share) {
-          try {
-            await navigator.share({ text: message });
-            showFeedback('Confirme se a mensagem foi enviada ao responsável pelos pedidos.');
-          } catch (e) {
-            if (e && e.name !== 'AbortError') showFeedback('Não foi possível compartilhar. Use o botão “Copiar mensagem”.', true);
-          }
-        } else {
-          window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
-          showFeedback('Selecione o contato responsável e confirme o envio no WhatsApp.');
-        }
-      });
-      copyBtn.addEventListener('click', async () => {
-        if (!validate()) return;
-        try {
-          await navigator.clipboard.writeText(orderText());
-          showFeedback('Pedido copiado! Cole na conversa do responsável pelo almoço.');
-        } catch (_) {
-          const ta = document.createElement('textarea');
-          ta.value = orderText(); document.body.append(ta); ta.select();
-          const ok = document.execCommand('copy'); ta.remove();
-          showFeedback(ok ? 'Pedido copiado! Cole no WhatsApp.' : 'Não foi possível copiar automaticamente.', !ok);
-        }
-      });
-      render();
-    })();
-  </script>
-</body>
-</html>
+    <div class="floatcard float1"><span class="greenicon">✓</span><div><strong>Pedido recebido</strong><small>Atualização no restaurante</small></div></div>
+    <div class="floatcard float2"><span class="blueicon">▤</span><div><strong>Conferência por nome</strong><small>Valores em R$ + entrega</small></div></div>
+  </div></div></section>
+  <section class="ribbon"><div class="container"><span>COLABORADOR</span><i></i><span>RESTAURANTE</span><i></i><span>GESTÃO DA OBRA</span><i></i><span>FECHAMENTO DIÁRIO</span></div></section>
+  <section class="section" id="solucao"><div class="container"><div class="section-eyebrow">O PROBLEMA QUE RESOLVEMOS</div><h2>Chega de conferir pedidos em dezenas de mensagens.</h2><p class="lead">Uma operação de refeições na obra precisa de rastreabilidade. O sistema reúne pedidos, alterações e cancelamentos em um só lugar para reduzir retrabalho na conferência.</p>
+  <div class="grid3">
+    <article class="feature"><div class="featureicon">👷</div><h3>Para o colaborador</h3><p>Escolhe o prato do dia, marca acompanhamentos, escreve observações e recebe confirmação do pedido.</p><span class="featuretag">Pedido individual</span></article>
+    <article class="feature"><div class="featureicon">👩‍🍳</div><h3>Para o restaurante</h3><p>Visualiza todos os pedidos por refeição, acompanha alterações e marca cada um como em preparo ou entregue.</p><span class="featuretag">Painel centralizado</span></article>
+    <article class="feature"><div class="featureicon">📊</div><h3>Para a gestão RL</h3><p>Confere nomes, pratos, quantidades, cancelamentos, taxas de entrega e valores totais do dia.</p><span class="featuretag">Conferência financeira</span></article>
+  </div></div></section>
+  <section class="section tinted" id="funcionamento"><div class="container"><div class="section-eyebrow">COMO FUNCIONA</div><h2>Um processo simples, do pedido ao pagamento.</h2>
+  <div class="steps"><article><div class="stepno">01</div><h3>Escolher</h3><p>O colaborador acessa o cardápio do dia e escolhe café da manhã ou almoço.</p></article><article><div class="stepno">02</div><h3>Registrar</h3><p>O pedido fica salvo com nome, prato, acompanhamentos, data e horário.</p></article><article><div class="stepno">03</div><h3>Preparar</h3><p>O restaurante acompanha os pedidos em seu próprio painel, em tempo real.</p></article><article><div class="stepno">04</div><h3>Conferir</h3><p>A gestão exporta a relação nominal e apura o total antes do pagamento.</p></article></div></div></section>
+  <section class="section" id="conferencia"><div class="container compare-grid"><div><div class="section-eyebrow">CONFERÊNCIA DE REFEIÇÕES</div><h2>Números claros para decisões mais seguras.</h2><p class="lead">A cobrança é calculada por refeição. A taxa de entrega é aplicada à remessa coletiva, uma vez por período no fechamento padrão.</p>
+  <div class="pricing"><div><span>Café completo</span><strong>R$ 17,00</strong></div><div><span>Café simples com pão</span><strong>R$ 10,00</strong></div><div><span>Almoço</span><strong>R$ 22,00</strong></div><div><span>Entrega café</span><strong>R$ 12,00</strong></div><div><span>Entrega almoço (seg.–sex.)</span><strong>R$ 8,00</strong></div><div><span>Entrega almoço (sáb.–dom.)</span><strong>R$ 12,00</strong></div></div>
+  <small>Valores fornecidos para a operação RL em 15/11/2026. Taxas extras por múltiplas remessas requerem lançamento específico.</small>
+  </div><div class="billing">
+    <div class="billingtop"><div><span>FECHAMENTO DIÁRIO</span><h3>Exemplo de conferência</h3></div><span class="labeldemo">DADOS FICTÍCIOS</span></div>
+    <div class="billingstats"><div><b>03</b><small>Cafés</small></div><div><b>04</b><small>Almoços</small></div></div>
+    <div class="billingline"><span>3 cafés completos</span><strong>R$ 51,00</strong></div><div class="billingline"><span>4 almoços</span><strong>R$ 88,00</strong></div><div class="billingline"><span>Entrega café</span><strong>R$ 12,00</strong></div><div class="billingline"><span>Entrega almoço (dia útil)</span><strong>R$ 8,00</strong></div>
+    <div class="billingtotal"><span>Total ilustrativo</span><strong>R$ 159,00</strong></div>
+    <p>Cancelamentos e arquivamentos são identificados e retirados do total ativo para conferência.</p>
+  </div></div></section>
+  <section class="section tinted"><div class="container"><div class="section-eyebrow">TECNOLOGIA E RASTREABILIDADE</div><h2>Da planilha improvisada a um sistema com permissões.</h2><div class="grid3"><div class="techcard"><b>Frontend responsivo</b><p>HTML, CSS e JavaScript, acessível de celular ou computador.</p></div><div class="techcard"><b>Supabase PostgreSQL</b><p>Armazenamento compartilhado de usuários, pedidos e histórico de mudanças.</p></div><div class="techcard"><b>Autenticação e RLS</b><p>Regras de acesso para colaborador, restaurante e administração da RL.</p></div></div><p class="smallnote">O banco de dados foi provisionado. A operação com usuários reais exige testes completos de acesso, preparo, cancelamento e fechamento.</p></div></section>
+  <section id="compartilhar" class="share-section">
+  <div class="container share-grid">
+    <div>
+      <div class="section-eyebrow">ACESSO À PLATAFORMA</div>
+      <h2>Um único endereço para toda a equipe.</h2>
+      <p>O colaborador, a proprietária do restaurante e a administração entram pelo mesmo link. Cada usuário vê somente as funções autorizadas para seu perfil.</p>
+      <p class="share-note">Para entrar é necessário receber usuário e senha da gestão RL. O acesso é protegido por autenticação.</p>
+    </div>
+    <div class="share-card">
+      <label for="shareLink">Link para colaboradores e restaurante</label>
+      <input id="shareLink" type="text" readonly value="https://lionzionion.github.io/pedidos-almoco-solutio/acesso/" aria-label="Link de acesso do aplicativo">
+      <div class="share-actions">
+        <button type="button" class="button mainbtn" id="copyShareLink">Copiar link</button>
+        <button type="button" class="button share-whatsapp" id="sendWhatsapp">Enviar pelo WhatsApp</button>
+      </div>
+      <p class="share-feedback" id="shareFeedback" role="status" aria-live="polite">Use esse endereço para compartilhar o acesso — sem dados de login incluídos.</p>
+    </div>
+  </div>
+</section>
+<section class="cta"><div class="container"><span class="section-eyebrow">CONHEÇA NA PRÁTICA</span><h2>Veja a solução funcionando.</h2><p>Você pode entrar no aplicativo com cadastro ou explorar uma demonstração interativa com pedidos fictícios.</p><div class="buttons center"><a class="button mainbtn" href="./acesso/">Acessar o aplicativo ↗</a><a class="button outline light" href="./demo/">Explorar demonstração →</a><a class="button outline light" href="https://github.com/lionzionion/pedidos-almoco-solutio">Ver projeto no GitHub →</a></div></div></section>
+</main>
+<footer><div class="container footerinner"><img src="./assets/rl-logo.webp" alt="RL Engenharia — Fazendo Acontecer" width="220" height="64"><span>AMBEV | Pedidos RL • Projeto demonstrativo 2026</span></div></footer>
+<script>
+(() => {
+  const input=document.getElementById('shareLink');
+  const status=document.getElementById('shareFeedback');
+  const accessURL=new URL(document.querySelector('.navcta').getAttribute('href'),location.href).href;
+  input.value=accessURL;
+  document.getElementById('copyShareLink').addEventListener('click',async()=>{
+    try {
+      await navigator.clipboard.writeText(accessURL);
+      status.textContent='Link copiado! Envie pelo WhatsApp ou pelo grupo da equipe.';
+    } catch {
+      input.select();
+      status.textContent='Copie o endereço selecionado e envie ao colaborador.';
+    }
+  });
+  document.getElementById('sendWhatsapp').addEventListener('click',()=>{
+    const text='RL Engenharia | Pedidos de refeições\nAcesse o sistema para solicitar café da manhã ou almoço:\n'+accessURL+'\nUse o usuário e a senha fornecidos pela administração RL.';
+    window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank','noopener,noreferrer');
+  });
+})();
+</script>
+</body></html>
