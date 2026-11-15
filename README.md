@@ -8,7 +8,7 @@
 
 **Projeto-piloto: obra AMBEV, Itapissuma — Pernambuco.**
 
-[**Conhecer a solução**](https://lionzionion.github.io/pedidos-almoco-solutio/) · [**Acessar o aplicativo**](https://lionzionion.github.io/pedidos-almoco-solutio/acesso/) · [**Testar demonstração**](https://lionzionion.github.io/pedidos-almoco-solutio/demo/)
+[**Conhecer a solução**](https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/) · [**Acessar o aplicativo**](https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/acesso/) · [**Testar demonstração**](https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/demo/)
 
 ![JavaScript](https://img.shields.io/badge/JavaScript-Frontend-F7DF1E?logo=javascript&logoColor=black)
 ![Supabase](https://img.shields.io/badge/Supabase-Auth%20%2B%20PostgreSQL-3ECF8E?logo=supabase&logoColor=white)
@@ -50,11 +50,11 @@ flowchart LR
 
 | Destino | Endereço | Indicação |
 |---|---|---|
-| **Portal do produto** | [rl-pedidos · apresentação](https://lionzionion.github.io/pedidos-almoco-solutio/) | Apresentações, portfólio e demonstração da solução |
-| **Acesso único** | [Entrar no RL Pedidos](https://lionzionion.github.io/pedidos-almoco-solutio/acesso/) | Colaboradores, restaurante e administração |
-| **Demo interativa** | [Explorar versão fictícia](https://lionzionion.github.io/pedidos-almoco-solutio/demo/) | Testes e apresentações sem alterar o banco real |
-| **Aplicação original** | [Rota técnica do aplicativo](https://lionzionion.github.io/pedidos-almoco-solutio/app/) | Mesmo sistema autenticado |
-| **Formulário histórico** | [Versão anterior preservada](https://lionzionion.github.io/pedidos-almoco-solutio/legado/) | Compatibilidade e registro da evolução do projeto |
+| **Portal do produto** | [rl-pedidos · apresentação](https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/) | Apresentações, portfólio e demonstração da solução |
+| **Acesso único** | [Entrar no RL Pedidos](https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/acesso/) | Colaboradores, restaurante e administração |
+| **Demo interativa** | [Explorar versão fictícia](https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/demo/) | Testes e apresentações sem alterar o banco real |
+| **Aplicação original** | [Rota técnica do aplicativo](https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/app/) | Mesmo sistema autenticado |
+| **Formulário histórico** | [Versão anterior preservada](https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/legado/) | Compatibilidade e registro da evolução do projeto |
 
 **Importante:** o aplicativo utiliza autenticação e está em **fase de homologação operacional**. A demonstração é isolada, utiliza dados fictícios e não envia pedidos ao restaurante.
 
@@ -143,7 +143,7 @@ Supabase PostgreSQL + Row Level Security
 
 ### Demonstração para portfólio
 
-1. Abra [a demonstração](https://lionzionion.github.io/pedidos-almoco-solutio/demo/).
+1. Abra [a demonstração](https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/demo/).
 2. Escolha **Colaborador**, monte uma refeição e registre um pedido fictício.
 3. Alterne para **Restaurante** e acompanhe as solicitações.
 4. Abra **Gestão RL** para visualizar o fechamento e a relação nominal.
@@ -153,8 +153,8 @@ A demo não grava dados no Supabase real.
 ### Desenvolvimento local
 
 ```bash
-git clone https://github.com/lionzionion/pedidos-almoco-solutio.git
-cd pedidos-almoco-solutio
+git clone https://github.com/lionzionion/pedidos-almoco-Rlconstrucoes.git
+cd pedidos-almoco-Rlconstrucoes
 python -m http.server 8000
 ```
 
