@@ -2,7 +2,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 global.window = {};
-require('../menu.js');
+require('../app/menu.js');
 const M = global.window.RL_MENU;
 const week = ['2026-11-15','2026-11-16','2026-11-17','2026-11-18','2026-11-19','2026-11-20','2026-11-21'];
 test('todos os 7 dias possuem 3 opções de café (incluindo pão simples) e 3 almoços',()=>{
