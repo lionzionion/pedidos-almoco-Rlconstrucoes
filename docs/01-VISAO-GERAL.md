@@ -20,9 +20,9 @@ Pedidos de café da manhã e almoço feitos de modo disperso por mensagens são 
 - [Banco Supabase dedicado](https://supabase.com/dashboard/project/dpmofhdaefcqxohuhkfr)
 
 Em GitHub Pages, os três primeiros endereços equivalem a:
-- https://lionzionion.github.io/pedidos-almoco-solutio/
-- https://lionzionion.github.io/pedidos-almoco-solutio/acesso/
-- https://lionzionion.github.io/pedidos-almoco-solutio/demo/
+- https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/
+- https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/acesso/
+- https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/demo/
 
 ## Diferenciais operacionais
 
