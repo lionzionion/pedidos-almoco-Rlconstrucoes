@@ -45,6 +45,11 @@
       return;
     }
     $('demo').hidden=true;
+    $('login').hidden=false;
+    $('loginBtn').disabled=false;
+    const boot=$('bootStatus');
+    if(boot)boot.hidden=true;
+    window.RL_APP_BOOTED=true;
     client.auth.getUser().then(({data,error}) => { if(error && !/Auth session missing/i.test(error.message||'')) fail(error); return setUser(data?.user || null); }).catch(fail);
     client.auth.onAuthStateChange((_event,session) => { setTimeout(()=>setUser(session?.user || null),0); });
     client.channel('rl-order-updates').on('postgres_changes', {event:'*',schema:'public',table:'orders'}, () => reload()).subscribe();
@@ -420,6 +425,7 @@
   ['adminDate','adminMeal'].forEach(id => $(id).addEventListener('change',renderAdmin));
   $('csvBtn').addEventListener('click',downloadCsv);
   $('whatsBtn').addEventListener('click',sendSummary);
-  $('whatsPhone').value=localStorage.getItem('rl-whats-dest')||'';
+  try { $('whatsPhone').value=localStorage.getItem('rl-whats-dest')||''; }
+  catch { $('whatsPhone').value=''; }
   begin();
 })();
