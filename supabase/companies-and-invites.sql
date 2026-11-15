@@ -41,5 +41,7 @@ CREATE TABLE IF NOT EXISTS public.staff_invitations (
 );
 ALTER TABLE public.staff_invitations ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.staff_invitations FROM PUBLIC, anon, authenticated;
+DROP POLICY IF EXISTS staff_invitations_deny_clients ON public.staff_invitations;
+CREATE POLICY staff_invitations_deny_clients ON public.staff_invitations FOR ALL TO authenticated USING(false) WITH CHECK(false);
 -- Somente a Edge Function autenticada com SERVICE_ROLE consulta e consome convites.
 -- Os links pessoais distribuem apenas token criptográfico, guardado como SHA-256 no banco.
