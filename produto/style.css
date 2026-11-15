@@ -7,3 +7,19 @@
 .phone-brand img{display:block;max-width:160px;width:100%;height:auto}
 .footerinner>img{width:190px;max-width:100%;height:auto;object-fit:contain}
 @media(max-width:620px){.topinner>.brand{padding:4px 6px}.topinner>.brand img{width:min(46vw,168px)}}
+
+
+/* Área de compartilhamento — portal RL */
+.share-section{background:#eff6f9;padding:78px 0}
+.share-grid{display:grid;grid-template-columns:1fr 1fr;gap:46px;align-items:center}
+.share-grid h2{font-size:clamp(28px,3vw,39px);line-height:1.18;margin:13px 0 15px;letter-spacing:-.03em;color:#082f4b}
+.share-grid p{color:#587487;font-size:15px}
+.share-grid .share-note{font-size:13px;color:#688496}
+.share-card{border:1px solid #d6e5eb;border-radius:20px;background:#fff;padding:24px;box-shadow:0 15px 45px #153c5217}
+.share-card label{display:block;font-weight:800;font-size:13px;color:#284b60;margin-bottom:10px}
+.share-card input{width:100%;border:1px solid #c4d7e0;border-radius:10px;background:#f8fbfd;color:#164663;font-size:12px;padding:14px 13px;min-width:0}
+.share-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.share-actions .button{border:0;cursor:pointer;padding:12px 15px;font:inherit;font-weight:800;font-size:13px}
+.share-whatsapp{background:#e7f5ed;color:#176538}
+.share-feedback{font-size:12px!important;margin:12px 0 0}
+@media(max-width:800px){.share-grid{grid-template-columns:1fr;gap:20px}.share-section{padding:54px 0}}
