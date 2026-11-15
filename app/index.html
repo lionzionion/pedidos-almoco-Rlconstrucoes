@@ -23,11 +23,10 @@
     <div class="login-logo"><img src="../assets/rl-logo.webp" alt="RL Engenharia — Fazendo Acontecer" width="220" height="64"></div>
     <h2>Acesso ao sistema</h2>
     <p class="muted">Entre com seu cadastro para acompanhar seus pedidos e receber confirmação.</p>
-    <label for="loginEmail">E-mail</label><input id="loginEmail" type="email" autocomplete="email" placeholder="voce@exemplo.com">
-    <label for="loginPassword">Senha</label><input id="loginPassword" type="password" autocomplete="current-password" minlength="6" placeholder="Sua senha">
-    <label for="loginName">Nome completo (somente no primeiro cadastro)</label><input id="loginName" type="text" autocomplete="name" placeholder="Seu nome completo" maxlength="80">
-    <div class="actions"><button id="loginBtn" class="primary">Entrar</button><button id="signupBtn" class="secondary">Criar cadastro</button></div>
-    <p class="small muted">Apenas a administração poderá conceder acesso ao painel do restaurante ou à gestão.</p>
+    <label for="loginEmail">Usuário ou e-mail do administrador</label><input id="loginEmail" type="text" autocomplete="username" placeholder="Ex.: joao.campos" maxlength="120">
+    <label for="loginPassword">Senha</label><input id="loginPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Sua senha">
+    <div class="actions"><button id="loginBtn" class="primary">Entrar no aplicativo</button></div>
+    <p class="small muted">Os colaboradores e o restaurante recebem usuário e senha cadastrados pela gestão RL. O administrador inicial entra com seu e-mail cadastrado.</p>
   </section>
   <section id="demo" class="card demo-card" hidden>
     <strong>Prévia local — ainda não conectada ao banco de dados.</strong>
@@ -41,6 +40,7 @@
       <button class="tab" data-tab="mine">🧾 Meus pedidos</button>
       <button class="tab" data-tab="restaurant">👩‍🍳 Restaurante</button>
       <button class="tab" data-tab="admin">📊 Conferência RL</button>
+      <button class="tab" data-tab="users">👥 Cadastros</button>
       <button id="logoutBtn" class="tab logout" hidden>Sair</button>
     </nav>
     <section id="order" class="pane">
@@ -63,16 +63,37 @@
     <section id="restaurant" class="pane" hidden>
       <div class="sectionhead"><div><div class="eyebrow blue">PAINEL DO RESTAURANTE</div><h2>Pedidos recebidos</h2><p class="muted">Os pedidos aparecem aqui sem envio individual pelo WhatsApp.</p></div><button id="restaurantRefresh" class="secondary compact">Atualizar</button></div>
       <div class="toolbar"><label for="restaurantDate">Dia</label><input id="restaurantDate" type="date"><label for="restaurantMeal">Refeição</label><select id="restaurantMeal"><option value="todos">Todas</option><option value="cafe">Café</option><option value="almoco">Almoço</option></select></div>
-      <div id="restaurantStats" class="metricrow"></div><div id="restaurantList" class="stack"></div>
+      <div id="restaurantStats" class="metricrow"></div>
+      <div class="actions report-actions"><button id="restaurantPdfBtn" class="secondary">📄 Baixar PDF da produção</button><button id="restaurantPrintBtn" class="secondary">🖨️ Imprimir lista</button></div>
+      <div id="restaurantList" class="stack"></div>
     </section>
     <section id="admin" class="pane" hidden>
       <div class="sectionhead"><div><div class="eyebrow blue">ADMINISTRAÇÃO RL</div><h2>Conferência e pagamento</h2><p class="muted">Listagem nominal, conferência das remessas, cancelamentos e registros arquivados.</p></div><button id="adminRefresh" class="secondary compact">Atualizar</button></div>
       <div class="toolbar"><label for="adminDate">Dia da conferência</label><input id="adminDate" type="date"><label for="adminMeal">Refeição</label><select id="adminMeal"><option value="todos">Todas</option><option value="cafe">Café</option><option value="almoco">Almoço</option></select></div>
       <div id="adminStats" class="metricrow"></div>
       <div class="card"><h3>Relação nominal</h3><div class="table-scroll"><table><thead><tr><th>Colaborador</th><th>Refeição</th><th>Pedido</th><th>Status</th><th>Valor</th><th>Ação</th></tr></thead><tbody id="adminRows"></tbody></table></div><p class="small muted">Arquivar remove da lista ativa, mas mantém histórico para auditoria. O pedido pode ser restaurado.</p>
-      <div class="actions"><button id="csvBtn" class="secondary">Exportar CSV</button><button id="whatsBtn" class="secondary">Resumo para WhatsApp</button></div>
+      <div class="actions report-actions"><button id="pdfBtn" class="primary">📄 Baixar PDF</button><button id="printBtn" class="secondary">🖨️ Imprimir relatório</button><button id="csvBtn" class="secondary">Exportar CSV</button><button id="whatsBtn" class="secondary">Resumo para WhatsApp</button></div>
       <label for="whatsPhone">WhatsApp do destinatário (DDI + DDD + número)</label><input id="whatsPhone" type="tel" inputmode="numeric" placeholder="55DDDNUMERO"><p class="small muted">Por enquanto, o resumo abre uma conversa para confirmação manual do envio.</p></div>
       <div class="card"><h3>Pedidos cancelados e arquivados</h3><div id="adminAudit" class="stack"></div></div>
+    </section>
+    <section id="users" class="pane" hidden>
+      <div class="sectionhead"><div><div class="eyebrow blue">ADMINISTRAÇÃO DE ACESSOS</div><h2>Colaboradores e restaurante</h2><p class="muted">Crie acessos sem exigir e-mail pessoal. Todos os cadastros ficam na nuvem e são protegidos por senha.</p></div><button id="usersRefresh" class="secondary compact">Atualizar</button></div>
+      <div class="card">
+        <h3>Cadastrar novo usuário</h3>
+        <div class="user-form-grid">
+          <div><label for="newFullName">Nome completo</label><input id="newFullName" type="text" maxlength="80" placeholder="Ex.: João Campos" autocomplete="off"></div>
+          <div><label for="newUsername">Usuário de acesso</label><input id="newUsername" type="text" maxlength="30" placeholder="Ex.: joao.campos" autocapitalize="none" autocomplete="off"></div>
+          <div><label for="newPassword">Senha inicial (mínimo 8 caracteres)</label><input id="newPassword" type="password" minlength="8" maxlength="72" autocomplete="new-password" placeholder="Senha provisória"></div>
+          <div><label for="newRole">Perfil de acesso</label><select id="newRole"><option value="colaborador">Colaborador</option><option value="restaurante">Restaurante</option></select></div>
+        </div>
+        <div class="actions"><button id="createUserBtn" class="primary">Cadastrar na nuvem</button></div>
+        <p class="small muted">A senha não será exibida novamente. Para recuperar o acesso, a gestão poderá redefinir uma nova senha. Não utilize a mesma senha para funcionários diferentes.</p>
+        <div id="usersFeedback" class="feedback" aria-live="polite"></div>
+      </div>
+      <div class="card">
+        <h3>Usuários cadastrados <span id="usersCount" class="counter">0</span></h3>
+        <div id="usersList" class="stack"><div class="empty">Carregando lista de usuários...</div></div>
+      </div>
     </section>
   </div>
 </main>
@@ -80,6 +101,9 @@
 <script src="./config.js"></script>
 <script src="./menu.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+<script src="./reports.js"></script>
 <script src="./app.js" defer></script>
 </body>
 </html>
