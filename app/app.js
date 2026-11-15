@@ -76,7 +76,7 @@
       return;
     }
     try {
-      const {data,error}=await client.from('profiles').select('id,display_name,role,username,active').eq('id',user.id).single();
+      const {data,error}=await client.from('profiles').select('id,display_name,role,username,active,company,job_title').eq('id',user.id).single();
       if(error || !data?.active) {
         await client.auth.signOut();
         inform('Seu usuário não está ativo. Procure a administração RL para liberação.',true);
@@ -130,7 +130,7 @@
       b.hidden=(['order','mine'].includes(t) && !isStaff()) || (t==='restaurant' && !isManager() && !isRestaurant()) || (['admin','users'].includes(t) && !isManager()) || (['chat','security'].includes(t) && !configured);
     });
     $('logoutBtn').hidden=!configured;
-    $('who').textContent = name() + ' • ' + ({admin:'Gestão RL',restaurante:'Restaurante',colaborador:'Colaborador'}[state.role]||'');
+    $('who').textContent = name() + ' • ' + ({admin:'Gestão RL',restaurante:'Restaurante',colaborador:'Colaborador'}[state.role]||'') + ((state.role==='colaborador'||state.role==='admin')?' • '+(state.profile?.company==='SOLUTIO'?'Solutio':'RL Construções'):'');
     if((['order','mine'].includes(state.tab) && !isStaff()) || (['admin','users'].includes(state.tab) && !isManager()) || (state.tab==='restaurant' && !isRestaurant() && !isManager())) {
       state.tab=isRestaurant() ? 'restaurant' : isManager() ? 'admin' : 'order';
     }
