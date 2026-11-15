@@ -66,6 +66,14 @@ Deno.serve(async (req) => {
       return reply({ accounts: data || [] });
     }
 
+    if (action === 'list_invites') {
+      // Nunca devolver token de convite ao navegador, somente estado administrativo.
+      const {data,error}=await admin.from('staff_invitations')
+        .select('username,display_name,company,job_title,expires_at,redeemed_at')
+        .order('company',{ascending:true}).order('display_name',{ascending:true}).limit(500);
+      if(error)throw error;
+      return reply({invitations:data||[]});
+    }
     if (action === 'reset_preview') {
       const tables=['orders','order_audit','chat_messages'];
       const counts:Record<string,number>={};
