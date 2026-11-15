@@ -12,7 +12,7 @@
     const restaurant=kind==='restaurante';
     const rows=(payload.orders||[]).filter(o=>o.order_day===date && (meal==='todos'||meal===o.meal));
     rows.sort((a,b)=>a.meal.localeCompare(b.meal)||String(a.employee_name).localeCompare(String(b.employee_name),'pt-BR'));
-    const summary=M.summary(rows,date);
+    const summary=M.summary(rows,date,payload.now||new Date());
     const columns=['Colaborador','Refeição','Prato','Acompanhamentos / Observações','Situação'];
     if(!restaurant) columns.push('Valor');
     const values=rows.map(o=>{
