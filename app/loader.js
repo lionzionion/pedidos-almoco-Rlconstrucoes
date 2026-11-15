@@ -2,6 +2,7 @@
    Exibe login antes de baixar bibliotecas e mostra mensagens claras quando a rede falha. */
 (() => {
   'use strict';
+  const loaderURL = document.currentScript?.src || new URL('./loader.js',location.href).href;
   const status=document.getElementById('bootStatus');
   const login=document.getElementById('login');
   const loginButton=document.getElementById('loginBtn');
@@ -71,7 +72,8 @@
       }
       if(!ready)throw new Error('Não foi possível carregar o serviço de autenticação');
     }
-    await loadScript('./app.js?v=4',10000);
+    const appScript = new URL('app.js?v=5', new URL('.', loaderURL)).href;
+    await loadScript(appScript,10000);
     if(!window.RL_APP_BOOTED)throw new Error('A interface não concluiu a inicialização');
   }
 
