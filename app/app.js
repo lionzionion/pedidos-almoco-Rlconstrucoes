@@ -610,11 +610,11 @@
   $('shareInviteWhatsApp').addEventListener('click',()=>{
     if(!generatedInvite)return;
     const person=generatedInvite.role==='restaurante'?'equipe do restaurante':generatedInvite.name;
-    const text='*RL CONSTRUÇÕES | PRIMEIRO ACESSO*\\n\\nOlá, '+person+
+    const text='*RL CONSTRUÇÕES | PRIMEIRO ACESSO*\n\nOlá, '+person+
       '! Este é seu convite individual para o aplicativo de refeições da obra AMBEV Itapissuma.'+
-      '\\n\\n*Login:* '+generatedInvite.username+
-      '\\n*Ative seu acesso e crie sua senha pelo link:*\\n'+generatedInvite.link+
-      '\\n\\nO convite é individual, funciona uma vez e expira em 7 dias. Não encaminhe.';
+      '\n\n*Login:* '+generatedInvite.username+
+      '\n*Ative seu acesso e crie sua senha pelo link:*\n'+generatedInvite.link+
+      '\n\nO convite é individual, funciona uma vez e expira em 7 dias. Não encaminhe.';
     window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank','noopener,noreferrer');
   });
   $('hideGeneratedInvite').addEventListener('click',clearGeneratedInvite);
