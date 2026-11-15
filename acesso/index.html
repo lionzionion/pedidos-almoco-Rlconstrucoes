@@ -101,7 +101,22 @@
           <div><label for="newPassword">Senha inicial (mínimo 8 caracteres)</label><input id="newPassword" type="password" minlength="8" maxlength="72" autocomplete="new-password" placeholder="Senha provisória"></div>
           <div><label for="newRole">Perfil de acesso</label><select id="newRole"><option value="colaborador">Colaborador</option><option value="restaurante">Restaurante</option></select></div><div><label for="newCompany">Empresa</label><select id="newCompany"><option value="RL">RL Construções</option><option value="SOLUTIO">Solutio</option></select></div><div><label for="newJobTitle">Cargo ou função</label><input id="newJobTitle" type="text" maxlength="80" placeholder="Ex.: Engenheiro"></div>
         </div>
-        <div class="actions"><button id="createUserBtn" class="primary">Cadastrar na nuvem</button></div>
+        <div class="actions">
+          <button id="createUserBtn" class="primary" type="button">Cadastrar com senha</button>
+          <button id="createInviteBtn" class="secondary" type="button">🔗 Gerar convite de primeiro acesso</button>
+        </div>
+        <p class="small muted">Para testar no celular ou liberar um restaurante novo, preencha nome, login, empresa, função e perfil. Clique em <strong>Gerar convite de primeiro acesso</strong>. O funcionário escolhe sua própria senha pelo link, sem receber senha por WhatsApp.</p>
+        <div id="generatedInviteBox" class="credential-box" hidden>
+          <strong>Convite individual gerado</strong>
+          <p id="generatedInviteInfo" class="small"></p>
+          <input id="generatedInviteLink" type="text" readonly aria-label="Link privado de ativação">
+          <div class="actions">
+            <button id="copyInviteLink" class="secondary compact" type="button">Copiar link</button>
+            <button id="shareInviteWhatsApp" class="primary compact" type="button">Enviar por WhatsApp</button>
+            <button id="hideGeneratedInvite" class="secondary compact" type="button">Ocultar</button>
+          </div>
+          <p class="small muted">Link privado de uso único, válido por 7 dias. Quem receber pode criar a senha e ativar a conta. Não compartilhe em grupos.</p>
+        </div>
         <p class="small muted">A senha só poderá ser visualizada durante o cadastro ou após uma redefinição. O ADM não consegue recuperar senhas antigas, mas pode gerar uma nova com segurança.</p>
         <div class="actions"><button type="button" id="generatePassword" class="secondary compact">🎲 Gerar senha forte</button><button type="button" id="toggleNewPassword" class="secondary compact">👁️ Mostrar / ocultar senha</button></div>
         <div id="oneTimePassword" class="credential-box" hidden>
