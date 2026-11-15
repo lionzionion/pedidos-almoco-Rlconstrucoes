@@ -10,7 +10,7 @@
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const localKey = 'rl-demo-pedidos-v1';
   const today = M.today();
-  const state = {role: 'colaborador', user: null, profile: null, orders: [], users: [], chatPeople: [], chatRows: [], chatOwner:null, dish:'', sides:[], editing:null, tab:'order', demoName:'Colaborador de teste'};
+  const state = {role: 'colaborador', user: null, profile: null, orders: [], users: [], invitations: [], chatPeople: [], chatRows: [], chatOwner:null, dish:'', sides:[], editing:null, tab:'order', demoName:'Colaborador de teste'};
   const name = () => state.profile?.display_name || state.demoName;
   const ownId = () => state.user?.id || 'demo-user';
   const meal = () => document.querySelector('input[name="meal"]:checked')?.value || 'almoco';
@@ -392,9 +392,11 @@
   async function loadUsers() {
     if(!isManager())return;
     try{
-      const result=await userApi('list');
+      const [result, invitationResult]=await Promise.all([userApi('list'),userApi('list_invites')]);
       state.users=result.accounts||[];
+      state.invitations=invitationResult.invitations||[];
       renderUsers();
+      renderInvitations();
     }catch(error){$('usersFeedback').textContent='Não foi possível carregar usuários: '+error.message; $('usersFeedback').classList.add('error');}
   }
   function renderUsers(){
@@ -460,6 +462,21 @@
         await loadUsers();
       }catch(error){fail(error);}finally{b.disabled=false;}
     }));
+  }
+  function renderInvitations(){
+    if(!isManager())return;
+    const invitations=state.invitations||[];
+    $('invitesCount').textContent=String(invitations.length);
+    const list=$('invitesList');
+    list.innerHTML=invitations.length?invitations.map(i=>{
+      const used=Boolean(i.redeemed_at);
+      const expired=!used && Date.parse(i.expires_at)<=Date.now();
+      const status=used?'Ativado':expired?'Expirado':'Aguardando ativação';
+      return '<article class="entry user-account"><div class="entry-top"><div><strong>'+
+        esc(i.display_name)+'</strong><br><small>'+esc(i.username)+' • '+
+        (i.company==='SOLUTIO'?'Solutio':'RL Construções')+' • '+esc(i.job_title||'')+
+        '</small></div><span class="status '+(used?'entregue':expired?'cancelado':'confirmado')+'">'+status+'</span></div></article>';
+    }).join(''):'<div class="empty">Nenhum convite preparado.</div>';
   }
   // Converte um nome de exibição em login fácil, ex.: João Campos → joao.campos.
   function normalizeLogin(input){
