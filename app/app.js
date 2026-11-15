@@ -56,7 +56,17 @@
     client.channel('rl-chat-updates').on('postgres_changes', {event:'INSERT',schema:'public',table:'chat_messages'}, () => {
       if(state.user && state.tab==='chat') loadChat();
     }).subscribe();
-    setInterval(() => { if (state.user) reload(); }, 45000);
+    // O restaurante e os colaboradores também recebem o aviso de limpeza do ADM.
+    client.channel('rl-system-reset').on('postgres_changes',
+      {event:'UPDATE',schema:'public',table:'rl_system_state'},
+      () => refreshAfterReset()
+    ).subscribe();
+    // Segurança adicional quando a aba retorna do segundo plano (especialmente no celular).
+    document.addEventListener('visibilitychange', () => {
+      if(!document.hidden && state.user) reload();
+    });
+    window.addEventListener('focus', () => { if(state.user) reload(); });
+    setInterval(() => { if (state.user && !document.hidden) reload(); }, 15000);
   }
   async function setUser(user) {
     state.user=user;
@@ -160,6 +170,17 @@
     state.editing=null; state.dish=''; state.sides=[]; $('notes').value='';
     $('placeBtn').textContent='Confirmar pedido'; $('clearEditBtn').hidden=true;
     renderMenu();
+  }
+  function refreshAfterReset() {
+    if(!state.user)return;
+    // Remove dados antigos instantaneamente antes da leitura nova da nuvem.
+    state.orders=[];
+    state.chatRows=[];
+    renderMine();
+    renderRestaurant();
+    renderAdmin();
+    if(state.tab==='chat')loadChat();
+    reload();
   }
   async function reload() {
     try {
@@ -586,8 +607,12 @@
       const phrase=prompt('Para confirmar a exclusão DEFINITIVA dos dados de teste, digite exatamente ZERAR TESTES:');
       if(phrase!=='ZERAR TESTES')return inform('Limpeza cancelada. Nenhum dado foi excluído.',true);
       const result=await userApi('reset_test_data',{confirm:phrase});
-      inform(result.message||'Dados operacionais de teste apagados.');
-      await reload();await previewReset();
+      refreshAfterReset();
+      await reload();
+      const remaining=await previewReset();
+      if((remaining.orders||0)+(remaining.chat_messages||0)+(remaining.order_audit||0)>0)
+        throw Error('A conferência encontrou registros remanescentes; tente atualizar a página e procure a gestão técnica.');
+      inform('Limpeza confirmada no Supabase: 0 pedidos, 0 mensagens e 0 alterações de pedidos. Todos os aparelhos serão atualizados.');
       if(state.tab==='chat')await initChat();
     }catch(e){fail(e);}
   }
