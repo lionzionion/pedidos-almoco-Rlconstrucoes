@@ -1,6 +1,5 @@
-/* Configure SOMENTE URL e chave publicável do projeto dedicado a RL.
-   Nunca coloque service_role/secret keys em um site GitHub Pages público. */
+/* URL e chave publishable (públicas) do Supabase dedicado a RL. NUNCA use service_role. */
 window.RL_CONFIG = {
-  supabaseUrl: '',
-  supabaseAnonKey: ''
+  supabaseUrl: 'https://dpmofhdaefcqxohuhkfr.supabase.co',
+  supabaseAnonKey: 'sb_publishable_JerHh05UE8RcnXJ91Ypuyg_IWdiAhh5'
 };
