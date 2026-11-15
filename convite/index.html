@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#073a60">
+<title>Primeiro acesso | RL Pedidos</title>
+<link rel="icon" type="image/webp" href="../assets/rl-logo.webp">
+<style>
+:root{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:#17394d;background:#edf4f7}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(165deg,#063a56 0%,#0a5a7b 38%,#edf4f7 38%)}
+header{padding:23px max(18px,calc((100vw - 620px)/2));display:flex;align-items:center;gap:12px;color:white}
+header img{width:150px;max-height:65px;object-fit:contain}header span{font-weight:750;letter-spacing:.06em;font-size:12px}
+main{margin:24px auto 50px;width:min(95%,540px);background:white;padding:clamp(22px,5vw,38px);border:1px solid #d3e1e8;border-radius:22px;box-shadow:0 18px 65px #01283d30}
+h1{font-size:clamp(26px,5vw,34px);line-height:1.14;margin:0 0 12px;color:#073a60}p{color:#537185;line-height:1.55;font-size:14px}
+label{display:block;font-weight:700;margin:18px 0 8px;font-size:13px}input{width:100%;padding:14px 13px;border:1px solid #b8ccd7;border-radius:10px;font-size:15px;outline-color:#28789b}
+.profile{background:#eaf4f7;border-radius:13px;padding:17px;margin:20px 0}.profile strong{display:block;font-size:19px}.profile small{color:#476779;font-size:13px}
+button,a.button{border:0;border-radius:10px;padding:13px 16px;font-size:14px;font-weight:750;cursor:pointer;text-decoration:none;text-align:center}
+.primary{background:#08678c;color:white;width:100%;margin-top:16px}.secondary{background:#e5eff4;color:#145173}
+.actions{display:flex;gap:9px;margin-top:10px;flex-wrap:wrap}
+.status{padding:12px;background:#eaf4f7;border-radius:9px;font-size:13px;margin:18px 0;white-space:pre-wrap}
+.status.error{background:#ffede7;color:#8c2e24}.small{font-size:12px}button:disabled{opacity:.55;cursor:wait}
+[hidden]{display:none!important}
+</style>
+<script src="../app/config.js?v=2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/dist/umd/supabase.js"></script>
+</head>
+<body><header><img src="../assets/rl-logo.webp" alt="RL Construções"><span>GESTÃO DE REFEIÇÕES</span></header>
+<main>
+ <h1>Seu primeiro acesso</h1>
+ <p>Convite individual da RL Construções para os pedidos de café da manhã e almoço da obra AMBEV Itapissuma.</p>
+ <div id="status" class="status">Verificando convite...</div>
+ <div id="form" hidden>
+  <div class="profile"><strong id="person"></strong><small id="company"></small><br><small>Usuário: <b id="username"></b></small></div>
+  <label for="password">Sua senha individual</label>
+  <input id="password" type="password" autocomplete="new-password" minlength="10" maxlength="72">
+  <div class="actions">
+   <button id="generate" class="secondary" type="button">🎲 Gerar senha forte</button>
+   <button id="show" class="secondary" type="button">👁 Mostrar senha</button>
+   <button id="copy" class="secondary" type="button">Copiar senha</button>
+  </div>
+  <label for="confirm">Confirme sua senha</label>
+  <input id="confirm" type="password" autocomplete="new-password" minlength="10" maxlength="72">
+  <p class="small">Guarde sua senha em local seguro. O convite funciona uma única vez. Você entrará automaticamente após definir a senha.</p>
+  <button id="activate" class="primary" type="button">Ativar minha conta e entrar</button>
+ </div>
+ <p class="small">Já ativou seu acesso? <a href="../acesso/">Entrar no aplicativo</a>. Se o convite expirou, solicite um novo ao administrador da RL.</p>
+</main>
+<script>
+(() => {
+'use strict';
+const $=id=>document.getElementById(id),setStatus=(s,error=false)=>{$('status').textContent=s;$('status').classList.toggle('error',error)};
+const params=new URLSearchParams(location.hash.slice(1));
+const token=params.get('convite')||'';
+const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*';
+const pass=()=>{const r=new Uint8Array(20);crypto.getRandomValues(r);const a=Array.from(r,i=>alphabet[i%alphabet.length]);a[0]='ABCDEFGHJKLMNPQRSTUVWXYZ'[r[0]%24];a[1]='abcdefghijkmnopqrstuvwxyz'[r[1]%25];a[2]='23456789'[r[2]%8];a[3]='!@#$%&*'[r[3]%7];return a.join('')};
+let client=null,user=null;
+async function init(){
+ if(!/^[a-f0-9]{64}$/i.test(token))throw Error('Este link não contém um convite válido.');
+ const url=window.RL_CONFIG?.supabaseUrl,key=window.RL_CONFIG?.supabaseAnonKey;
+ if(!url||!key||typeof window.supabase?.createClient!=='function')throw Error('Não foi possível conectar ao sistema. Atualize a página.');
+ client=window.supabase.createClient(url,key);
+ const {data,error}=await client.functions.invoke('invite-access',{body:{action:'inspect',token}});
+ if(error||data?.error)throw Error(data?.error||'Convite expirado, já usado ou não encontrado.');
+ user=data;
+ $('person').textContent=data.display_name;
+ $('company').textContent='Empresa: '+(data.company==='SOLUTIO'?'Solutio':'RL Construções')+' • '+data.job_title;
+ $('username').textContent=data.username;
+ $('password').value=pass();
+ $('confirm').value=$('password').value;
+ $('form').hidden=false;
+ setStatus('Convite validado. Defina ou copie sua senha e ative a conta.');
+}
+$('generate').addEventListener('click',()=>{$('password').value=pass();$('confirm').value=$('password').value;$('password').type='text';setStatus('Nova senha forte gerada. Copie ou guarde a senha antes de entrar.')});
+$('show').addEventListener('click',()=>{$('password').type=$('password').type==='password'?'text':'password'});
+$('copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('password').value);setStatus('Senha copiada. Guarde-a em local seguro.')}catch{setStatus('Selecione a senha para copiar manualmente.',true)}});
+$('activate').addEventListener('click',async()=>{
+ const password=$('password').value;
+ if(password.length<10||password.length>72)return setStatus('Use uma senha de 10 a 72 caracteres.',true);
+ if(password!==$('confirm').value)return setStatus('As senhas não conferem.',true);
+ const btn=$('activate');btn.disabled=true;
+ try{
+   setStatus('Criando seu acesso pessoal...');
+   const {data,error}=await client.functions.invoke('invite-access',{body:{action:'redeem',token,password}});
+   if(error||data?.error)throw Error(data?.error||'Não foi possível ativar o convite.');
+   // Apagar o token do histórico local antes de sair do primeiro acesso.
+   history.replaceState(null,'',location.pathname);
+   const {error:authError}=await client.auth.signInWithPassword({email:data.email,password});
+   if(authError)throw Error('Conta criada. Entre pelo aplicativo com seu usuário e a senha definida.');
+   location.replace('../acesso/');
+ }catch(e){setStatus(e.message||'Falha no primeiro acesso.',true);}
+ finally{btn.disabled=false;}
+});
+init().catch(e=>setStatus(e.message,true));
+})();
+</script></body></html>
