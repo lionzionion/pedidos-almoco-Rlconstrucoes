@@ -103,6 +103,42 @@ Deno.serve(async (req) => {
         message:'Convite gerado. Copie o link e envie em mensagem privada. O link só será exibido nesta resposta.'},201);
     }
 
+    if (action === 'renew_invite') {
+      const username=normalizedUsername(body.username);
+      if(!validUsername(username))return reply({error:'Convite inválido.'},400);
+      const {data:existing,error:lookError}=await admin.from('staff_invitations')
+        .select('username,display_name,company,job_title,role,redeemed_at')
+        .eq('username',username).maybeSingle();
+      if(lookError)throw lookError;
+      if(!existing)return reply({error:'Convite não encontrado. Use o formulário para um novo cadastro.'},404);
+      if(existing.redeemed_at)return reply({error:'Este convite já foi ativado. Use a redefinição de senha no cadastro.'},409);
+      const {data:alreadyRegistered,error:profileError}=await admin.from('profiles')
+        .select('id').eq('username',username).maybeSingle();
+      if(profileError)throw profileError;
+      if(alreadyRegistered)return reply({error:'Este usuário já possui conta ativa. Não é possível renovar o convite.'},409);
+      // A senha não viaja no link. O token de 32 bytes só é exibido uma vez
+      // ao administrador e o banco conserva somente seu SHA-256.
+      const bytes=crypto.getRandomValues(new Uint8Array(32));
+      const token=[...bytes].map(v=>v.toString(16).padStart(2,'0')).join('');
+      const digest=await crypto.subtle.digest('SHA-256',bytes);
+      const token_hash=[...new Uint8Array(digest)].map(v=>v.toString(16).padStart(2,'0')).join('');
+      const expires_at=new Date(Date.now()+7*86400000).toISOString();
+      const {data:updated,error:renewError}=await admin.from('staff_invitations')
+        .update({token_hash,expires_at})
+        .eq('username',username).is('redeemed_at',null)
+        .select('username').maybeSingle();
+      if(renewError)throw renewError;
+      if(!updated)return reply({error:'Convite já utilizado. Atualize a lista.'},409);
+      await admin.from('account_audit').insert({
+        actor:caller,target:caller,action:'renew_invite',
+        details:{username,company:existing.company,role:existing.role,expires_at}
+      });
+      const link='https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/convite/#convite='+token;
+      return reply({username,display_name:existing.display_name,company:existing.company,
+        role:existing.role,expires_at,link,
+        message:'Novo link gerado. O convite anterior foi invalidado. Copie ou envie por WhatsApp.'});
+    }
+
     if (action === 'list_invites') {
       // Nunca devolver token de convite ao navegador, somente estado administrativo.
       const {data,error}=await admin.from('staff_invitations')
