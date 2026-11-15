@@ -3,12 +3,15 @@
 -- Script de referência da implantação feita em 15/11/2026.
 CREATE TABLE IF NOT EXISTS public.chat_messages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  thread_owner uuid REFERENCES public.profiles(id) ON DELETE RESTRICT,
-  sender_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE RESTRICT,
+  thread_owner uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  sender_id uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
   sender_name text NOT NULL DEFAULT '',
   body text NOT NULL CHECK (length(trim(body)) BETWEEN 1 AND 1000),
   created_at timestamptz NOT NULL DEFAULT now()
 );
+-- Remetente pode ser NULL após exclusão da conta; o nome da mensagem é preservado.
+-- A conversa particular de um colaborador é removida ao excluir esse colaborador,
+-- para não ficar acessível na conversa administrativa do restaurante.
 CREATE INDEX IF NOT EXISTS rl_chat_thread_idx ON public.chat_messages(thread_owner,created_at DESC);
 ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.chat_messages FROM anon, authenticated;
