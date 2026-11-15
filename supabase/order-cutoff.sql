@@ -1,3 +1,8 @@
+-- ARQUIVO HISTÓRICO: RESTRIÇÃO DE HORÁRIOS ORIGINAL (DESATIVADA EM 15/11/2026)
+-- NÃO EXECUTAR DURANTE TESTES: este arquivo reinstala os bloqueios de 08h e 13h.
+-- O sistema atual libera a criação/edição de pedidos a qualquer hora.
+-- A taxa coletiva de R$ 8 por remessa permanece no cálculo financeiro.
+
 -- RL Construções: servidor impõe limites da operação em Recife.
 -- Horários: café até 08:00 e almoço até 13:00; frete único R$8 por tipo no resumo.
 -- Aplicar após schema.sql. Não altera pedidos existentes.
