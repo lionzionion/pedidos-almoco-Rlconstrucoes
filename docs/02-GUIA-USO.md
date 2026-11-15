@@ -66,3 +66,16 @@ Abra **Chat do restaurante**. O colaborador visualiza sua conversa exclusiva. Re
 ### Limpeza da fase de testes
 
 Na aba **Cadastros** (apenas ADM), use **Verificar dados** para consultar quantos pedidos, registros do histórico de pedidos e mensagens existem. Depois, se decidir limpar, clique em **Apagar pedidos e conversas de teste**, confirme duas vezes e digite **ZERAR TESTES**. Essa operação é irreversível. As contas, registros administrativos de auditoria e logs técnicos do Supabase permanecem. Não execute durante a operação real da obra.
+
+
+## Empresas e rateio do frete
+
+A mesma cozinha recebe os pedidos de colaboradores da **RL Construções** e da **Solutio**. Em **Conferência RL → Empresa**, escolha **RL + Solutio**, **RL Construções** ou **Solutio**. O PDF, CSV e resumo do WhatsApp seguem o filtro selecionado. O restaurante continua com todos os pedidos e a empresa de origem de cada um.
+
+O frete de R$ 8 é aplicado uma vez por evento somente no fechamento (08h para café, 13h para almoço) e distribuído proporcionalmente pelo número de pedidos ativos: por exemplo, 10 RL e 7 Solutio = R$ 4,71 para a RL + R$ 3,29 para a Solutio. Se só uma empresa pedir, essa empresa assume os R$ 8.
+
+## Primeiro acesso de colaborador por convite
+
+O ADM envia individualmente um link `/convite/#convite=...`. Este link contém um token de uso único, não uma senha, e deve ser tratado como confidencial. Ao abrir, o colaborador verifica seu nome, empresa e login, gera ou escolhe uma senha, confirma e entra automaticamente. O convite deixa de funcionar depois da ativação; os acessos futuros são feitos por `/acesso/`.
+
+Os convites são distribuídos pelo ADM **fora do repositório público**, sem armazenar senhas em texto no GitHub. Se o convite expirar ou já tiver sido usado, o colaborador deverá solicitar novo acesso à administração.
