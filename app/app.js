@@ -72,7 +72,7 @@
     state.user=user;
     if(!user) {
       state.profile=null; $('login').hidden=false; $('app').hidden=true; $('who').textContent='';
-      state.chatPeople=[];state.chatRows=[];hideOneTime();
+      state.chatPeople=[];state.chatRows=[];hideOneTime();clearGeneratedInvite();
       return;
     }
     try {
@@ -540,6 +540,59 @@
       $('usersFeedback').classList.add('error');
     }finally{btn.disabled=false;}
   }
+
+  let generatedInvite=null;
+  function clearGeneratedInvite(){
+    generatedInvite=null;
+    $('generatedInviteLink').value='';
+    $('generatedInviteInfo').textContent='';
+    $('generatedInviteBox').hidden=true;
+  }
+  async function createInvite(){
+    if(!isManager())return;
+    const display_name=$('newFullName').value.trim();
+    const username=normalizeLogin($('newUsername').value||display_name);
+    const role=$('newRole').value;
+    const company=$('newCompany').value,job_title=$('newJobTitle').value.trim();
+    $('newUsername').value=username;
+    if(display_name.length<3 || !/^[a-z][a-z0-9._-]{2,29}$/.test(username))
+      return inform('Informe o nome e o login válido para gerar o convite.',true);
+    clearGeneratedInvite();
+    const button=$('createInviteBtn');button.disabled=true;
+    try{
+      const result=await userApi('create_invite',{display_name,username,role,company,job_title});
+      generatedInvite={link:result.link,name:result.display_name,username:result.username,role:result.role};
+      $('generatedInviteLink').value=result.link;
+      $('generatedInviteInfo').textContent=result.display_name+' • '+username+' • '+(role==='restaurante'?'Restaurante':'Colaborador')+
+        '. Válido até '+new Date(result.expires_at).toLocaleDateString('pt-BR',{timeZone:'America/Recife'})+'.';
+      $('generatedInviteBox').hidden=false;
+      $('usersFeedback').classList.remove('error');
+      $('usersFeedback').textContent='Convite gerado. Use o WhatsApp para enviar somente ao destinatário.';
+      await loadUsers();
+      $('generatedInviteBox').scrollIntoView({behavior:'smooth',block:'nearest'});
+    }catch(error){
+      $('usersFeedback').textContent=error.message;
+      $('usersFeedback').classList.add('error');
+      fail(error);
+    }finally{button.disabled=false;}
+  }
+  $('createInviteBtn').addEventListener('click',createInvite);
+  $('copyInviteLink').addEventListener('click',async()=>{
+    if(!generatedInvite)return;
+    try{await navigator.clipboard.writeText(generatedInvite.link);inform('Link privado copiado. Envie somente ao colaborador ou restaurante.');}
+    catch{ $('generatedInviteLink').select();inform('Selecione o link e copie manualmente.',true); }
+  });
+  $('shareInviteWhatsApp').addEventListener('click',()=>{
+    if(!generatedInvite)return;
+    const person=generatedInvite.role==='restaurante'?'equipe do restaurante':generatedInvite.name;
+    const text='*RL CONSTRUÇÕES | PRIMEIRO ACESSO*\\n\\nOlá, '+person+
+      '! Este é seu convite individual para o aplicativo de refeições da obra AMBEV Itapissuma.'+
+      '\\n\\n*Login:* '+generatedInvite.username+
+      '\\n*Ative seu acesso e crie sua senha pelo link:*\\n'+generatedInvite.link+
+      '\\n\\nO convite é individual, funciona uma vez e expira em 7 dias. Não encaminhe.';
+    window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank','noopener,noreferrer');
+  });
+  $('hideGeneratedInvite').addEventListener('click',clearGeneratedInvite);
 
   // Senhas: geração criptográfica, nunca armazenamento persistente ou leitura de hashes.
   const passwordAlphabet='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*';
