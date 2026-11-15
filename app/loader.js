@@ -71,7 +71,7 @@
       }
       if(!ready)throw new Error('Não foi possível carregar o serviço de autenticação');
     }
-    await loadScript('./app.js?v=3',10000);
+    await loadScript('./app.js?v=4',10000);
     if(!window.RL_APP_BOOTED)throw new Error('A interface não concluiu a inicialização');
   }
 
