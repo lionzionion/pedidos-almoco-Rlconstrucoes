@@ -2,10 +2,10 @@
 
 ## URLs
 
-- Site de apresentação: https://lionzionion.github.io/pedidos-almoco-solutio/produto/
-- App real: https://lionzionion.github.io/pedidos-almoco-solutio/app/
-- Demo com dados fictícios: https://lionzionion.github.io/pedidos-almoco-solutio/demo/
-- Projeto: https://github.com/lionzionion/pedidos-almoco-solutio
+- Site de apresentação: https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/produto/
+- App real: https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/app/
+- Demo com dados fictícios: https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/demo/
+- Projeto: https://github.com/lionzionion/pedidos-almoco-Rlconstrucoes
 - Supabase: https://supabase.com/dashboard/project/dpmofhdaefcqxohuhkfr
 
 ## Executado até 15/11/2026
