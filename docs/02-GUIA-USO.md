@@ -16,10 +16,10 @@ As senhas são tratadas pelo Supabase Auth e não ficam armazenadas em texto pur
 ## Área de administração de usuários
 
 1. Faça login como ADM e abra **👥 Cadastros**.
-2. Digite o nome, usuário (3–30 caracteres, iniciando com letra minúscula), senha inicial com **8–72 caracteres** e perfil.
+2. Digite o nome, usuário (3–30 caracteres, iniciando com letra minúscula) e perfil. Deixe a senha vazia para gerar uma **senha forte automática**, ou digite uma senha inicial de **8–72 caracteres**. Você também pode clicar em **Gerar senha forte**.
 3. Escolha **Colaborador** ou **Restaurante**, depois **Cadastrar na nuvem**.
-4. Compartilhe login e senha pelo canal privado combinado com o colaborador/restaurante.
-5. Em **Usuários cadastrados** é possível **Desativar**, **Reativar**, alterar perfil entre colaborador/restaurante e **Redefinir senha**.
+4. Após criar, copie o login e a senha apresentados **uma única vez** e compartilhe por canal privado. Se precisar posteriormente, use **Redefinir senha** para gerar outra; não é possível consultar a senha antiga.
+5. Em **Usuários cadastrados** é possível **Desativar**, **Reativar**, alterar perfil entre colaborador/restaurante, **Redefinir senha** (automática ou manual) e **Excluir usuário sem pedidos**. Cada usuário pode alterar sua própria senha na aba **Minha senha**.
 6. Nunca compartilhe sua própria senha ADM, nem reutilize a mesma senha de colaboradores. O primeiro ADM não pode ser desativado por esse painel.
 
 ## Colaborador: fazer pedido
@@ -51,10 +51,18 @@ As senhas são tratadas pelo Supabase Auth e não ficam armazenadas em texto pur
 
 ### Apuração
 
-O cálculo padrão considera um frete coletivo por refeição: **R$12 no café**; almoço **R$8 seg–sex / R$12 sáb–dom**. Cancelados e arquivados não são somados. Os totais são de **conferência**, não comprovante de pagamento. Remessas adicionais e cobrança de pedidos já preparados exigem registro e acerto separados.
+O cálculo considera **R$ 8 por remessa**, apenas uma vez para todos os pedidos ativos do café **após 08h**, e outra taxa de R$ 8 para todos os almoços ativos **após 13h** (horário de Recife), inclusive fins de semana. Os funcionários não pagam frete individual em cada pedido. Cancelados e arquivados não são somados. Os totais são de conferência, não comprovante de pagamento; remessas extraordinárias exigem acerto separado.
 
 ## Testes sem risco de pedidos reais
 
 Acesse https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/demo/
 
 A demonstração é **separada do banco** e contém somente nomes e pedidos fictícios. Use-a para apresentações.
+
+### Chat privado com restaurante e gestão
+
+Abra **Chat do restaurante**. O colaborador visualiza sua conversa exclusiva. Restaurante e ADM escolhem um colaborador ou a conversa reservada RL ↔ Restaurante. Envie mensagens e acompanhe as respostas no próprio aplicativo.
+
+### Limpeza da fase de testes
+
+Na aba **Cadastros** (apenas ADM), use **Verificar dados** para consultar quantos pedidos, registros do histórico de pedidos e mensagens existem. Depois, se decidir limpar, clique em **Apagar pedidos e conversas de teste**, confirme duas vezes e digite **ZERAR TESTES**. Essa operação é irreversível. As contas, registros administrativos de auditoria e logs técnicos do Supabase permanecem. Não execute durante a operação real da obra.
