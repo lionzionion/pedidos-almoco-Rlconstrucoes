@@ -3,7 +3,8 @@
   'use strict';
   const M = window.RL_MENU;
   const C = window.RL_CONFIG || {};
-  const configured = !!(C.supabaseUrl && C.supabaseAnonKey && window.supabase);
+  const hasConfig = Boolean(C.supabaseUrl && C.supabaseAnonKey);
+  const configured = hasConfig && Boolean(window.supabase);
   const client = configured ? window.supabase.createClient(C.supabaseUrl, C.supabaseAnonKey) : null;
   const $ = id => document.getElementById(id);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -31,6 +32,11 @@
   }
   function begin() {
     initializeDay();
+    if(hasConfig && !window.supabase) {
+      $('demo').hidden=true; $('login').hidden=true; $('app').hidden=true;
+      inform('Não foi possível carregar o Supabase. Verifique sua conexão e recarregue a página. Pedidos reais estão bloqueados.',true);
+      return;
+    }
     if(!configured) {
       $('demo').hidden=false; $('login').hidden=true; $('app').hidden=false;
       state.orders=readDemo(); state.profile={display_name:state.demoName,role:'colaborador'};
