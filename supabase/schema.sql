@@ -103,20 +103,20 @@ returns trigger language plpgsql security invoker set search_path=''
 as $$
 declare
   current_id uuid:=(select auth.uid());
-  current_role text;
-  current_name text;
+  v_actor_profile_role text;
+  v_actor_profile_name text;
   allowed_sides text[]:=array['Arroz','Feijão mulato','Feijão macassar','Macarrão','Vinagrete','Legumes'];
 begin
-  select role,display_name into current_role,current_name from public.profiles where id=current_id;
-  if current_id is null or current_role is null then
+  select role,display_name into v_actor_profile_role,v_actor_profile_name from public.profiles where id=current_id;
+  if current_id is null or v_actor_profile_role is null then
     raise exception 'Acesso não autorizado.';
   end if;
   if TG_OP='INSERT' then
-    if current_role not in ('colaborador','admin') then
+    if v_actor_profile_role not in ('colaborador','admin') then
       raise exception 'Somente colaboradores podem criar pedidos.';
     end if;
     new.owner:=current_id;
-    new.employee_name:=current_name;
+    new.employee_name:=v_actor_profile_name;
     new.order_day:=(timezone('America/Recife',now()))::date;
     new.status:='confirmado';
     new.archived:=false;
@@ -128,10 +128,10 @@ begin
        is distinct from (old.id,old.owner,old.order_day,old.employee_name,old.created_at) then
       raise exception 'Identificação e data não podem ser alteradas.';
     end if;
-    if current_role='admin' then
+    if v_actor_profile_role='admin' then
       -- Gestor pode corrigir, cancelar, arquivar e restaurar, mas a operação fica auditada.
       null;
-    elsif current_role='restaurante' then
+    elsif v_actor_profile_role='restaurante' then
       if not ((old.status='confirmado' and new.status='preparo')
            or (old.status='preparo' and new.status='entregue')) then
         raise exception 'Restaurante só pode avançar preparo ou entrega.';
@@ -140,7 +140,7 @@ begin
          (to_jsonb(old)-array['status','updated_at']) then
         raise exception 'Restaurante não pode alterar detalhes de pedido.';
       end if;
-    elsif current_role='colaborador' and old.owner=current_id then
+    elsif v_actor_profile_role='colaborador' and old.owner=current_id then
       if old.status<>'confirmado' or old.archived then
         raise exception 'Pedido já em preparo, cancelado ou arquivado.';
       end if;
