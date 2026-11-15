@@ -198,3 +198,18 @@ No aplicativo, abra **Chat do restaurante** para mensagens privadas. Colaborador
 Em **Cadastros**, o ADM gera senhas fortes e visualiza a credencial **somente no momento de sua criação/redefinição**. As senhas anteriores não são recuperáveis do Supabase Auth. Cada usuário altera sua própria senha em **Minha senha**.
 
 Depois da homologação, o ADM pode usar **Verificar dados → Apagar pedidos e conversas de teste**, confirmando a operação e digitando **ZERAR TESTES**. A limpeza é irreversível e **remove dados operacionais, não os cadastros, a trilha administrativa ou os logs de infraestrutura**. Não use após iniciar pedidos reais sem antes exportar/conferir os dados.
+
+
+## Operação compartilhada RL Construções + Solutio
+
+O projeto atende **uma única obra e um único restaurante**, mas os pedidos de cada colaborador são associados à sua empresa no momento em que são feitos. O vínculo de empresa é **definido pela administração** e permanece gravado no pedido, evitando que uma alteração posterior no cadastro mude o faturamento histórico.
+
+Na **Conferência RL**, selecione `RL Construções`, `Solutio` ou `RL + Solutio`. Os totais e relatórios PDF/CSV podem ser emitidos individualmente, enquanto o restaurante conserva a **lista conjunta de produção**, com cada empresa identificada.
+
+O frete é **R$ 8 por evento de café** (após 08h) e **R$ 8 por evento de almoço** (após 13h). Cada evento é repartido **proporcionalmente ao número de pedidos ativos de cada empresa** em centavos. Exemplo de 10 almoços RL e 7 Solutio: RL R$ 4,71 e Solutio R$ 3,29, somando exatamente R$ 8. Cancelados e arquivados não participam do rateio.
+
+### Convites individuais e primeiro acesso
+
+Os trabalhadores recebem convites privados, **de uso único e validade limitada**, enviados pelo ADM individualmente. O link abre a página `/convite/` e **não contém senha**. O colaborador gera ou define uma senha forte, ativa seu cadastro e entra automaticamente. O código do convite é mantido como hash no banco, e os tokens de distribuição **não ficam no GitHub**. Após a ativação, os próximos acessos são feitos pelo login comum em `/acesso/`.
+
+Convites pendentes não equivalem a contas já ativadas: a conta só aparece como usuário no painel ADM após o primeiro acesso. O perfil inicial é `colaborador`, com empresa e função atribuídas pelo administrador. O acesso ADM existente é preservado.
