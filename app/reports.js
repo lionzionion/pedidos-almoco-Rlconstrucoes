@@ -40,9 +40,9 @@
       '<table><thead><tr>'+headings+'</tr></thead><tbody>'+tds+'</tbody></table>'+totalsHTML(r)+
       '<p class="note">Relatório emitido pelo AMBEV Pedidos RL. Pedidos cancelados/arquivados não compõem valores ativos. Conferir entregas efetivas e eventuais remessas extras antes do pagamento.</p></body></html>';
   }
-  function print(payload){
+  function print(payload, targetWindow){
     const r=build(payload);
-    const w=window.open('','_blank');
+    const w=targetWindow || window.open('','_blank');
     if(!w)throw Error('Permita janelas pop-up para imprimir o relatório.');
     w.document.open();w.document.write(reportHTML(r));w.document.close();w.focus();
     // A folha permite imprimir/salvar como PDF, sem depender de biblioteca externa.
