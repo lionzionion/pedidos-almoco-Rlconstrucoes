@@ -44,5 +44,36 @@ window.RL_MENU = (() => {
     const delivery = (count('cafe') && closed('cafe',date,now) ? fee('cafe',date) : 0) + (count('almoco') && closed('almoco',date,now) ? fee('almoco',date) : 0);
     return {active, coffee:count('cafe'), lunch:count('almoco'), subtotal, delivery, total:subtotal + delivery};
   }
-  return Object.freeze({breakfast, lunch, sides, days, today, weekday, items, unitPrice, fee, cutoff, closed, money, summary});
+  // Rateio do frete único por quantidade de pedidos de cada empresa, em centavos.
+  // Arredondamento é aplicado à RL e o saldo à Solutio, garantindo soma exata de R$8.
+  function companyBreakdown(orders,date,now=new Date()) {
+    const active=orders.filter(o=>o.order_day===date && !o.archived && o.status!=='cancelado');
+    const result={RL:{company:'RL',coffee:0,lunch:0,subtotal:0,delivery:0,total:0,active:[]},
+      SOLUTIO:{company:'SOLUTIO',coffee:0,lunch:0,subtotal:0,delivery:0,total:0,active:[]}};
+    const cents={RL:0,SOLUTIO:0};
+    for(const o of active){
+      const company=o.company==='SOLUTIO'?'SOLUTIO':'RL';
+      const group=result[company];group.active.push(o);
+      if(o.meal==='cafe')group.coffee++;
+      if(o.meal==='almoco')group.lunch++;
+      cents[company]+=Math.round(Number(o.price)*100);
+    }
+    const deliveries={RL:0,SOLUTIO:0};
+    for(const type of ['cafe','almoco']){
+      const rl=result.RL.active.filter(o=>o.meal===type).length;
+      const sol=result.SOLUTIO.active.filter(o=>o.meal===type).length;
+      if(!rl&&!sol)continue;
+      if(!closed(type,date,now))continue;
+      const rlShare=Math.round(800*rl/(rl+sol));
+      deliveries.RL+=rlShare;
+      deliveries.SOLUTIO+=800-rlShare;
+    }
+    for(const company of ['RL','SOLUTIO']){
+      result[company].subtotal=cents[company]/100;
+      result[company].delivery=deliveries[company]/100;
+      result[company].total=(cents[company]+deliveries[company])/100;
+    }
+    return result;
+  }
+  return Object.freeze({breakfast, lunch, sides, days, today, weekday, items, unitPrice, fee, cutoff, closed, money, summary, companyBreakdown});
 })();
