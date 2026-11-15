@@ -81,9 +81,15 @@
       <div class="sectionhead"><div><div class="eyebrow blue">ADMINISTRAÇÃO DE ACESSOS</div><h2>Colaboradores e restaurante</h2><p class="muted">Crie acessos sem exigir e-mail pessoal. Todos os cadastros ficam na nuvem e são protegidos por senha.</p></div><button id="usersRefresh" class="secondary compact">Atualizar</button></div>
       <div class="card">
         <h3>Cadastrar novo usuário</h3>
+        <p class="muted small">Para fazer os primeiros testes, escolha um exemplo abaixo. O login será preenchido automaticamente; você só precisa definir uma senha diferente para cada conta.</p>
+        <div class="actions" role="group" aria-label="Preencher cadastros de teste">
+          <button type="button" id="fillUserTest" class="secondary compact">👷 Preencher usuário teste</button>
+          <button type="button" id="fillRestaurantTest" class="secondary compact">👩‍🍳 Preencher restaurante teste</button>
+        </div>
         <div class="user-form-grid">
           <div><label for="newFullName">Nome completo</label><input id="newFullName" type="text" maxlength="80" placeholder="Ex.: João Campos" autocomplete="off"></div>
-          <div><label for="newUsername">Usuário de acesso</label><input id="newUsername" type="text" maxlength="30" placeholder="Ex.: joao.campos" autocapitalize="none" autocomplete="off"></div>
+          <div><label for="newUsername">Login do usuário (gerado automaticamente)</label><input id="newUsername" type="text" maxlength="60" placeholder="Ex.: usuario.teste" autocapitalize="none" autocomplete="off">
+          <p class="small muted" id="usernameHelp">Pode escrever com espaços, maiúsculas ou acentos. O aplicativo converterá para o login correto.</p></div>
           <div><label for="newPassword">Senha inicial (mínimo 8 caracteres)</label><input id="newPassword" type="password" minlength="8" maxlength="72" autocomplete="new-password" placeholder="Senha provisória"></div>
           <div><label for="newRole">Perfil de acesso</label><select id="newRole"><option value="colaborador">Colaborador</option><option value="restaurante">Restaurante</option></select></div>
         </div>
