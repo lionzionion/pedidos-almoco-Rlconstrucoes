@@ -22,3 +22,12 @@
 .report-actions .primary{background:#81b932}
 .auth-card .login-logo{margin-bottom:24px}
 @media(max-width:630px){.user-form-grid{grid-template-columns:1fr}.user-actions>*{flex:1}.user-actions select{width:100%;flex-basis:100%}}
+
+
+/* O login aparece mesmo quando a conexão ou bibliotecas externas falham. */
+.boot-status{background:#e7f0f7;border:1px solid #a9c7da;color:#154768;padding:15px 18px;border-radius:13px;margin:0 0 16px;font-size:14px;font-weight:650}
+.boot-status.error{background:#fff1eb;border-color:#deaa94;color:#9a3425}
+.boot-status[hidden]{display:none!important}
+.auth-card{display:block}
+.auth-card[hidden]{display:none!important}
+@media(max-width:650px){.boot-status{font-size:13px;padding:12px 14px}}
