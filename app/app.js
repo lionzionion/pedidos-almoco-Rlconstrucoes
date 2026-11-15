@@ -76,13 +76,26 @@
     } catch(error) { fail(error); }
   }
   async function authAction() {
-    const login=$('loginEmail').value.trim().toLowerCase();
+    const rawLogin=$('loginEmail').value.trim();
     const password=$('loginPassword').value;
-    if(!login || !password) return inform('Informe usuário e senha.',true);
-    const email = login.includes('@') ? login : login+'@acesso.rl-pedidos.invalid';
-    const {data,error}=await client.auth.signInWithPassword({email,password});
-    if(error) return inform('Usuário ou senha inválidos. Confira os dados cadastrados pela gestão RL.',true);
-    if(data.user) await setUser(data.user);
+    if(!rawLogin || !password) return inform('Informe seu usuário e sua senha.',true);
+    // O cadastro normaliza espaços/acentos; o login deve seguir a mesma regra.
+    const login=rawLogin.includes('@')?rawLogin.toLowerCase():normalizeLogin(rawLogin);
+    if(!rawLogin.includes('@') && login.length<3)
+      return inform('Confira o nome de usuário. Exemplo: usuario.teste.',true);
+    $('loginEmail').value=login;
+    const email=login.includes('@')?login:login+'@acesso.rl-pedidos.invalid';
+    const button=$('loginBtn');button.disabled=true;
+    try {
+      const {data,error}=await client.auth.signInWithPassword({email,password});
+      if(error) {
+        inform('Login ou senha não conferem. Verifique o usuário correto e solicite ao ADM a redefinição da senha, se necessário.',true);
+        return;
+      }
+      if(data?.user) await setUser(data.user);
+    } catch(error) {
+      inform('Não foi possível conectar ao serviço de login. Confira sua conexão e tente novamente.',true);
+    } finally {button.disabled=false;}
   }
   function chooseTab(tab) {
     if(tab === 'order' && !isStaff()) return;
@@ -288,7 +301,17 @@
   async function userApi(action, params={}) {
     if(!configured || !isManager())throw Error('Acesso restrito ao administrador RL.');
     const {data,error}=await client.functions.invoke('manage-users',{body:{action,...params}});
-    if(error)throw Error(data?.error || error.message || 'Não foi possível acessar o servidor.');
+    if(error) {
+      let message=data?.error || error.message || 'Não foi possível acessar o servidor.';
+      try {
+        const context=error.context;
+        if(context && typeof context.clone==='function'){
+          const details=await context.clone().json();
+          if(details?.error)message=details.error;
+        }
+      } catch {}
+      throw Error(message);
+    }
     if(data?.error)throw Error(data.error);
     return data;
   }
@@ -315,6 +338,7 @@
         <button class="secondary compact" data-user-action="set_role" data-id="${esc(u.id)}">Salvar perfil</button>
         <button class="secondary compact" data-user-action="reset_password" data-id="${esc(u.id)}">Redefinir senha</button>
         <button class="${u.active?'danger':'primary'} compact" data-user-action="set_active" data-id="${esc(u.id)}">${u.active?'Desativar':'Reativar'}</button>
+        <button class="danger compact" data-user-action="delete_user" data-id="${esc(u.id)}" title="Exclusão definitiva somente para usuários sem pedidos">Excluir usuário</button>
       </div>`;
       return `<article class="entry user-account">
         <div class="entry-top"><div><strong>${esc(u.display_name)}</strong>
@@ -332,6 +356,11 @@
       if(action==='set_active'){
         if(!confirm((u.active?'Desativar':'Reativar')+' acesso de '+u.display_name+'?'))return;
         params.active=!u.active;
+      }
+      if(action==='delete_user'){
+        if(!confirm('Excluir definitivamente o usuário "'+u.display_name+'"? Esta ação não pode ser desfeita. Usuários com pedidos registrados não podem ser excluídos; devem ser desativados.'))return;
+        const confirmation=prompt('Para confirmar a exclusão de '+u.display_name+', digite EXCLUIR:');
+        if(confirmation!=='EXCLUIR')return;
       }
       if(action==='reset_password'){
         const password=prompt('Digite uma NOVA senha provisória (8 a 72 caracteres) para '+u.display_name+':');
