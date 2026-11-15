@@ -41,11 +41,13 @@ test('limpeza admin exige duas confirmações e apaga apenas registros operacion
  for(const h of [html,access])assert.match(h,/id="resetDataBtn"/);
 });
 
-test('UI apresenta taxa coletiva e horário de fechamento',()=>{
- assert.match(app,/M\.closed\(type,today\)/);
- assert.match(app,/Prazo de pedidos encerrado/);
- assert.match(html,/fechamento às 08h/);
- assert.match(html,/fechamento às 13h/);
+test('UI mantém frete coletivo e libera pedidos sem limite de horário durante os testes',()=>{
+ assert.match(app,/M\.fee\(type,today\)/);
+ assert.match(app,/MODO DE TESTES: pedidos liberados a qualquer hora/);
+ assert.doesNotMatch(app,/if\(M\.closed\(meal\(\),today\)\)/);
+ assert.doesNotMatch(app,/Prazo de pedidos encerrado/);
+ assert.match(html,/pedidos de café e almoço liberados a qualquer hora/);
+ assert.match(access,/pedidos de café e almoço liberados a qualquer hora/);
 });
 
 test('rotas preservam bibliotecas locais e atualização de cache',()=>{
