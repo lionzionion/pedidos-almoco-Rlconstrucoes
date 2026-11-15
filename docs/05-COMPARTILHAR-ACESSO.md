@@ -2,7 +2,7 @@
 
 ## Link oficial de acesso da equipe
 
-**https://lionzionion.github.io/pedidos-almoco-solutio/acesso/**
+**https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/acesso/**
 
 Esse é o endereço único para:
 - **Colaboradores:** registrar café da manhã ou almoço, acompanhar, editar e cancelar pedidos no período permitido.
@@ -17,7 +17,7 @@ O sistema identifica o perfil automaticamente após o login. **Não é necessár
 >
 > Os pedidos de café da manhã e almoço serão feitos pelo nosso aplicativo.
 >
-> Acesse: https://lionzionion.github.io/pedidos-almoco-solutio/acesso/
+> Acesse: https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/acesso/
 >
 > Entre com o **usuário e a senha que a administração RL forneceu**.
 >
@@ -30,7 +30,7 @@ O sistema identifica o perfil automaticamente após o login. **Não é necessár
 > *RL ENGENHARIA | PAINEL DO RESTAURANTE* 👩‍🍳
 >
 > Acesse os pedidos da equipe por este endereço:
-> https://lionzionion.github.io/pedidos-almoco-solutio/acesso/
+> https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/acesso/
 >
 > Entre com seu **usuário exclusivo de restaurante** e a senha fornecida pela administração RL.
 >
@@ -44,11 +44,11 @@ O sistema identifica o perfil automaticamente após o login. **Não é necessár
 >
 > Da solicitação da refeição à conferência financeira: um só sistema para colaboradores, restaurante e gestão.
 >
-> Apresentação: https://lionzionion.github.io/pedidos-almoco-solutio/
+> Apresentação: https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/
 >
-> Demonstração (com dados fictícios): https://lionzionion.github.io/pedidos-almoco-solutio/demo/
+> Demonstração (com dados fictícios): https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/demo/
 >
-> Código e arquitetura: https://github.com/lionzionion/pedidos-almoco-solutio
+> Código e arquitetura: https://github.com/lionzionion/pedidos-almoco-Rlconstrucoes
 
 ## Cuidados ao enviar
 
