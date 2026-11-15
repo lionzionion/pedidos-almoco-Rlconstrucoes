@@ -63,9 +63,11 @@ flowchart LR
 - **Cardápio por dia da semana:** rodízio de café da manhã e almoço, de segunda a domingo.
 - **Personalização de refeições:** escolha do prato, acompanhamentos, observações e restrição de dois feijões simultâneos.
 - **Controle de pedidos:** confirmação, edição e cancelamento antes do preparo; arquivamento administrativo com histórico.
-- **Gestão de acessos:** criação de contas com nomes de usuário, permissões distintas, redefinição de senha e desativação de acesso.
+- **Gestão de acessos:** criação de contas com nomes de usuário, **senha forte gerada automaticamente**, redefinição e troca de senha, desativação e exclusão de contas sem pedidos.
 - **Painel do restaurante:** lista de produção, status de preparo/entrega e visualização de cancelamentos.
-- **Conferência financeira:** total das refeições e taxa coletiva de entrega conforme o dia, com lista nominal.
+- **Chat privado em tempo real:** colaborador ↔ restaurante/gestão e uma conversa reservada entre RL e restaurante.
+- **Limpeza protegida de testes:** ADM pode zerar pedidos, histórico operacional de pedidos e mensagens após prévia e dupla confirmação, sem apagar contas ou logs de segurança.
+- **Conferência financeira:** total das refeições e **uma única taxa de R$ 8 por remessa**, aplicada somente após o fechamento do café às **08h** e do almoço às **13h**, horário de Recife.
 - **Relatórios:** PDF A4 com logo RL, impressão, CSV e resumo consolidado para envio manual por WhatsApp.
 - **Dados centralizados:** PostgreSQL na nuvem, autenticação Supabase, políticas de acesso por linha (RLS), auditoria e atualização em tempo real.
 
@@ -76,11 +78,10 @@ flowchart LR
 | Café completo | R$ 17,00 |
 | Café simples com pão | R$ 10,00 |
 | Almoço | R$ 22,00 |
-| Entrega de café por remessa padrão | R$ 12,00 |
-| Entrega de almoço, segunda a sexta | R$ 8,00 |
-| Entrega de almoço, sábado e domingo | R$ 12,00 |
+| Entrega coletiva de café (uma vez no fechamento às 08h) | R$ 8,00 |
+| Entrega coletiva de almoço (uma vez no fechamento às 13h) | R$ 8,00 |
 
-*Valores e cardápios específicos da operação de referência, informados em novembro de 2026. A taxa é contabilizada uma vez por refeição/período no fechamento padrão. Remessas extras exigem tratamento específico.*
+*Valores da operação de referência em novembro de 2026. Exemplo: 10 almoços a R$ 22 = R$ 220 + **somente R$ 8 de entrega** = R$ 228. Os pedidos são bloqueados após seu horário de corte; a taxa não é multiplicada por colaborador. Remessas extras exigem definição separada.*
 
 ## Arquitetura e tecnologias
 
@@ -189,3 +190,11 @@ A publicação do frontend é estática. Para usar outro projeto Supabase, confi
 **Projeto desenvolvido para resolver uma necessidade concreta da operação em obra, unindo engenharia, gestão e desenvolvimento de software.**
 
 <div align="center"><sub>RL Engenharia · Fazendo Acontecer · Pernambuco, Brasil</sub></div>
+
+### Comunicação, senhas e limpeza pós-teste
+
+No aplicativo, abra **Chat do restaurante** para mensagens privadas. Colaboradores veem apenas sua conversa; restaurante/ADM selecionam o funcionário ou a conversa reservada da gestão.
+
+Em **Cadastros**, o ADM gera senhas fortes e visualiza a credencial **somente no momento de sua criação/redefinição**. As senhas anteriores não são recuperáveis do Supabase Auth. Cada usuário altera sua própria senha em **Minha senha**.
+
+Depois da homologação, o ADM pode usar **Verificar dados → Apagar pedidos e conversas de teste**, confirmando a operação e digitando **ZERAR TESTES**. A limpeza é irreversível e **remove dados operacionais, não os cadastros, a trilha administrativa ou os logs de infraestrutura**. Não use após iniciar pedidos reais sem antes exportar/conferir os dados.
