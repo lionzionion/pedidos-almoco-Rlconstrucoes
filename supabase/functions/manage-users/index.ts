@@ -16,6 +16,13 @@ const reply = (data: unknown, status = 200) =>
 const admin = createClient(URL, ADMIN_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
 const authClient = createClient(URL, ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
 const cleanName = (s: unknown) => typeof s === 'string' ? s.replace(/\s+/g, ' ').trim() : '';
+// "Usuário Teste", "JOÃO CAMPOS" e "restaurante teste" viram logins consistentes.
+// O servidor normaliza novamente: ninguém depende apenas do JavaScript do navegador.
+const normalizedUsername = (input: unknown) => {
+  const name = cleanName(input).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const value = name.replace(/[^a-z0-9]+/g, '.').replace(/^\.+|\.+$/g, '').replace(/\.{2,}/g, '.');
+  return value.length > 30 ? value.slice(0, 30).replace(/\.+$/g, '') : value;
+};
 const validUsername = (u: string) => /^[a-z][a-z0-9._-]{2,29}$/.test(u);
 const validPassword = (p: unknown) => typeof p === 'string' && p.length >= 8 && p.length <= 72;
 const managedRole = (r: unknown) => r === 'colaborador' || r === 'restaurante';
@@ -51,11 +58,11 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'create') {
-      const username = cleanName(body.username).toLowerCase();
+      const username = normalizedUsername(body.username || body.display_name);
       const displayName = cleanName(body.display_name);
       const password = body.password;
       const role = body.role;
-      if (!validUsername(username)) return reply({ error: 'Usuário deve ter 3–30 caracteres, começando por letra; use letras minúsculas, números, ponto, hífen ou sublinhado.' }, 400);
+      if (!validUsername(username)) return reply({ error: 'Informe um nome de usuário com pelo menos 3 caracteres, por exemplo usuario.teste ou restaurante.teste.' }, 400);
       if (displayName.length < 3 || displayName.length > 80) return reply({ error: 'Informe nome completo com 3–80 caracteres.' }, 400);
       if (!validPassword(password)) return reply({ error: 'A senha deve ter entre 8 e 72 caracteres.' }, 400);
       if (!managedRole(role)) return reply({ error: 'Perfil deve ser colaborador ou restaurante.' }, 400);
