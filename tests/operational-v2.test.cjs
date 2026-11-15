@@ -49,7 +49,7 @@ test('UI apresenta taxa coletiva e horário de fechamento',()=>{
 });
 
 test('rotas preservam bibliotecas locais e atualização de cache',()=>{
- assert.match(html,/loader\.js\?v=8/);
- assert.match(access,/loader\.js\?v=8/);
- assert.match(read('app/loader.js'),/app\.js\?v=9/);
+ assert.match(html,/loader\.js\?v=9/);
+ assert.match(access,/loader\.js\?v=9/);
+ assert.match(read('app/loader.js'),/app\.js\?v=10/);
 });
