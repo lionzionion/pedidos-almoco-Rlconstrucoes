@@ -23,8 +23,7 @@ button,a.button{border:0;border-radius:10px;padding:13px 16px;font-size:14px;fon
 [hidden]{display:none!important}
 </style>
 <script src="../app/config.js?v=2"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/dist/umd/supabase.js"
- onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2.57.0/dist/umd/supabase.js'"></script>
+
 </head>
 <body><header><img src="../assets/rl-logo.webp" alt="RL Construções"><span>GESTÃO DE REFEIÇÕES</span></header>
 <main>
@@ -56,8 +55,27 @@ const token=params.get('convite')||'';
 const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*';
 const pass=()=>{const r=new Uint8Array(20);crypto.getRandomValues(r);const a=Array.from(r,i=>alphabet[i%alphabet.length]);a[0]='ABCDEFGHJKLMNPQRSTUVWXYZ'[r[0]%24];a[1]='abcdefghijkmnopqrstuvwxyz'[r[1]%25];a[2]='23456789'[r[2]%8];a[3]='!@#$%&*'[r[3]%7];return a.join('')};
 let client=null,user=null;
+async function loadSupabase(){
+  if(window.supabase?.createClient)return;
+  const sources=[
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/dist/umd/supabase.js',
+    'https://unpkg.com/@supabase/supabase-js@2.57.0/dist/umd/supabase.js'
+  ];
+  for(const src of sources){
+    try{
+      await new Promise((resolve,reject)=>{
+        const el=document.createElement('script');el.src=src;
+        el.onload=()=>resolve();el.onerror=()=>reject(new Error('Biblioteca não carregou'));
+        document.head.appendChild(el);
+      });
+      if(window.supabase?.createClient)return;
+    }catch{}
+  }
+  throw Error('Não foi possível carregar o serviço de login. Verifique sua conexão e recarregue a página.');
+}
 async function init(){
  if(!/^[a-f0-9]{64}$/i.test(token))throw Error('Este link não contém um convite válido.');
+ await loadSupabase();
  const url=window.RL_CONFIG?.supabaseUrl,key=window.RL_CONFIG?.supabaseAnonKey;
  if(!url||!key||typeof window.supabase?.createClient!=='function')throw Error('Não foi possível conectar ao sistema. Atualize a página.');
  client=window.supabase.createClient(url,key);
@@ -71,12 +89,12 @@ async function init(){
  $('person').textContent=data.display_name;
  $('company').textContent='Empresa: '+(data.company==='SOLUTIO'?'Solutio':'RL Construções')+' • '+data.job_title;
  $('username').textContent=data.username;
- $('password').value=pass();
- $('confirm').value=$('password').value;
+ $('password').value='';
+ $('confirm').value='';
  $('form').hidden=false;
- setStatus('Convite validado. Defina ou copie sua senha e ative a conta.');
+ setStatus('Convite validado. Escolha uma senha ou clique em Gerar senha forte. Depois confirme a senha para ativar.');
 }
-$('generate').addEventListener('click',()=>{$('password').value=pass();$('confirm').value=$('password').value;$('password').type='text';setStatus('Nova senha forte gerada. Copie ou guarde a senha antes de entrar.')});
+$('generate').addEventListener('click',()=>{$('password').value=pass();$('confirm').value='';$('password').type='text';setStatus('Senha forte gerada. Copie ou anote, depois digite-a novamente no campo Confirmar senha.')});
 $('show').addEventListener('click',()=>{$('password').type=$('password').type==='password'?'text':'password'});
 $('copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('password').value);setStatus('Senha copiada. Guarde-a em local seguro.')}catch{setStatus('Selecione a senha para copiar manualmente.',true)}});
 $('activate').addEventListener('click',async()=>{
