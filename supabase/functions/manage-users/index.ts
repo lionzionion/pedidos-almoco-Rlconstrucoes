@@ -96,11 +96,34 @@ Deno.serve(async (req) => {
     const id = cleanName(body.id);
     if (!/^[0-9a-fA-F-]{36}$/.test(id)) return reply({ error: 'ID inválido.' }, 400);
     const { data: target, error: targetError } = await admin.from('profiles')
-      .select('id,username,role,active').eq('id',id).single();
+      .select('id,username,display_name,role,active').eq('id',id).single();
     if (targetError || !target) return reply({ error: 'Usuário não encontrado.' }, 404);
     if (target.id === caller || target.role === 'admin') return reply({ error: 'Esta conta administrativa está protegida.' }, 403);
     if (!target.username) return reply({ error: 'Conta de e-mail não gerenciada por este painel.' }, 403);
 
+    if (action === 'delete_user') {
+      // Administrador e demais contas com role admin são protegidos acima.
+      // Excluir conta com pedidos violaria a integridade das medições/relatórios.
+      const { count, error: countError } = await admin.from('orders')
+        .select('id', { count: 'exact', head: true }).eq('owner', id);
+      if (countError) throw countError;
+      if ((count ?? 0) > 0) {
+        return reply({ error: 'Este usuário já possui pedidos registrados. Para preservar a conferência financeira, desative o acesso em vez de excluir.' }, 409);
+      }
+      const { error: deleteError } = await admin.auth.admin.deleteUser(id);
+      if (deleteError) {
+        console.error('manage-users delete_user:', deleteError.message);
+        return reply({ error: 'Não foi possível excluir este usuário. Confira se há registros vinculados e tente novamente.' }, 409);
+      }
+      // target=null intencional: a FK de auditoria é SET NULL após a remoção.
+      // Guardar identificador e nome histórico evita perder a identificação da exclusão.
+      const { error: auditError } = await admin.from('account_audit').insert({
+        actor: caller, target: null, action: 'delete_user',
+        details: { removed_user_id: id, username: target.username, display_name: target.display_name, role: target.role }
+      });
+      if (auditError) console.error('manage-users audit:', auditError.message);
+      return reply({ message: 'Usuário excluído definitivamente do acesso e da autenticação. Histórico administrativo preservado.' });
+    }
     if (action === 'set_active') {
       if (typeof body.active !== 'boolean') return reply({ error: 'Estado inválido.' }, 400);
       const { error } = await admin.from('profiles').update({ active: body.active }).eq('id',id);
