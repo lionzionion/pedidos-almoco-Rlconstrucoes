@@ -1,194 +1,83 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#102a25">
-  <meta name="description" content="Escolha seu almoço e envie o pedido pelo WhatsApp.">
-  <title>Almoço do dia | Solutio & RL</title>
-  <style>
-    :root { --bg:#f5f7f5; --ink:#173a33; --deep:#102a25; --muted:#63716d; --accent:#167c58; --line:#dae3dd; --white:#fff; --good:#dff3e8; --warn:#fff1da; }
-    * { box-sizing:border-box; }
-    body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; color:var(--ink); background:var(--bg); line-height:1.42; }
-    header { background:linear-gradient(135deg,#102a25,#1d604d); color:white; padding:30px 18px 76px; }
-    .wrap { max-width:620px; margin:0 auto; }
-    .eyebrow { font-size:12px; letter-spacing:.14em; text-transform:uppercase; font-weight:800; color:#b4dec7; }
-    h1 { font-size:clamp(26px,6vw,36px); line-height:1.1; margin:10px 0 8px; letter-spacing:-.04em; }
-    header p { margin:0; color:#dfede6; font-size:15px; }
-    main { padding:0 14px 40px; margin-top:-48px; }
-    .panel { background:white; padding:24px 20px; border:1px solid var(--line); border-radius:20px; box-shadow:0 12px 40px rgba(15,43,33,.08); }
-    h2 { margin:0 0 6px; font-size:20px; letter-spacing:-.02em; }
-    .help { font-size:13px; color:var(--muted); margin:0 0 20px; }
-    label.field { display:block; font-weight:750; font-size:14px; margin:16px 0 8px; }
-    input[type=text], select { display:block; width:100%; border:1px solid #cddcd3; border-radius:12px; padding:14px; font-size:16px; background:white; color:var(--ink); outline-offset:3px; }
-    select { appearance:auto; }
-    .choices-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:26px; }
-    .choices-head h2 { margin:0; }
-    .counter { background:#ecf4ef; border-radius:30px; padding:6px 10px; font-size:12px; font-weight:800; white-space:nowrap; }
-    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:16px 0 4px; }
-    .choice { position:relative; display:flex; align-items:center; gap:10px; padding:14px 12px; border:1.5px solid var(--line); border-radius:14px; cursor:pointer; min-height:67px; font-weight:650; font-size:14px; transition:.12s ease; }
-    .choice.selected { border-color:#1d8b61; background:#e8f7ee; }
-    .choice input { width:20px; height:20px; flex-shrink:0; accent-color:var(--accent); }
-    .footnote { font-size:12px; color:var(--muted); padding:5px 0 0; }
-    .preview { white-space:pre-line; border-radius:14px; background:#f2f6f3; padding:16px; font-size:14px; color:#244138; margin-top:16px; border:1px solid var(--line); }
-    .btn { border:0; border-radius:14px; min-height:53px; padding:14px 18px; font-size:16px; font-weight:800; width:100%; cursor:pointer; }
-    .primary { background:#1d9b5a; color:white; margin-top:18px; }
-    .primary:disabled { opacity:.45; cursor:not-allowed; }
-    .secondary { background:#eaf2ec; color:var(--ink); margin-top:9px; }
-    .message { padding:13px 15px; border-radius:12px; font-size:14px; font-weight:600; margin-top:12px; display:none; }
-    .message.show { display:block; }
-    .error { background:#fff0e9; color:#8b3b21; }
-    .success { background:var(--good); color:#17613e; }
-    .smallprint { margin-top:16px; color:var(--muted); font-size:12px; text-align:center; }
-    .pill { display:inline-block; padding:5px 9px; border-radius:30px; background:#2c755a; color:white; font-size:13px; font-weight:750; margin-top:18px; }
-    @media (max-width:380px) { .grid{grid-template-columns:1fr;} .panel{padding:20px 15px} }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#073a60">
+<meta name="description" content="AMBEV | Pedidos RL — gestão de refeições, restaurante e conferência diária.">
+<title>AMBEV | Pedidos RL Engenharia</title>
+<link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <header><div class="wrap">
-    <div class="eyebrow">SOLUTIO × RL ENGENHARIA</div>
-    <h1>🍽️ Pedido de almoço</h1>
-    <p>Preencha em menos de um minuto e envie seu pedido pelo WhatsApp.</p>
-    <div class="pill" id="datePill"></div>
-  </div></header>
-
-  <main><div class="wrap"><section class="panel">
-    <h2>Seus dados</h2>
-    <p class="help">Informe seu nome e a empresa para identificar corretamente o pedido.</p>
-    <label class="field" for="fullName">Nome do funcionário</label>
-    <input id="fullName" type="text" maxlength="80" autocomplete="name" placeholder="Digite seu nome completo">
-    <label class="field" for="company">Empresa</label>
-    <select id="company">
-      <option value="">Selecione sua empresa</option>
-      <option value="SOLUTIO">SOLUTIO</option>
-      <option value="RL">RL</option>
-    </select>
-
-    <div class="choices-head">
-      <h2>Escolha as carnes</h2><span class="counter" id="counter">0 de 2 selecionadas</span>
-    </div>
-    <p class="help" style="margin-top:6px">Selecione <strong>uma ou duas</strong> opções do cardápio.</p>
-    <div class="grid" id="meatGrid"></div>
-    <p class="footnote">Máximo de 2 opções por funcionário.</p>
-
-    <label class="field" style="margin-top:23px">Resumo do pedido</label>
-    <div id="preview" class="preview" aria-live="polite"></div>
-    <div id="feedback" class="message" role="status" aria-live="polite"></div>
-    <button class="btn primary" id="sendBtn" type="button">📲 Enviar pedido pelo WhatsApp</button>
-    <button class="btn secondary" id="copyBtn" type="button">📋 Copiar mensagem do pedido</button>
-    <p class="smallprint">O envio só é concluído quando você confirma a mensagem no WhatsApp. Este formulário não armazena pedidos em servidor.</p>
-  </section></div></main>
-
-  <script>
-    (() => {
-      const meats = [
-        'Frango assado', 'Linguiça toscana', 'Porco assado',
-        'Fraldinha', 'Maminha', 'Galinha guisada',
-        'Fígado acebolado', 'Guisado de boi', 'Carneiro assado'
-      ];
-      const now = new Date();
-      const dateLabel = new Intl.DateTimeFormat('pt-BR', {
-        timeZone: 'America/Recife', day: '2-digit', month: '2-digit', year: 'numeric'
-      }).format(now);
-      const fullDateLabel = new Intl.DateTimeFormat('pt-BR', {
-        timeZone: 'America/Recife', weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
-      }).format(now);
-      document.getElementById('datePill').textContent =
-        fullDateLabel.charAt(0).toUpperCase() + fullDateLabel.slice(1);
-      const params = new URLSearchParams(location.search);
-      const phone = (params.get('dest') || '').replace(/\D/g, '');
-      const fullName = document.getElementById('fullName');
-      const company = document.getElementById('company');
-      const grid = document.getElementById('meatGrid');
-      const preview = document.getElementById('preview');
-      const counter = document.getElementById('counter');
-      const sendBtn = document.getElementById('sendBtn');
-      const copyBtn = document.getElementById('copyBtn');
-      const feedback = document.getElementById('feedback');
-      const selected = new Set();
-      const clean = t => t.replace(/\s+/g, ' ').trim();
-
-      function showFeedback(text, isError = false) {
-        feedback.textContent = text;
-        feedback.className = `message show ${isError ? 'error' : 'success'}`;
-      }
-      function orderText() {
-        const name = clean(fullName.value) || '(não informado)';
-        const org = company.value || '(não informada)';
-        const choices = [...selected];
-        return `🍽️ *PEDIDO DE ALMOÇO – ${dateLabel}*\n\n👤 *Nome:* ${name}\n🏢 *Empresa:* ${org}\n🥩 *1ª opção:* ${choices[0] || '(não selecionada)'}${choices[1] ? '\n🥩 *2ª opção:* ' + choices[1] : ''}\n\n✅ Pedido preenchido`;
-      }
-      function render() {
-        counter.textContent = `${selected.size} de 2 selecionadas`;
-        preview.textContent = orderText();
-        document.querySelectorAll('.choice').forEach(label => {
-          const checkbox = label.querySelector('input');
-          label.classList.toggle('selected', selected.has(checkbox.value));
-          checkbox.checked = selected.has(checkbox.value);
-          checkbox.disabled = selected.size >= 2 && !selected.has(checkbox.value);
-        });
-      }
-      function validate() {
-        if (clean(fullName.value).length < 2) { fullName.focus(); showFeedback('Informe seu nome para identificar o pedido.', true); return false; }
-        if (!company.value) { company.focus(); showFeedback('Escolha SOLUTIO ou RL.', true); return false; }
-        if (selected.size === 0) { showFeedback('Selecione pelo menos uma carne.', true); return false; }
-        feedback.className = 'message';
-        return true;
-      }
-      meats.forEach((meat, i) => {
-        const label = document.createElement('label');
-        label.className = 'choice';
-        const input = document.createElement('input');
-        input.type = 'checkbox'; input.value = meat; input.name = 'carne'; input.id = `meat-${i}`;
-        const span = document.createElement('span'); span.textContent = meat;
-        label.append(input, span);
-        input.addEventListener('change', () => {
-          if (input.checked) {
-            if (selected.size >= 2) { input.checked = false; showFeedback('Você pode escolher no máximo duas opções.', true); return; }
-            selected.add(meat);
-          } else selected.delete(meat);
-          feedback.className = 'message';
-          render();
-        });
-        grid.appendChild(label);
-      });
-      fullName.addEventListener('input', render);
-      company.addEventListener('change', render);
-      sendBtn.addEventListener('click', async () => {
-        if (!validate()) return;
-        const message = orderText();
-        if (phone.length >= 12 && phone.length <= 15) {
-          location.href = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-          showFeedback('Confirme o envio da mensagem no WhatsApp.');
-          return;
-        }
-        // No destination defined: share sheet lets employee choose the organizer's WhatsApp chat.
-        if (navigator.share) {
-          try {
-            await navigator.share({ text: message });
-            showFeedback('Confirme se a mensagem foi enviada ao responsável pelos pedidos.');
-          } catch (e) {
-            if (e && e.name !== 'AbortError') showFeedback('Não foi possível compartilhar. Use o botão “Copiar mensagem”.', true);
-          }
-        } else {
-          window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
-          showFeedback('Selecione o contato responsável e confirme o envio no WhatsApp.');
-        }
-      });
-      copyBtn.addEventListener('click', async () => {
-        if (!validate()) return;
-        try {
-          await navigator.clipboard.writeText(orderText());
-          showFeedback('Pedido copiado! Cole na conversa do responsável pelo almoço.');
-        } catch (_) {
-          const ta = document.createElement('textarea');
-          ta.value = orderText(); document.body.append(ta); ta.select();
-          const ok = document.execCommand('copy'); ta.remove();
-          showFeedback(ok ? 'Pedido copiado! Cole no WhatsApp.' : 'Não foi possível copiar automaticamente.', !ok);
-        }
-      });
-      render();
-    })();
-  </script>
+<header class="hero">
+  <div class="container headrow">
+    <div class="brand"><div class="brandmark"><span>R</span><span>L</span></div><div><strong>RL Engenharia</strong><small>Fazendo Acontecer</small></div></div>
+    <div class="brandright"><span class="tag">Obra AMBEV • Itapissuma</span><div class="userhead" id="who"></div></div>
+  </div>
+  <div class="container hero-content"><div class="eyebrow">GESTÃO DE REFEIÇÕES</div><h1>AMBEV | PEDIDOS RL</h1><p>Café da manhã e almoço organizados para toda a equipe.</p><span id="todayLabel" class="date-pill"></span></div>
+</header>
+<main class="container">
+  <div id="notice" class="notice" hidden></div>
+  <section id="login" class="card auth-card" hidden>
+    <h2>Acesso ao sistema</h2>
+    <p class="muted">Entre com seu cadastro para acompanhar seus pedidos e receber confirmação.</p>
+    <label for="loginEmail">E-mail</label><input id="loginEmail" type="email" autocomplete="email" placeholder="voce@exemplo.com">
+    <label for="loginPassword">Senha</label><input id="loginPassword" type="password" autocomplete="current-password" minlength="6" placeholder="Sua senha">
+    <label for="loginName">Nome completo (somente no primeiro cadastro)</label><input id="loginName" type="text" autocomplete="name" placeholder="Seu nome completo" maxlength="80">
+    <div class="actions"><button id="loginBtn" class="primary">Entrar</button><button id="signupBtn" class="secondary">Criar cadastro</button></div>
+    <p class="small muted">Apenas a administração poderá conceder acesso ao painel do restaurante ou à gestão.</p>
+  </section>
+  <section id="demo" class="card demo-card" hidden>
+    <strong>Prévia local — ainda não conectada ao banco de dados.</strong>
+    <p>Os pedidos de teste ficam somente neste navegador e <b>não aparecem em outros celulares</b>. Não use esta prévia para encomendar refeições reais.</p>
+    <div class="actions"><button data-demo-role="colaborador" class="secondary">Testar colaborador</button><button data-demo-role="restaurante" class="secondary">Testar restaurante</button><button data-demo-role="admin" class="secondary">Testar gestão RL</button></div>
+    <label for="demoName">Nome do colaborador de teste</label><input id="demoName" value="Colaborador de teste" maxlength="80">
+  </section>
+  <div id="app" hidden>
+    <nav class="tabs" aria-label="Áreas do sistema">
+      <button class="tab active" data-tab="order">🍽️ Fazer pedido</button>
+      <button class="tab" data-tab="mine">🧾 Meus pedidos</button>
+      <button class="tab" data-tab="restaurant">👩‍🍳 Restaurante</button>
+      <button class="tab" data-tab="admin">📊 Conferência RL</button>
+      <button id="logoutBtn" class="tab logout" hidden>Sair</button>
+    </nav>
+    <section id="order" class="pane">
+      <div class="sectionhead"><div><div class="eyebrow blue">COLABORADOR</div><h2>Monte sua refeição</h2><p class="muted">Escolha uma refeição por período. Você pode alterar ou cancelar antes do preparo.</p></div></div>
+      <div class="card">
+        <div class="group"><span class="fieldtitle">Refeição</span><div class="toggle-row"><label class="meal-option"><input name="meal" value="cafe" type="radio"> ☀️ Café da manhã</label><label class="meal-option"><input name="meal" value="almoco" type="radio" checked> 🍛 Almoço</label></div></div>
+        <div class="group"><span class="fieldtitle">Data e cardápio</span><div class="dayname" id="menuDay"></div><div id="menuCards" class="menu-cards"></div></div>
+        <div id="sideSection" class="group"><span class="fieldtitle">Acompanhamentos</span><p class="muted small">Escolha o que deseja. Selecione apenas um tipo de feijão.</p><div id="sides" class="checkgrid"></div></div>
+        <div class="group"><label for="notes">Observações para a cozinha</label><textarea id="notes" rows="3" maxlength="250" placeholder="Ex.: sem cebola, pouco arroz..."></textarea></div>
+        <div class="order-total"><div><span>Valor unitário</span><strong id="unitPrice">R$ 22,00</strong></div><div><span>Taxa da entrega coletiva</span><strong id="feePreview">R$ 8,00</strong></div></div>
+        <p class="muted small">A taxa de entrega é cobrada uma vez por remessa, não por funcionário. O fechamento final é calculado no painel da gestão.</p>
+        <div id="orderFeedback" class="feedback" role="status" aria-live="polite"></div>
+        <div class="actions"><button id="placeBtn" class="primary">Confirmar pedido</button><button id="clearEditBtn" class="secondary" hidden>Cancelar edição</button></div>
+      </div>
+    </section>
+    <section id="mine" class="pane" hidden>
+      <div class="sectionhead"><div><div class="eyebrow blue">MEUS PEDIDOS</div><h2>Histórico e cancelamentos</h2><p class="muted">Edite ou cancele pedidos com status confirmado. Pedidos em preparo não podem mais ser alterados.</p></div><button id="mineRefresh" class="secondary compact">Atualizar</button></div>
+      <div id="mineList" class="stack"></div>
+    </section>
+    <section id="restaurant" class="pane" hidden>
+      <div class="sectionhead"><div><div class="eyebrow blue">PAINEL DO RESTAURANTE</div><h2>Pedidos recebidos</h2><p class="muted">Os pedidos aparecem aqui sem envio individual pelo WhatsApp.</p></div><button id="restaurantRefresh" class="secondary compact">Atualizar</button></div>
+      <div class="toolbar"><label for="restaurantDate">Dia</label><input id="restaurantDate" type="date"><label for="restaurantMeal">Refeição</label><select id="restaurantMeal"><option value="todos">Todas</option><option value="cafe">Café</option><option value="almoco">Almoço</option></select></div>
+      <div id="restaurantStats" class="metricrow"></div><div id="restaurantList" class="stack"></div>
+    </section>
+    <section id="admin" class="pane" hidden>
+      <div class="sectionhead"><div><div class="eyebrow blue">ADMINISTRAÇÃO RL</div><h2>Conferência e pagamento</h2><p class="muted">Listagem nominal, conferência das remessas, cancelamentos e registros arquivados.</p></div><button id="adminRefresh" class="secondary compact">Atualizar</button></div>
+      <div class="toolbar"><label for="adminDate">Dia da conferência</label><input id="adminDate" type="date"><label for="adminMeal">Refeição</label><select id="adminMeal"><option value="todos">Todas</option><option value="cafe">Café</option><option value="almoco">Almoço</option></select></div>
+      <div id="adminStats" class="metricrow"></div>
+      <div class="card"><h3>Relação nominal</h3><div class="table-scroll"><table><thead><tr><th>Colaborador</th><th>Refeição</th><th>Pedido</th><th>Status</th><th>Valor</th><th>Ação</th></tr></thead><tbody id="adminRows"></tbody></table></div><p class="small muted">Arquivar remove da lista ativa, mas mantém histórico para auditoria. O pedido pode ser restaurado.</p>
+      <div class="actions"><button id="csvBtn" class="secondary">Exportar CSV</button><button id="whatsBtn" class="secondary">Resumo para WhatsApp</button></div>
+      <label for="whatsPhone">WhatsApp do destinatário (DDI + DDD + número)</label><input id="whatsPhone" type="tel" inputmode="numeric" placeholder="55DDDNUMERO"><p class="small muted">Por enquanto, o resumo abre uma conversa para confirmação manual do envio.</p></div>
+      <div class="card"><h3>Pedidos cancelados e arquivados</h3><div id="adminAudit" class="stack"></div></div>
+    </section>
+  </div>
+</main>
+<footer>RL Engenharia • AMBEV Itapissuma • Horário de Recife/PE</footer>
+<script src="./config.js"></script>
+<script src="./menu.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/dist/umd/supabase.min.js"></script>
+<script src="./app.js" defer></script>
 </body>
 </html>
