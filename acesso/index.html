@@ -59,7 +59,7 @@
         <div id="sideSection" class="group"><span class="fieldtitle">Acompanhamentos</span><p class="muted small">Escolha o que deseja. Selecione apenas um tipo de feijão.</p><div id="sides" class="checkgrid"></div></div>
         <div class="group"><label for="notes">Observações para a cozinha</label><textarea id="notes" rows="3" maxlength="250" placeholder="Ex.: sem cebola, pouco arroz..."></textarea></div>
         <div class="order-total"><div><span>Valor unitário</span><strong id="unitPrice">R$ 22,00</strong></div><div><span>Frete da remessa (cobrado no fechamento)</span><strong id="feePreview">R$ 8,00</strong></div></div>
-        <p class="muted small">Uma única taxa de R$ 8,00 para todos os pedidos de café (fechamento às 08h) e outra para o almoço (fechamento às 13h). A cobrança entra apenas após o horário de fechamento, não por funcionário.</p>
+        <p class="muted small">Modo de testes: pedidos de café e almoço liberados a qualquer hora. O frete coletivo de R$ 8 por tipo de refeição continua considerado uma única vez na conferência depois das 08h para café e 13h para almoço, sem multiplicar por colaborador.</p>
         <p class="small" id="orderDeadlineInfo" role="status"></p>
         <div id="orderFeedback" class="feedback" role="status" aria-live="polite"></div>
         <div class="actions"><button id="placeBtn" class="primary">Confirmar pedido</button><button id="clearEditBtn" class="secondary" hidden>Cancelar edição</button></div>
@@ -133,7 +133,7 @@
       </div>
       <div class="card">
         <h3>Convites de primeiro acesso <span id="invitesCount" class="counter">0</span></h3>
-        <p class="small muted">Aguardando ativação por cada colaborador. O link pessoal está no documento privado de convites enviado ao ADM; o sistema não mostra os códigos de ativação nesta página.</p>
+        <p class="small muted">Para cada colaborador pendente, clique em <strong>Gerar link para WhatsApp</strong>. Depois use <strong>Copiar link</strong> ou <strong>Enviar por WhatsApp</strong> na caixa que aparece acima. A geração invalida o link anterior e não altera contas já ativadas.</p>
         <div id="invitesList" class="stack">Carregando convites...</div>
       </div>
       <div class="card">
