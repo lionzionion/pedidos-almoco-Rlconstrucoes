@@ -31,3 +31,19 @@
 .auth-card{display:block}
 .auth-card[hidden]{display:none!important}
 @media(max-width:650px){.boot-status{font-size:13px;padding:12px 14px}}
+
+
+/* Chat reservado por colaborador e restaurante */
+.chat-messages{min-height:240px;max-height:430px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:16px;background:#f0f6f8;border:1px solid #d1e0e6;border-radius:14px;margin:12px 0}
+.chat-bubble{max-width:88%;background:#fff;border:1px solid #dce7ed;border-radius:14px 14px 14px 4px;padding:10px 13px;align-self:flex-start;word-break:break-word}
+.chat-bubble.chat-own{background:#dff0de;border-color:#bdd8b4;border-radius:14px 14px 4px 14px;align-self:flex-end}
+.chat-meta{font-size:11px;color:#54738a;font-weight:700;margin-bottom:5px}
+.chat-bubble p{white-space:pre-wrap;margin:0;font-size:14px;line-height:1.5}
+#chatThread{max-width:100%}
+#chatInput{max-width:100%}
+.credential-box{background:#eef8ed;border:1px solid #a6c996;color:#234b26;padding:16px;border-radius:13px;margin:14px 0}
+.credential-box[hidden]{display:none!important}
+.credentials{white-space:pre-wrap;overflow-wrap:anywhere;background:#fff;padding:13px;border-radius:8px;border:1px solid #c8dcca;font-family:ui-monospace,monospace;font-size:13px}
+#orderDeadlineInfo{padding:10px 13px;background:#edf6e8;border-radius:8px;border:1px solid #cae2c3;color:#315b29}
+#orderDeadlineInfo.error{background:#fff0ed;color:#933f2e;border-color:#ecbcae}
+@media(max-width:630px){.chat-bubble{max-width:96%}.chat-messages{min-height:220px;max-height:55vh}}
