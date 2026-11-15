@@ -347,19 +347,53 @@
       }catch(error){fail(error);}finally{b.disabled=false;}
     }));
   }
+  // Converte um nome de exibição em login fácil, ex.: João Campos → joao.campos.
+  function normalizeLogin(input){
+    const value=String(input||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .toLowerCase().replace(/[^a-z0-9]+/g,'.').replace(/^\.+|\.+$/g,'')
+      .replace(/\.{2,}/g,'.');
+    return value.slice(0,30).replace(/\.+$/g,'');
+  }
+  let loginEdited=false;
+  function setTestTemplate(type) {
+    const restaurant=type==='restaurante';
+    $('newFullName').value=restaurant?'Restaurante Teste':'Usuário Teste';
+    $('newUsername').value=restaurant?'restaurante.teste':'usuario.teste';
+    $('newRole').value=restaurant?'restaurante':'colaborador';
+    $('newPassword').value='';
+    $('usersFeedback').textContent='Exemplo preenchido. Crie uma senha individual com 8 caracteres ou mais e clique em Cadastrar na nuvem.';
+    $('usersFeedback').classList.remove('error');
+    loginEdited=false;
+    $('newPassword').focus();
+  }
+  $('newFullName').addEventListener('input',()=>{
+    if(!loginEdited)$('newUsername').value=normalizeLogin($('newFullName').value);
+  });
+  $('newUsername').addEventListener('input',()=>{
+    loginEdited=true;
+    $('usernameHelp').textContent='O login será salvo como: '+(normalizeLogin($('newUsername').value)||'informe pelo menos 3 letras');
+  });
+  $('fillUserTest').addEventListener('click',()=>setTestTemplate('colaborador'));
+  $('fillRestaurantTest').addEventListener('click',()=>setTestTemplate('restaurante'));
+
   async function createUser(){
     if(!isManager())return;
     const display_name=$('newFullName').value.trim();
-    const username=$('newUsername').value.trim().toLowerCase();
+    const username=normalizeLogin($('newUsername').value||$('newFullName').value);
+    $('newUsername').value=username;
     const password=$('newPassword').value;
     const role=$('newRole').value;
     if(display_name.length<3)return inform('Informe o nome completo.',true);
-    if(!/^[a-z][a-z0-9._-]{2,29}$/.test(username))return inform('Usuário deve ter 3 a 30 caracteres, começando por letra minúscula.',true);
+    if(!/^[a-z][a-z0-9._-]{2,29}$/.test(username)) {
+      $('usersFeedback').textContent='Digite um nome de pelo menos 3 letras. Exemplos: usuario.teste ou restaurante.teste.';
+      $('usersFeedback').classList.add('error');
+      return;
+    }
     if(password.length<8)return inform('Use senha provisória com pelo menos 8 caracteres.',true);
     const btn=$('createUserBtn');btn.disabled=true;
     try{
       const result=await userApi('create',{display_name,username,password,role});
-      $('newFullName').value='';$('newUsername').value='';$('newPassword').value='';
+      $('newFullName').value='';$('newUsername').value='';$('newPassword').value='';loginEdited=false;
       $('usersFeedback').classList.remove('error');
       $('usersFeedback').textContent='Conta de '+display_name+' criada. Informe ao usuário o login "'+username+'" e a senha provisória por canal privado.';
       inform(result.message||'Conta cadastrada na nuvem.');
