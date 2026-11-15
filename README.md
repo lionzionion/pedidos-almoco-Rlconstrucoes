@@ -213,3 +213,9 @@ O frete é **R$ 8 por evento de café** (após 08h) e **R$ 8 por evento de almo�
 Os trabalhadores recebem convites privados, **de uso único e validade limitada**, enviados pelo ADM individualmente. O link abre a página `/convite/` e **não contém senha**. O colaborador gera ou define uma senha forte, ativa seu cadastro e entra automaticamente. O código do convite é mantido como hash no banco, e os tokens de distribuição **não ficam no GitHub**. Após a ativação, os próximos acessos são feitos pelo login comum em `/acesso/`.
 
 Convites pendentes não equivalem a contas já ativadas: a conta só aparece como usuário no painel ADM após o primeiro acesso. O perfil inicial é `colaborador`, com empresa e função atribuídas pelo administrador. O acesso ADM existente é preservado.
+
+### Modo de testes: pedidos sem restrição de horário (15/11/2026)
+
+Durante a homologação, **não existe horário de bloqueio para criar, editar ou cancelar pedidos confirmados**. O corte original das 08h (café) e 13h (almoço) está temporariamente desativado no gatilho do Supabase e na interface. **A taxa única de R$ 8 por evento permanece**, contabilizada na conferência a partir de 08h/13h e rateada proporcionalmente entre RL/Solutio. Portanto, durante os testes, pedidos feitos mais tarde podem alterar o total da remessa. Antes da operação oficial, restabeleça o bloqueio de horários e confirme a regra de frete.
+
+Em **Cadastros → Convites de primeiro acesso**, a administração pode escolher um nome já listado (por exemplo, `jackeline.tecnica`) e clicar em **Gerar link para WhatsApp**. Isso **substitui o código anterior** por outro, sem expor senha, e abre as opções **Copiar link** e **Enviar por WhatsApp**. Convites ativados não podem ser regenerados; para esses usuários, use a redefinição de senha.
