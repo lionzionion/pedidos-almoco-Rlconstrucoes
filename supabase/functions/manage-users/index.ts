@@ -26,6 +26,15 @@ const normalizedUsername = (input: unknown) => {
 const validUsername = (u: string) => /^[a-z][a-z0-9._-]{2,29}$/.test(u);
 const validPassword = (p: unknown) => typeof p === 'string' && p.length >= 8 && p.length <= 72;
 const managedRole = (r: unknown) => r === 'colaborador' || r === 'restaurante';
+// Gerador criptográfico sem persistir senhas recuperáveis no banco.
+const randomPassword = () => {
+  const groups=['ABCDEFGHJKLMNPQRSTUVWXYZ','abcdefghijkmnopqrstuvwxyz','23456789','!@#$%&*'];
+  const all=groups.join('');
+  const pick=(chars:string) => chars[crypto.getRandomValues(new Uint32Array(1))[0] % chars.length];
+  const chars=[...groups.map(pick), ...Array.from({length:12},()=>pick(all))];
+  for(let i=chars.length-1;i>0;i--){const j=crypto.getRandomValues(new Uint32Array(1))[0]%(i+1);[chars[i],chars[j]]=[chars[j],chars[i]];}
+  return chars.join('');
+};
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
@@ -57,10 +66,30 @@ Deno.serve(async (req) => {
       return reply({ accounts: data || [] });
     }
 
+    if (action === 'reset_preview') {
+      const tables=['orders','order_audit','chat_messages'];
+      const counts:Record<string,number>={};
+      for(const table of tables) {
+        const {count,error}=await admin.from(table).select('*',{count:'exact',head:true});
+        if(error) throw error;
+        counts[table]=count??0;
+      }
+      return reply({counts});
+    }
+    if (action === 'reset_test_data') {
+      if(body.confirm !== 'ZERAR TESTES')return reply({error:'Confirmação inválida. Digite ZERAR TESTES.'},400);
+      const {data,error}=await admin.rpc('rl_reset_test_records',{
+        p_actor:caller,p_confirm:body.confirm
+      });
+      if(error)throw error;
+      return reply({message:'Pedidos, auditoria de pedidos e conversas de teste apagados. Usuários e trilha administrativa preservados.',counts:data});
+    }
+
     if (action === 'create') {
       const username = normalizedUsername(body.username || body.display_name);
       const displayName = cleanName(body.display_name);
-      const password = body.password;
+      const autoPassword=body.password==='AUTO' || body.password===undefined;
+      const password = autoPassword ? randomPassword() : body.password;
       const role = body.role;
       if (!validUsername(username)) return reply({ error: 'Informe um nome de usuário com pelo menos 3 caracteres, por exemplo usuario.teste ou restaurante.teste.' }, 400);
       if (displayName.length < 3 || displayName.length > 80) return reply({ error: 'Informe nome completo com 3–80 caracteres.' }, 400);
@@ -90,7 +119,7 @@ Deno.serve(async (req) => {
         return reply({ error: 'Cadastro incompleto. Revise usuário e tente novamente.' }, 409);
       }
       await admin.from('account_audit').insert({ actor: caller, target, action: 'create', details: { username, role } });
-      return reply({ account: updated, message: 'Usuário cadastrado na nuvem.' }, 201);
+      return reply({ account: updated, password: autoPassword ? password : undefined, message: 'Usuário cadastrado na nuvem.' }, 201);
     }
 
     const id = cleanName(body.id);
@@ -139,11 +168,13 @@ Deno.serve(async (req) => {
       return reply({ message: 'Permissão atualizada.' });
     }
     if (action === 'reset_password') {
-      if (!validPassword(body.password)) return reply({ error:'Nova senha exige 8 a 72 caracteres.' },400);
-      const { error } = await admin.auth.admin.updateUserById(id,{password:body.password as string});
+      const generated=body.password==='AUTO';
+      const nextPassword=generated?randomPassword():body.password;
+      if (!validPassword(nextPassword)) return reply({ error:'Nova senha exige 8 a 72 caracteres.' },400);
+      const { error } = await admin.auth.admin.updateUserById(id,{password:nextPassword as string});
       if (error) throw error;
       await admin.from('account_audit').insert({actor:caller,target:id,action:'reset_password'});
-      return reply({ message: 'Senha redefinida. Entregue-a diretamente ao usuário.' });
+      return reply({ password: generated?nextPassword:undefined, message: 'Senha redefinida. Entregue-a diretamente ao usuário.' });
     }
     return reply({ error:'Ação não reconhecida.' },400);
   } catch (error) {
