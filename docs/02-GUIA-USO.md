@@ -79,3 +79,12 @@ O frete de R$ 8 é aplicado uma vez por evento somente no fechamento (08h para c
 O ADM envia individualmente um link `/convite/#convite=...`. Este link contém um token de uso único, não uma senha, e deve ser tratado como confidencial. Ao abrir, o colaborador verifica seu nome, empresa e login, gera ou escolhe uma senha, confirma e entra automaticamente. O convite deixa de funcionar depois da ativação; os acessos futuros são feitos por `/acesso/`.
 
 Os convites são distribuídos pelo ADM **fora do repositório público**, sem armazenar senhas em texto no GitHub. Se o convite expirar ou já tiver sido usado, o colaborador deverá solicitar novo acesso à administração.
+
+### Envio individual pelo cadastro ADM (teste de celular)
+
+1. Acesse **Cadastros → Convites de primeiro acesso** e encontre a pessoa (ex.: **Tec. Jackeline (Solutio)**).
+2. Clique em **Gerar link para WhatsApp**, confirme que deseja invalidar o link anterior e use **Enviar por WhatsApp**.
+3. No celular, o colaborador define a senha e ativa o convite uma única vez. O ADM acompanha o estado do convite na mesma lista.
+4. Para novos colaboradores ainda não listados, preencha o formulário e use **Gerar convite de primeiro acesso**.
+
+**Modo de testes (temporário):** é possível enviar pedidos a qualquer horário. O frete de R$ 8 continua único por evento, entra nos relatórios após 08h/13h e é rateado entre as empresas; pedidos tardios podem alterar o total até encerrar a homologação. O bloqueio de horário deverá ser reativado antes da entrada oficial.
