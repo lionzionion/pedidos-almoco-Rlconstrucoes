@@ -23,7 +23,8 @@ button,a.button{border:0;border-radius:10px;padding:13px 16px;font-size:14px;fon
 [hidden]{display:none!important}
 </style>
 <script src="../app/config.js?v=2"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/dist/umd/supabase.js"
+ onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2.57.0/dist/umd/supabase.js'"></script>
 </head>
 <body><header><img src="../assets/rl-logo.webp" alt="RL Construções"><span>GESTÃO DE REFEIÇÕES</span></header>
 <main>
@@ -61,7 +62,11 @@ async function init(){
  if(!url||!key||typeof window.supabase?.createClient!=='function')throw Error('Não foi possível conectar ao sistema. Atualize a página.');
  client=window.supabase.createClient(url,key);
  const {data,error}=await client.functions.invoke('invite-access',{body:{action:'inspect',token}});
- if(error||data?.error)throw Error(data?.error||'Convite expirado, já usado ou não encontrado.');
+ if(error||data?.error){
+   let msg=data?.error;
+   try{if(!msg && error?.context?.clone){const detail=await error.context.clone().json();msg=detail?.error;}}catch{}
+   throw Error(msg||'Convite expirado, já usado ou não encontrado.');
+ }
  user=data;
  $('person').textContent=data.display_name;
  $('company').textContent='Empresa: '+(data.company==='SOLUTIO'?'Solutio':'RL Construções')+' • '+data.job_title;
@@ -82,7 +87,11 @@ $('activate').addEventListener('click',async()=>{
  try{
    setStatus('Criando seu acesso pessoal...');
    const {data,error}=await client.functions.invoke('invite-access',{body:{action:'redeem',token,password}});
-   if(error||data?.error)throw Error(data?.error||'Não foi possível ativar o convite.');
+   if(error||data?.error){
+     let msg=data?.error;
+     try{if(!msg && error?.context?.clone){const detail=await error.context.clone().json();msg=detail?.error;}}catch{}
+     throw Error(msg||'Não foi possível ativar o convite.');
+   }
    // Apagar o token do histórico local antes de sair do primeiro acesso.
    history.replaceState(null,'',location.pathname);
    const {error:authError}=await client.auth.signInWithPassword({email:data.email,password});
