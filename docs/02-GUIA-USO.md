@@ -2,7 +2,7 @@
 
 ## Acesso ao aplicativo
 
-https://lionzionion.github.io/pedidos-almoco-solutio/app/
+https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/app/
 
 A página de login pede **Usuário ou e-mail do administrador** e **Senha**.
 
@@ -55,6 +55,6 @@ O cálculo padrão considera um frete coletivo por refeição: **R$12 no café**
 
 ## Testes sem risco de pedidos reais
 
-Acesse https://lionzionion.github.io/pedidos-almoco-solutio/demo/
+Acesse https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/demo/
 
 A demonstração é **separada do banco** e contém somente nomes e pedidos fictícios. Use-a para apresentações.
