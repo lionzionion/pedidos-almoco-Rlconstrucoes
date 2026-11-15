@@ -1,132 +1,191 @@
-# AMBEV | PEDIDOS RL
+<div align="center">
 
-### Gestão digital de café da manhã e almoço na obra
+<img src="assets/rl-logo.webp" alt="RL Engenharia — Fazendo Acontecer" width="370">
 
-Aplicativo web de gestão de refeições da **RL Engenharia na obra AMBEV Itapissuma/PE**. Organiza solicitações dos colaboradores, produção do restaurante, cancelamentos, relatórios e conferência diária antes do pagamento.
+# RL Pedidos | Gestão de Refeições em Obras
 
-## 🌐 Abra o projeto
+**Uma solução digital da RL Engenharia para organizar café da manhã, almoço, restaurante e conferência financeira em canteiros de obras.**
 
-| Ambiente | Link | Finalidade |
+**Projeto-piloto: obra AMBEV, Itapissuma — Pernambuco.**
+
+[**Conhecer a solução**](https://lionzionion.github.io/pedidos-almoco-solutio/) · [**Acessar o aplicativo**](https://lionzionion.github.io/pedidos-almoco-solutio/acesso/) · [**Testar demonstração**](https://lionzionion.github.io/pedidos-almoco-solutio/demo/)
+
+![JavaScript](https://img.shields.io/badge/JavaScript-Frontend-F7DF1E?logo=javascript&logoColor=black)
+![Supabase](https://img.shields.io/badge/Supabase-Auth%20%2B%20PostgreSQL-3ECF8E?logo=supabase&logoColor=white)
+![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Web-222222?logo=githubpages&logoColor=white)
+![Status](https://img.shields.io/badge/Status-Homologa%C3%A7%C3%A3o-006D9B)
+
+</div>
+
+---
+
+## O problema
+
+Em uma obra, os pedidos de refeições frequentemente são feitos em conversas individuais e grupos de mensagens. Quando chega a hora de pagar o restaurante, a gestão precisa conferir manualmente **quem pediu, o que pediu, quanto foi entregue e quanto deve ser cobrado**.
+
+Isso pode gerar duplicidade, cancelamentos sem registro, dificuldade de planejar a produção e divergências na conferência.
+
+## A solução
+
+O **RL Pedidos** centraliza toda a operação em um aplicativo web responsivo, acessível por celular ou computador, com três perfis e dados compartilhados em um banco na nuvem.
+
+| Perfil | O que faz |
+|---|---|
+| 👷 **Colaborador** | Entra com usuário e senha, escolhe café ou almoço no cardápio do dia, personaliza acompanhamentos, confirma, consulta e cancela pedidos enquanto permitido. |
+| 🍽️ **Restaurante** | Visualiza pedidos recebidos, nomes, acompanhamentos e observações; atualiza o estado para **em preparo** e **entregue**; imprime o mapa de produção. |
+| 📊 **Administração RL** | Cadastra e gerencia usuários, acompanha todos os pedidos, identifica cancelamentos, confere preços e taxas, emite relatórios PDF e exporta dados. |
+
+### Fluxo operacional
+
+```mermaid
+flowchart LR
+    A["Colaborador escolhe refeição"] --> B["Pedido registrado na nuvem"]
+    B --> C["Restaurante visualiza e prepara"]
+    C --> D["Entrega e atualização de status"]
+    D --> E["Gestão confere nomes e valores"]
+    E --> F["Relatório PDF / CSV"]
+```
+
+## Acesse o projeto
+
+| Destino | Endereço | Indicação |
 |---|---|---|
-| **Site de apresentação do produto** | [Abrir apresentação](https://lionzionion.github.io/pedidos-almoco-solutio/produto/) | Explicar a solução a gestores e parceiros |
-| **Aplicativo conectado ao banco** | [Abrir acesso](https://lionzionion.github.io/pedidos-almoco-solutio/app/) | Login e pedidos reais **após homologação** |
-| **Demonstração interativa** | [Testar sistema](https://lionzionion.github.io/pedidos-almoco-solutio/demo/) | Pedidos **fictícios**, sem usar o banco real |
-| **Versão anterior** | [Abrir formulário legado](https://lionzionion.github.io/pedidos-almoco-solutio/) | Mantida temporariamente na raiz |
+| **Portal do produto** | [rl-pedidos · apresentação](https://lionzionion.github.io/pedidos-almoco-solutio/) | Apresentações, portfólio e demonstração da solução |
+| **Acesso único** | [Entrar no RL Pedidos](https://lionzionion.github.io/pedidos-almoco-solutio/acesso/) | Colaboradores, restaurante e administração |
+| **Demo interativa** | [Explorar versão fictícia](https://lionzionion.github.io/pedidos-almoco-solutio/demo/) | Testes e apresentações sem alterar o banco real |
+| **Aplicação original** | [Rota técnica do aplicativo](https://lionzionion.github.io/pedidos-almoco-solutio/app/) | Mesmo sistema autenticado |
+| **Formulário histórico** | [Versão anterior preservada](https://lionzionion.github.io/pedidos-almoco-solutio/legado/) | Compatibilidade e registro da evolução do projeto |
 
-> **SITUAÇÃO EM 15/11/2026:** o primeiro acesso ADM foi ativado no Supabase para a conta confirmada de Leandro Dias. A área **Cadastros** já permite criar usuários do restaurante e colaboradores com login e senha. Ainda faltam testes completos com contas separadas e impressões reais antes de usar em cobranças. Para apresentar a solução, utilize `/demo/`.
+**Importante:** o aplicativo utiliza autenticação e está em **fase de homologação operacional**. A demonstração é isolada, utiliza dados fictícios e não envia pedidos ao restaurante.
 
-## O que já foi implementado
+## Principais funcionalidades
 
-- Formulário responsivo do colaborador com café da manhã e almoço.
-- Rodízio semanal conforme o cardápio do restaurante.
-- Café completo R$ 17, pão simples R$ 10 e almoço R$ 22.
-- Acompanhamentos de almoço e campo de observações.
-- Painel de preparo do restaurante e atualização Realtime.
-- Perfis de acesso colaborador, restaurante e administrador (ADM existente liberado no banco).
-- **Cadastro centralizado pelo ADM**, com usuário simples e senha temporária; criação e redefinição protegidas por função Supabase, sem e-mail pessoal dos colaboradores.
-- Desativação, reativação e alteração de perfil com auditoria administrativa.
-- Edição e cancelamento antes do preparo.
-- Arquivamento/restauração administrativos (exclusão lógica e auditada).
-- Relação nominal e fechamento financeiro por data/refeição.
-- **Relatórios diários PDF A4** com logomarca RL, nomes, itens, cancelamentos, subtotal, taxas e total; opção de **Imprimir / Salvar como PDF**.
-- Mapa de produção do restaurante em PDF (pedidos, acompanhamentos, observações e status).
-- Exportação CSV e resumo consolidado para envio manual por WhatsApp.
-- Banco Supabase separado, autenticado, com PostgreSQL e políticas RLS.
-- Demonstração com dados fictícios para reuniões e apresentação no canteiro.
+- **Cardápio por dia da semana:** rodízio de café da manhã e almoço, de segunda a domingo.
+- **Personalização de refeições:** escolha do prato, acompanhamentos, observações e restrição de dois feijões simultâneos.
+- **Controle de pedidos:** confirmação, edição e cancelamento antes do preparo; arquivamento administrativo com histórico.
+- **Gestão de acessos:** criação de contas com nomes de usuário, permissões distintas, redefinição de senha e desativação de acesso.
+- **Painel do restaurante:** lista de produção, status de preparo/entrega e visualização de cancelamentos.
+- **Conferência financeira:** total das refeições e taxa coletiva de entrega conforme o dia, com lista nominal.
+- **Relatórios:** PDF A4 com logo RL, impressão, CSV e resumo consolidado para envio manual por WhatsApp.
+- **Dados centralizados:** PostgreSQL na nuvem, autenticação Supabase, políticas de acesso por linha (RLS), auditoria e atualização em tempo real.
 
-## Comece pela documentação
+### Regras de preço do projeto-piloto
 
-1. [Visão geral e problema resolvido](docs/01-VISAO-GERAL.md)
-2. [Manual completo de uso para colaborador, restaurante e gestão](docs/02-GUIA-USO.md)
-3. [Arquitetura, segurança e modelo de dados](docs/03-ARQUITETURA-E-SEGURANCA.md)
-4. [Implantação, acessos e roteiro de apresentação comercial](docs/04-IMPLANTACAO-E-APRESENTACAO.md)
+| Item | Valor |
+|---|---:|
+| Café completo | R$ 17,00 |
+| Café simples com pão | R$ 10,00 |
+| Almoço | R$ 22,00 |
+| Entrega de café por remessa padrão | R$ 12,00 |
+| Entrega de almoço, segunda a sexta | R$ 8,00 |
+| Entrega de almoço, sábado e domingo | R$ 12,00 |
+
+*Valores e cardápios específicos da operação de referência, informados em novembro de 2026. A taxa é contabilizada uma vez por refeição/período no fechamento padrão. Remessas extras exigem tratamento específico.*
+
+## Arquitetura e tecnologias
+
+```text
+GitHub Pages
+  ├── Portal comercial             / e /produto/
+  ├── Acesso único                 /acesso/
+  ├── Interface autenticada        /app/
+  └── Demonstração local           /demo/
+            |
+            v
+       Supabase Auth
+            |
+            v
+Supabase PostgreSQL + Row Level Security
+  ├── profiles        usuários e permissões
+  ├── orders          refeições, status e valores
+  ├── order_audit     histórico de alterações
+  └── account_audit   ações administrativas
+            |
+            +── Realtime: atualizações de pedidos
+            +── Edge Function: manage-users (criação e gestão de contas)
+            +── Browser: PDF / impressão / CSV
+```
+
+**Stack:** HTML5, CSS3, JavaScript, Supabase Auth, PostgreSQL, Row Level Security (RLS), Supabase Realtime, Supabase Edge Functions, jsPDF, jsPDF-AutoTable e GitHub Pages.
+
+### Segurança e dados
+
+- Os funcionários não precisam informar e-mail pessoal: a administração cria **login e senha individuais** usando um identificador interno no serviço de autenticação.
+- Somente o perfil **ADM ativo** pode conceder contas de colaborador/restaurante. Senhas e credenciais privilegiadas **não são expostas no código do navegador**.
+- O aplicativo utiliza apenas uma **chave publicável** do Supabase; funções privilegiadas rodam no servidor.
+- Pedidos cancelados e arquivados são preservados para auditoria e não entram no valor ativo da conferência.
+- O GitHub público contém o código da aplicação, **não os pedidos ou senhas dos colaboradores**.
+
+> Armazenamento na nuvem não substitui política de backup. Antes de uso definitivo, é necessário validar rotinas de recuperação, fluxos operacionais e critérios de cobrança.
 
 ## Estrutura do repositório
 
 ```text
-├── assets/          # logomarca oficial RL em WebP e cópia SVG
-├── app/             # aplicação conectada a Supabase
-├── demo/            # demonstração local e fictícia
-├── produto/         # vitrine comercial do software
-├── supabase/        # schema, migrações e Edge Function segura manage-users
-├── docs/            # guias funcionais, técnicos e implantação
-├── tests/           # testes de cardápio, logo, relatórios e financeiro
-├── index.html       # formulário anterior preservado
+.
+├── index.html                      Portal oficial do produto
+├── acesso/index.html               Entrada única dos usuários
+├── app/                            Frontend autenticado e relatórios
+├── produto/                        Página comercial detalhada
+├── demo/                           Simulação isolada com dados fictícios
+├── legado/                         Formulário histórico preservado
+├── assets/                         Logomarca e recursos visuais
+├── supabase/
+│   ├── schema.sql                  Estrutura inicial e RLS
+│   ├── realtime.sql                Atualizações dos pedidos
+│   ├── managed-accounts.sql        Perfis e permissões
+│   └── functions/manage-users/     Gestão segura de usuários
+├── docs/                           Manuais, arquitetura e implantação
+├── tests/                          Testes de regras, login e relatórios
 └── README.md
 ```
 
-## Execução em desenvolvimento
+## Como testar
 
-O sistema web **não exige npm nem build** para funcionar. Abra `app/index.html` ou execute servidor estático (por exemplo, `python -m http.server 8000`) na pasta do repositório e visite `http://localhost:8000/app/`. Para testes Node.js do cardápio:
+### Demonstração para portfólio
 
-```powershell
+1. Abra [a demonstração](https://lionzionion.github.io/pedidos-almoco-solutio/demo/).
+2. Escolha **Colaborador**, monte uma refeição e registre um pedido fictício.
+3. Alterne para **Restaurante** e acompanhe as solicitações.
+4. Abra **Gestão RL** para visualizar o fechamento e a relação nominal.
+
+A demo não grava dados no Supabase real.
+
+### Desenvolvimento local
+
+```bash
+git clone https://github.com/lionzionion/pedidos-almoco-solutio.git
+cd pedidos-almoco-solutio
+python -m http.server 8000
+```
+
+Abra `http://localhost:8000/`. Para rodar testes de regras e estrutura (Node.js instalado):
+
+```bash
 node --test tests/*.test.cjs
 ```
 
-A configuração do projeto Supabase dedicado está em `app/config.js`. Contém **somente URL e chave publicável** do Supabase (não é segredo). Nunca coloque `service_role` ou `sb_secret` no frontend.
+A publicação do frontend é estática. Para usar outro projeto Supabase, configure `app/config.js` com URL e **chave publicável**, depois aplique as migrações conforme [documentação técnica](docs/03-ARQUITETURA-E-SEGURANCA.md). **Nunca publique chaves secretas ou de serviço.**
 
-## Arquitetura resumida
+## Documentação
 
-```text
-Colaborador ─┐
-Restaurante ─┼──> GitHub Pages (/app) ──> Supabase Auth + API ──> PostgreSQL (RLS)
-Gestão RL  ──┘                               │
-                                            └──> Realtime + auditoria
-Gestão RL ──> PDF, impressão, CSV / resumo WhatsApp (envio manual)
-Gestão RL ──> Edge Function manage-users ──> Supabase Auth Admin (servidor)
-```
+- [Visão geral e estudo de caso](docs/01-VISAO-GERAL.md)
+- [Guia de uso: colaborador, restaurante e administração](docs/02-GUIA-USO.md)
+- [Arquitetura, banco de dados e segurança](docs/03-ARQUITETURA-E-SEGURANCA.md)
+- [Implantação e roteiro de apresentação](docs/04-IMPLANTACAO-E-APRESENTACAO.md)
+- [Links e mensagem para compartilhar com a equipe](docs/05-COMPARTILHAR-ACESSO.md)
+- [Identidade do repositório e configuração do GitHub](docs/06-GITHUB-PERFIL.md)
 
-## Regras importantes
+## Status e próximos marcos
 
-- O servidor valida as opções do rodízio, data e preço, e impede múltiplos pedidos ativos da **mesma refeição** pelo mesmo usuário no mesmo dia.
-- A taxa de entrega padrão é **uma por remessa/refeição**: café R$ 12; almoço segunda a sexta R$ 8; sábado e domingo R$ 12.
-- Pedidos cancelados ou arquivados não integram o total ativo; a gestão deve reconciliar os pedidos efetivamente preparados/entregues.
-- Não há exclusão física pela interface; o histórico de cancelamentos/arquivamentos é preservado.
-- WhatsApp abre um texto consolidado para confirmação manual pelo usuário.
-- A versão `/demo/` **não** escreve pedidos no banco de dados.
+| Área | Situação |
+|---|---|
+| Interface responsiva e cardápios | Implementado |
+| Contas e permissões de colaborador, restaurante e ADM | Implementado; testes de campo pendentes |
+| Painel de restaurante e conferência | Implementado; homologação pendente |
+| Relatórios PDF, impressão e CSV | Implementado; validação nos dispositivos pendente |
+| Backups testados e rotina de recuperação | Pendente |
+| Horários de corte, remessas múltiplas e fechamento ampliado | Evolução prevista |
 
-## Cadastro rápido de contas de teste
+**Projeto desenvolvido para resolver uma necessidade concreta da operação em obra, unindo engenharia, gestão e desenvolvimento de software.**
 
-No aplicativo, entre como **ADM** e abra **👥 Cadastros**. Use os botões:
-- **👷 Preencher usuário teste**: nome `Usuário Teste`, login `usuario.teste`, perfil **Colaborador**.
-- **👩‍🍳 Preencher restaurante teste**: nome `Restaurante Teste`, login `restaurante.teste`, perfil **Restaurante**.
-
-O formulário agora converte automaticamente nomes escritos com espaços, letras maiúsculas ou acentos para um login em minúsculas, sem acentos e com ponto. Defina **senhas diferentes com pelo menos 8 caracteres** e clique em **Cadastrar na nuvem** em cada perfil. As contas reais de teste só serão criadas após a confirmação feita pelo ADM; os botões não fazem cadastro automático.
-
-Depois, entre em **outro navegador ou janela anônima** com `usuario.teste` e `restaurante.teste`, usando as respectivas senhas. O usuário testa o pedido; o restaurante vê o recebimento e inicia o preparo. Não compartilhe senhas no repositório.
-
-## Como entrar e cadastrar colaboradores
-
-1. O **ADM inicial** faz login em [AMBEV Pedidos RL](https://lionzionion.github.io/pedidos-almoco-solutio/app/) com seu e-mail já confirmado e senha existente; sua permissão `admin` está ativa.
-2. Acesse a aba **Cadastros** e cadastre o nome completo, o usuário (ex.: `joao.campos`), uma **senha temporária de pelo menos 8 caracteres** e o perfil `colaborador` ou `restaurante`.
-3. Entregue o usuário e a senha por canal privado; o colaborador entra pelo **usuário + senha**, de qualquer aparelho, sem fornecer e-mail pessoal.
-4. A proprietária do restaurante entra pelo mesmo link e verá automaticamente a aba **Restaurante**.
-5. O ADM pode desativar, reativar, alterar entre os perfis de colaborador/restaurante e redefinir senhas. O primeiro administrador não pode ser desativado pela interface.
-6. A senha nunca é recuperada em texto puro. Quando esquecida, deve ser **redefinida** pela gestão. Alterações ficam no histórico `account_audit`.
-
-**Servidor de gestão:** `supabase/functions/manage-users/index.ts` — autentica o token, confere papel e estado ativo do administrador e usa credenciais privilegiadas **somente no servidor**. O frontend possui apenas chave publicável.
-
-## Relatórios
-
-- **ADM:** Conferência RL → selecione o dia e a refeição → **Baixar PDF** ou **Imprimir relatório**. O documento contém a lista nominal, situação dos pedidos, valores e taxas do dia. Pedidos cancelados ou arquivados são identificados e excluídos da soma.
-- **Restaurante:** painel Restaurante → escolha o dia e a refeição → **Baixar PDF da produção** ou **Imprimir lista**, com acompanhantes e observações.
-- A opção Imprimir permite escolher **Salvar como PDF** no navegador.
-- Os PDFs são gerados no próprio navegador; o arquivo não é publicado automaticamente na internet. Os dados vêm do Supabase, protegidos pelas políticas de acesso.
-
-## Pendências antes de usar em cobrança real
-
-1. Criar no painel ADM um usuário **restaurante** e um usuário **colaborador de teste** com senhas individuais (não existem contas fictícias no banco).
-2. Entrar simultaneamente em dois celulares distintos, validar status em tempo real, edição, cancelamento e saída.
-3. Verificar download e impressão PDF em Android, iOS e computador; conferir valores e nomes.
-4. Definir horários de corte e regra financeira de pedidos em preparo cancelados e de remessas extras.
-5. Recomendado: habilitar proteção contra senhas vazadas em Supabase Auth → segurança de senhas.
-
----
-
-**RL Engenharia — Fazendo Acontecer.** Projeto demonstrativo e sistema interno de gestão de refeições • 2026.
-
-## Identidade visual oficial
-
-A logomarca oficial **RL Engenharia — Fazendo Acontecer**, enviada pelo proprietário, foi incorporada ao repositório em `assets/rl-logo.webp` (imagem com fundo transparente). O arquivo é usado no cabeçalho de **todas as telas do app**, login, demonstração, site de apresentação e formulário anterior. O favicon também usa a marca.
-
-Para validar todas as referências da imagem antes de publicar, execute `node --test tests/logo.test.cjs`.
+<div align="center"><sub>RL Engenharia · Fazendo Acontecer · Pernambuco, Brasil</sub></div>
