@@ -15,17 +15,18 @@
     <div class="brand"><img src="../assets/rl-logo.webp" alt="RL Engenharia — Fazendo Acontecer" width="220" height="64" decoding="async"></div>
     <div class="brandright"><span class="tag">Obra AMBEV • Itapissuma</span><div class="userhead" id="who"></div></div>
   </div>
-  <div class="container hero-content"><div class="eyebrow">GESTÃO DE REFEIÇÕES</div><h1>AMBEV | PEDIDOS RL</h1><p>Café da manhã e almoço organizados para toda a equipe.</p><span id="todayLabel" class="date-pill"></span></div>
+  <div class="container hero-content"><div class="eyebrow">GESTÃO DE REFEIÇÕES</div><h1>AMBEV | PEDIDOS RL</h1><p>Café da manhã e almoço organizados para toda a equipe.</p><span id="todayLabel" class="date-pill">Atualizando data...</span></div>
 </header>
 <main class="container">
   <div id="notice" class="notice" hidden></div>
-  <section id="login" class="card auth-card" hidden>
+  <div id="bootStatus" class="boot-status" role="status" aria-live="polite">Conectando ao sistema de pedidos...</div>
+  <section id="login" class="card auth-card">
     <div class="login-logo"><img src="../assets/rl-logo.webp" alt="RL Engenharia — Fazendo Acontecer" width="220" height="64"></div>
     <h2>Acesso ao sistema</h2>
     <p class="muted">Entre com seu cadastro para acompanhar seus pedidos e receber confirmação.</p>
     <label for="loginEmail">Usuário ou e-mail do administrador</label><input id="loginEmail" type="text" autocomplete="username" placeholder="Ex.: joao.campos" maxlength="120">
     <label for="loginPassword">Senha</label><input id="loginPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Sua senha">
-    <div class="actions"><button id="loginBtn" class="primary">Entrar no aplicativo</button></div>
+    <div class="actions"><button id="loginBtn" class="primary" disabled>Entrar no aplicativo</button></div>
     <p class="small muted">Os colaboradores e o restaurante recebem usuário e senha cadastrados pela gestão RL. O administrador inicial entra com seu e-mail cadastrado.</p>
   </section>
   <section id="demo" class="card demo-card" hidden>
@@ -98,12 +99,10 @@
   </div>
 </main>
 <footer>RL Engenharia • AMBEV Itapissuma • Horário de Recife/PE</footer>
-<script src="./config.js"></script>
-<script src="./menu.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
-<script src="./reports.js"></script>
-<script src="./app.js" defer></script>
+<noscript><div class="container notice">Ative o JavaScript no navegador para acessar os pedidos.</div></noscript>
+<script src="./config.js?v=2"></script>
+<script src="./menu.js?v=2"></script>
+<script src="./reports.js?v=2"></script>
+<script src="./loader.js?v=2"></script>
 </body>
 </html>
