@@ -45,7 +45,7 @@
       return;
     }
     $('demo').hidden=true;
-    client.auth.getUser().then(({data,error})=>error ? fail(error) : setUser(data.user)).catch(fail);
+    client.auth.getUser().then(({data,error}) => { if(error && !/Auth session missing/i.test(error.message||'')) fail(error); return setUser(data?.user || null); }).catch(fail);
     client.auth.onAuthStateChange((_event,session) => { setTimeout(()=>setUser(session?.user || null),0); });
     client.channel('rl-order-updates').on('postgres_changes', {event:'*',schema:'public',table:'orders'}, () => reload()).subscribe();
     setInterval(() => { if (state.user) reload(); }, 45000);
@@ -69,7 +69,7 @@
     if(!email || password.length<6) return inform('Informe e-mail e senha com pelo menos 6 caracteres.',true);
     if(signup && fullName.length<3) return inform('Informe seu nome completo para criar o cadastro.',true);
     const {data,error} = signup
-      ? await client.auth.signUp({email,password,options:{data:{full_name:fullName}}})
+      ? await client.auth.signUp({email,password,options:{data:{full_name:fullName},emailRedirectTo:location.origin+location.pathname}})
       : await client.auth.signInWithPassword({email,password});
     if(error) return fail(error);
     if(signup && !data.session) inform('Cadastro criado. Confirme o e-mail recebido antes de entrar.');
