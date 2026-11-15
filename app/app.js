@@ -10,7 +10,7 @@
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const localKey = 'rl-demo-pedidos-v1';
   const today = M.today();
-  const state = {role: 'colaborador', user: null, profile: null, orders: [], users: [], dish:'', sides:[], editing:null, tab:'order', demoName:'Colaborador de teste'};
+  const state = {role: 'colaborador', user: null, profile: null, orders: [], users: [], chatPeople: [], chatRows: [], chatOwner:null, dish:'', sides:[], editing:null, tab:'order', demoName:'Colaborador de teste'};
   const name = () => state.profile?.display_name || state.demoName;
   const ownId = () => state.user?.id || 'demo-user';
   const meal = () => document.querySelector('input[name="meal"]:checked')?.value || 'almoco';
@@ -53,12 +53,16 @@
     client.auth.getUser().then(({data,error}) => { if(error && !/Auth session missing/i.test(error.message||'')) fail(error); return setUser(data?.user || null); }).catch(fail);
     client.auth.onAuthStateChange((_event,session) => { setTimeout(()=>setUser(session?.user || null),0); });
     client.channel('rl-order-updates').on('postgres_changes', {event:'*',schema:'public',table:'orders'}, () => reload()).subscribe();
+    client.channel('rl-chat-updates').on('postgres_changes', {event:'INSERT',schema:'public',table:'chat_messages'}, () => {
+      if(state.user && state.tab==='chat') loadChat();
+    }).subscribe();
     setInterval(() => { if (state.user) reload(); }, 45000);
   }
   async function setUser(user) {
     state.user=user;
     if(!user) {
       state.profile=null; $('login').hidden=false; $('app').hidden=true; $('who').textContent='';
+      state.chatPeople=[];state.chatRows=[];hideOneTime();
       return;
     }
     try {
@@ -103,14 +107,17 @@
     if(tab === 'restaurant' && !isRestaurant() && !isManager()) return;
     if(tab === 'admin' && !isManager()) return;
     if(tab === 'users' && !isManager()) return;
+    if(tab === 'chat' && !configured) return;
+    if(tab === 'security' && !configured) return;
     state.tab=tab;
     document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('active',b.dataset.tab===tab));
     document.querySelectorAll('.pane').forEach(p => p.hidden=(p.id!==tab));
+    if(tab==='chat') initChat();
   }
   function renderTabs() {
     document.querySelectorAll('[data-tab]').forEach(b => {
       const t=b.dataset.tab;
-      b.hidden=(['order','mine'].includes(t) && !isStaff()) || (t==='restaurant' && !isManager() && !isRestaurant()) || (['admin','users'].includes(t) && !isManager());
+      b.hidden=(['order','mine'].includes(t) && !isStaff()) || (t==='restaurant' && !isManager() && !isRestaurant()) || (['admin','users'].includes(t) && !isManager()) || (['chat','security'].includes(t) && !configured);
     });
     $('logoutBtn').hidden=!configured;
     $('who').textContent = name() + ' • ' + ({admin:'Gestão RL',restaurante:'Restaurante',colaborador:'Colaborador'}[state.role]||'');
@@ -139,8 +146,15 @@
     renderPrice();
   }
   function renderPrice() {
-    const type=meal(); $('unitPrice').textContent=M.money(M.unitPrice(type,state.dish));
+    const type=meal();
+    $('unitPrice').textContent=M.money(M.unitPrice(type,state.dish));
     $('feePreview').textContent=M.money(M.fee(type,today));
+    const cutoff=M.cutoff(type), closed=M.closed(type,today);
+    $('orderDeadlineInfo').textContent=closed
+      ? 'Pedidos encerrados às '+cutoff+' (horário de Recife). O total coletivo já inclui uma única taxa de entrega, se houver pedidos ativos.'
+      : 'Pedidos abertos até '+cutoff+' (horário de Recife). A taxa coletiva de R$ 8 será incluída somente no fechamento.';
+    $('orderDeadlineInfo').classList.toggle('error',closed);
+    $('placeBtn').disabled=closed;
   }
   function clearEdit() {
     state.editing=null; state.dish=''; state.sides=[]; $('notes').value='';
@@ -161,6 +175,7 @@
   function renderAll() { renderTabs(); renderMenu(); renderMine(); renderRestaurant(); renderAdmin(); renderUsers(); }
   async function saveOrder() {
     if(!isStaff()) return;
+    if(M.closed(meal(),today)) return inform('Prazo de pedidos encerrado. Café até 08:00; almoço até 13:00 (horário de Recife).',true);
     const type=meal(), dish=state.dish, sides=type==='almoco'?[...state.sides]:[], notes=$('notes').value.trim();
     if(!M.items(type,today).includes(dish)) return inform('Escolha uma opção válida do cardápio de hoje.',true);
     const feedback=$('orderFeedback');
@@ -188,7 +203,7 @@
       clearEdit(); await reload();
       chooseTab('mine');
     } catch(err) { feedback.textContent=err.message||String(err); feedback.classList.add('error'); }
-    finally { $('placeBtn').disabled=false; }
+    finally { $('placeBtn').disabled=M.closed(meal(),today); }
   }
   async function updateOrder(id, changes) {
     try {
@@ -261,7 +276,7 @@
     const day=$('restaurantDate').value||today, type=$('restaurantMeal').value;
     const rows=state.orders.filter(o=>o.order_day===day && !o.archived && (type==='todos'||o.meal===type));
     const s=M.summary(rows,day);
-    $('restaurantStats').innerHTML=metric('Cafés ativos',s.coffee)+metric('Almoços ativos',s.lunch)+metric('Total da remessa',M.money(s.total));
+    $('restaurantStats').innerHTML=metric('Cafés ativos',s.coffee)+metric('Almoços ativos',s.lunch)+metric('Total da remessa (taxa após corte)',M.money(s.total));
     const el=$('restaurantList'); el.innerHTML=rows.length?rows.map(o=>orderCard(o,'restaurant')).join(''):'<div class="empty">Nenhum pedido para esta data e refeição.</div>';
     bindActions(el);
   }
@@ -271,7 +286,7 @@
   }
   function renderAdmin(){
     const {day,rows}=filteredAdmin(), s=M.summary(rows,day);
-    $('adminStats').innerHTML=metric('Cafés',s.coffee)+metric('Almoços',s.lunch)+metric('Refeições',M.money(s.subtotal))+metric('Entregas',M.money(s.delivery))+metric('TOTAL A CONFERIR',M.money(s.total));
+    $('adminStats').innerHTML=metric('Cafés',s.coffee)+metric('Almoços',s.lunch)+metric('Refeições',M.money(s.subtotal))+metric('Taxa coletiva (após corte)',M.money(s.delivery))+metric('TOTAL A CONFERIR',M.money(s.total));
     const body=$('adminRows'); const billing=rows.filter(active);
     body.innerHTML=billing.length?billing.map(o => '<tr><td><b>'+esc(o.employee_name)+'</b></td><td>'+mealTitle(o.meal)+'</td><td>'+esc(o.dish)+(o.accompaniments?.length?'<br><small>'+esc(o.accompaniments.join(', '))+'</small>':'')+'</td><td>'+statusBadge(o)+'</td><td>'+M.money(o.price)+'</td><td><button class="danger compact" data-act="admincancel" data-id="'+esc(o.id)+'">Cancelar</button><button class="secondary compact" data-act="archive" data-id="'+esc(o.id)+'">Arquivar</button></td></tr>').join(''):'<tr><td colspan="6">Sem pedidos ativos.</td></tr>';
     bindActions(body);
@@ -363,15 +378,20 @@
         if(confirmation!=='EXCLUIR')return;
       }
       if(action==='reset_password'){
-        const password=prompt('Digite uma NOVA senha provisória (8 a 72 caracteres) para '+u.display_name+':');
-        if(password===null)return;
-        if(password.length<8 || password.length>72)return inform('Senha precisa ter no mínimo 8 caracteres.',true);
-        params.password=password;
+        if(confirm('Gerar automaticamente uma senha forte para '+u.display_name+'?\nOK = gerar automaticamente; Cancelar = informar uma senha manual.')){
+          params.password='AUTO';
+        }else{
+          const password=prompt('Digite a NOVA senha (8 a 72 caracteres):');
+          if(password===null)return;
+          if(password.length<8 || password.length>72)return inform('Senha precisa ter entre 8 e 72 caracteres.',true);
+          params.password=password;
+        }
       }
       b.disabled=true;
       try{
         const result=await userApi(action,params);
         inform(result.message||'Alteração concluída.');
+        if(action==='reset_password')showOneTime(u.username,result.password||(params.password==='AUTO'?'':params.password),'Senha redefinida para '+u.display_name);
         await loadUsers();
       }catch(error){fail(error);}finally{b.disabled=false;}
     }));
@@ -410,7 +430,11 @@
     const display_name=$('newFullName').value.trim();
     const username=normalizeLogin($('newUsername').value||$('newFullName').value);
     $('newUsername').value=username;
-    const password=$('newPassword').value;
+    let password=$('newPassword').value;
+    if(!password){
+      try {password=makePassword();$('newPassword').value=password;}
+      catch(e){return fail(e);}
+    }
     const role=$('newRole').value;
     if(display_name.length<3)return inform('Informe o nome completo.',true);
     if(!/^[a-z][a-z0-9._-]{2,29}$/.test(username)) {
@@ -424,7 +448,8 @@
       const result=await userApi('create',{display_name,username,password,role});
       $('newFullName').value='';$('newUsername').value='';$('newPassword').value='';loginEdited=false;
       $('usersFeedback').classList.remove('error');
-      $('usersFeedback').textContent='Conta de '+display_name+' criada. Informe ao usuário o login "'+username+'" e a senha provisória por canal privado.';
+      $('usersFeedback').textContent='Conta de '+display_name+' cadastrada. Copie as credenciais abaixo e entregue-as por mensagem privada.';
+      showOneTime(username,result.password||password,'Conta criada: '+display_name);
       inform(result.message||'Conta cadastrada na nuvem.');
       await loadUsers();
     }catch(error){
@@ -432,6 +457,160 @@
       $('usersFeedback').classList.add('error');
     }finally{btn.disabled=false;}
   }
+
+  // Senhas: geração criptográfica, nunca armazenamento persistente ou leitura de hashes.
+  const passwordAlphabet='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*';
+  function makePassword() {
+    if(!window.crypto?.getRandomValues)throw Error('Navegador sem gerador de senha criptográfico.');
+    const chars=new Uint32Array(16);window.crypto.getRandomValues(chars);
+    const out=Array.from(chars,n=>passwordAlphabet[n%passwordAlphabet.length]);
+    // Garantir diversidade para a senha provisória.
+    out[0]='ABCDEFGHJKLMNPQRSTUVWXYZ'[chars[0]%24];
+    out[1]='abcdefghijkmnopqrstuvwxyz'[chars[1]%25];
+    out[2]='23456789'[chars[2]%8];
+    out[3]='!@#$%&*'[chars[3]%7];
+    return out.join('');
+  }
+  let oneTimeValue='';
+  function showOneTime(username,password,title) {
+    if(!password)return;
+    oneTimeValue='Usuário: '+username+'\nSenha provisória: '+password;
+    $('oneTimeTitle').textContent=title;
+    $('oneTimeCredentials').textContent=oneTimeValue;
+    $('oneTimePassword').hidden=false;
+    $('oneTimePassword').scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+  function hideOneTime() {
+    oneTimeValue='';
+    $('oneTimeCredentials').textContent='';
+    $('oneTimePassword').hidden=true;
+  }
+  $('generatePassword').addEventListener('click',()=>{
+    try {$('newPassword').value=makePassword();$('newPassword').type='text';}
+    catch(e){fail(e);}
+  });
+  $('toggleNewPassword').addEventListener('click',()=>{
+    $('newPassword').type=$('newPassword').type==='password'?'text':'password';
+  });
+  $('copyCredentials').addEventListener('click',async()=>{
+    if(!oneTimeValue)return;
+    try {
+      await navigator.clipboard.writeText(oneTimeValue);
+      inform('Credenciais copiadas. Compartilhe por canal privado.');
+    }catch{inform('Não foi possível copiar automaticamente. Selecione as credenciais exibidas.',true);}
+  });
+  $('closeCredentials').addEventListener('click',hideOneTime);
+
+  // Chat privado: um canal por colaborador e outro reservado à gestão/restaurante.
+  let chatLoading=false;
+  async function initChat(){
+    if(!configured || !state.user || chatLoading)return;
+    chatLoading=true;
+    const selection=$('chatThread');
+    try{
+      if(state.role==='colaborador'){
+        selection.innerHTML='<option value="'+esc(ownId())+'">Minha conversa com o restaurante</option>';
+        selection.value=ownId();selection.disabled=true;
+      }else{
+        selection.disabled=false;
+        const {data,error}=await client.from('profiles')
+          .select('id,display_name,role,active').eq('role','colaborador').order('display_name',{ascending:true}).limit(500);
+        if(error)throw error;
+        state.chatPeople=data||[];
+        const before=selection.value;
+        selection.innerHTML='<option value="management">Conversa RL ↔ Restaurante</option>'
+          +state.chatPeople.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.display_name)+(p.active?'':' (inativo)')+'</option>').join('');
+        selection.value=[...selection.options].some(o=>o.value===before)?before:'management';
+      }
+      await loadChat();
+    }catch(e){$('chatStatus').textContent='Falha ao carregar as conversas: '+e.message;}
+    finally{chatLoading=false;}
+  }
+  async function loadChat(){
+    if(!configured || !state.user)return;
+    const target=state.role==='colaborador'?ownId():$('chatThread').value;
+    if(!target)return;
+    state.chatOwner=target==='management'?null:target;
+    try{
+      const query=client.from('chat_messages').select('id,thread_owner,sender_id,sender_name,body,created_at')
+        .order('created_at',{ascending:false}).limit(200);
+      const {data,error}=await (state.chatOwner===null ? query.is('thread_owner',null) : query.eq('thread_owner',state.chatOwner));
+      if(error)throw error;
+      state.chatRows=(data||[]).reverse();
+      const el=$('chatMessages');
+      el.innerHTML=state.chatRows.length?state.chatRows.map(m=>{
+        const own=m.sender_id===ownId();
+        const dt=new Date(m.created_at).toLocaleString('pt-BR',{timeZone:'America/Recife',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+        return '<article class="chat-bubble '+(own?'chat-own':'')+'"><div class="chat-meta">'+esc(m.sender_name)+(own?' (você)':'')+' · '+esc(dt)+'</div><p>'+esc(m.body)+'</p></article>';
+      }).join(''):'<p class="empty">Nenhuma mensagem ainda. Envie a primeira mensagem para o restaurante.</p>';
+      el.scrollTop=el.scrollHeight;
+      $('chatStatus').textContent='Conversa atualizada.';
+    }catch(e){$('chatStatus').textContent='Não foi possível atualizar mensagens: '+e.message;}
+  }
+  async function sendChat(){
+    if(!configured || !state.user)return;
+    const body=$('chatInput').value.trim();
+    if(!body)return;
+    if(body.length>1000)return inform('A mensagem deve ter até 1000 caracteres.',true);
+    const thread_owner=state.role==='colaborador'?ownId():($('chatThread').value==='management'?null:$('chatThread').value);
+    if(state.role!=='colaborador' && !thread_owner && $('chatThread').value!=='management')
+      return inform('Selecione uma conversa.',true);
+    const button=$('chatSend');button.disabled=true;
+    try{
+      const {error}=await client.from('chat_messages').insert({thread_owner,sender_id:ownId(),body});
+      if(error)throw error;
+      $('chatInput').value='';await loadChat();
+      $('chatStatus').textContent='Mensagem enviada.';
+    }catch(e){$('chatStatus').textContent='Mensagem não enviada: '+e.message;}
+    finally{button.disabled=false;}
+  }
+  $('chatRefresh').addEventListener('click',initChat);
+  $('chatThread').addEventListener('change',loadChat);
+  $('chatSend').addEventListener('click',sendChat);
+
+  // Exclusão de dados de TESTE exige duplo consentimento e é atômica no Postgres.
+  async function previewReset(){
+    const result=await userApi('reset_preview');
+    const n=result.counts||{};
+    $('resetPreview').textContent='Dados operacionais: '+(n.orders||0)+' pedidos, '+(n.order_audit||0)+
+      ' registros de histórico de pedidos e '+(n.chat_messages||0)+' mensagens. Os cadastros permanecerão.';
+    return n;
+  }
+  async function resetTestData(){
+    if(!isManager())return;
+    try{
+      const n=await previewReset();
+      const count=(n.orders||0)+(n.chat_messages||0)+(n.order_audit||0);
+      if(!count)return inform('Não há pedidos nem mensagens de teste para zerar.');
+      if(!confirm('ATENÇÃO: esta operação apaga permanentemente '+count+' registros operacionais, inclusive pedidos entregues. Os usuários permanecerão. Continuar?'))return;
+      const phrase=prompt('Para confirmar a exclusão DEFINITIVA dos dados de teste, digite exatamente ZERAR TESTES:');
+      if(phrase!=='ZERAR TESTES')return inform('Limpeza cancelada. Nenhum dado foi excluído.',true);
+      const result=await userApi('reset_test_data',{confirm:phrase});
+      inform(result.message||'Dados operacionais de teste apagados.');
+      await reload();await previewReset();
+      if(state.tab==='chat')await initChat();
+    }catch(e){fail(e);}
+  }
+  $('resetPreviewBtn').addEventListener('click',()=>previewReset().catch(fail));
+  $('resetDataBtn').addEventListener('click',resetTestData);
+
+  async function changeMyPassword(){
+    if(!configured||!state.user)return;
+    const current=$('currentPassword').value;
+    const next=$('ownNewPassword').value;
+    if(next.length<8||next.length>72)return inform('Nova senha deve ter 8 a 72 caracteres.',true);
+    if(next!==$('confirmOwnPassword').value)return inform('A confirmação da nova senha não confere.',true);
+    const button=$('changeOwnPassword');button.disabled=true;
+    try{
+      const {error:loginError}=await client.auth.signInWithPassword({email:state.user.email,password:current});
+      if(loginError)throw Error('Senha atual incorreta.');
+      const {error}=await client.auth.updateUser({password:next});
+      if(error)throw error;
+      $('currentPassword').value='';$('ownNewPassword').value='';$('confirmOwnPassword').value='';
+      inform('Sua senha foi atualizada com sucesso.');
+    }catch(e){fail(e);}finally{button.disabled=false;}
+  }
+  $('changeOwnPassword').addEventListener('click',changeMyPassword);
 
   // Imprimir ou salvar PDF: consulta todos os pedidos do DIA, não apenas o histórico carregado.
   async function reportAction(kind,format){
