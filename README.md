@@ -63,7 +63,7 @@ flowchart LR
 - **Cardápio por dia da semana:** rodízio de café da manhã e almoço, de segunda a domingo.
 - **Personalização de refeições:** escolha do prato, acompanhamentos, observações e restrição de dois feijões simultâneos.
 - **Controle de pedidos:** confirmação, edição e cancelamento antes do preparo; arquivamento administrativo com histórico.
-- **Gestão de acessos:** criação de contas com nomes de usuário, **senha forte gerada automaticamente**, redefinição e troca de senha, desativação e exclusão de contas sem pedidos.
+- **Gestão de acessos:** criação de contas com nomes de usuário, **senha forte gerada automaticamente**, redefinição e troca de senha, desativação e exclusão de contas sem pedidos. O ADM pode promover um colaborador ativo a **Administrador (ADM)** e reverter a permissão; a conta principal e a própria conta ficam protegidas.
 - **Painel do restaurante:** lista de produção, status de preparo/entrega e visualização de cancelamentos.
 - **Chat privado em tempo real:** colaborador ↔ restaurante/gestão e uma conversa reservada entre RL e restaurante.
 - **Limpeza protegida de testes:** ADM pode zerar pedidos, histórico operacional de pedidos e mensagens após prévia e dupla confirmação, sem apagar contas ou logs de segurança.

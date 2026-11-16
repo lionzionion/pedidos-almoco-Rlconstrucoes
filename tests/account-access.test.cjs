@@ -56,7 +56,7 @@ test('gestor possui botão de excluir e dupla confirmação',()=>{
 
 test('servidor só exclui conta administrada, sem pedidos, preservando auditoria',()=>{
  assert.match(edge,/profile\.role !== 'admin'/);
- assert.match(edge,/target\.id === caller \|\| target\.role === 'admin'/);
+ assert.match(edge,/target\.id === caller \|\| \(target\.role === 'admin' && action !== 'set_role'\)/);
  assert.match(edge,/if \(action === 'delete_user'\)/);
  assert.match(edge,/\.eq\('owner', id\)/);
  assert.match(edge,/\(count \?\? 0\) > 0/);

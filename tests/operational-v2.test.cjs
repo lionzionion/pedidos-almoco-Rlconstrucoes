@@ -51,7 +51,7 @@ test('UI mantém frete coletivo e libera pedidos sem limite de horário durante 
 });
 
 test('rotas preservam bibliotecas locais e atualização de cache',()=>{
- assert.match(html,/loader\.js\?v=12/);
- assert.match(access,/loader\.js\?v=12/);
- assert.match(read('app/loader.js'),/app\.js\?v=13/);
+ assert.match(html,/loader\.js\?v=13/);
+ assert.match(access,/loader\.js\?v=13/);
+ assert.match(read('app/loader.js'),/app\.js\?v=14/);
 });

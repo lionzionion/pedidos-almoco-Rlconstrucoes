@@ -213,7 +213,7 @@ Deno.serve(async (req) => {
     const { data: target, error: targetError } = await admin.from('profiles')
       .select('id,username,display_name,role,active,company,job_title').eq('id',id).single();
     if (targetError || !target) return reply({ error: 'Usuário não encontrado.' }, 404);
-    if (target.id === caller || target.role === 'admin') return reply({ error: 'Esta conta administrativa está protegida.' }, 403);
+    if (target.id === caller || (target.role === 'admin' && action !== 'set_role')) return reply({ error: 'Esta conta administrativa está protegida.' }, 403);
     if (!target.username) return reply({ error: 'Conta de e-mail não gerenciada por este painel.' }, 403);
 
     if (action === 'delete_user') {
@@ -265,11 +265,30 @@ Deno.serve(async (req) => {
       return reply({message:'Empresa atualizada. Pedidos anteriores não foram alterados.'});
     }
     if (action === 'set_role') {
-      if (!managedRole(body.role)) return reply({ error: 'Perfil inválido.' },400);
-      const { error } = await admin.from('profiles').update({ role: body.role }).eq('id',id);
+      const nextRole = body.role;
+      if (!managedRole(nextRole) && nextRole !== 'admin') return reply({ error: 'Perfil inválido.' },400);
+      if (nextRole === target.role) return reply({ message: 'O perfil já está atualizado.' });
+      // Nunca alterar o próprio perfil ou o ADM original (conta sem login interno).
+      // Promoções só são permitidas para colaboradores ativos, não restaurantes.
+      if (nextRole === 'admin' && target.role !== 'colaborador')
+        return reply({ error: 'Somente um colaborador pode ser promovido a ADM.' },400);
+      if (nextRole === 'admin' && !target.active)
+        return reply({ error: 'Reative o colaborador antes de promovê-lo a ADM.' },409);
+      if (target.role === 'admin' && nextRole !== 'colaborador')
+        return reply({ error: 'Para retirar o ADM, selecione Colaborador.' },400);
+      const { data: updated, error } = await admin.from('profiles')
+        .update({ role: nextRole }).eq('id',id).eq('role',target.role).select('id').maybeSingle();
       if (error) throw error;
-      await admin.from('account_audit').insert({actor:caller,target:id,action:'change_role',details:{from:target.role,to:body.role}});
-      return reply({ message: 'Permissão atualizada.' });
+      if (!updated) return reply({ error: 'O perfil mudou enquanto você editava. Atualize a lista e tente novamente.' },409);
+      const { error: auditError } = await admin.from('account_audit').insert({
+        actor:caller,target:id,action:'change_role',details:{from:target.role,to:nextRole}
+      });
+      if (auditError) console.error('manage-users change_role audit:',auditError.message);
+      return reply({ message: nextRole === 'admin'
+        ? 'Colaborador promovido a ADM. Oriente-o a atualizar o aplicativo ou entrar novamente.'
+        : target.role === 'admin'
+          ? 'Permissão de ADM removida. O colaborador deverá atualizar o aplicativo.'
+          : 'Permissão atualizada.' });
     }
     if (action === 'reset_password') {
       const generated=body.password==='AUTO';
