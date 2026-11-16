@@ -400,22 +400,23 @@
     $('usersCount').textContent=String(state.users.length);
     const el=$('usersList');
     el.innerHTML=state.users.length?state.users.map(u=>{
-      const mine=u.id===ownId(), protectedAccount=mine||u.role==='admin';
+      const mine=u.id===ownId(), protectedAccount=mine||!u.username;
       const role=u.role==='admin'?'Administrador':u.role==='restaurante'?'Restaurante':'Colaborador';
       const controls=protectedAccount?'':`<div class="user-actions">
         <select data-role-for="${esc(u.id)}" aria-label="Perfil de ${esc(u.display_name)}">
           <option value="colaborador" ${u.role==='colaborador'?'selected':''}>Colaborador</option>
-          <option value="restaurante" ${u.role==='restaurante'?'selected':''}>Restaurante</option>
+          <option value="restaurante" ${u.role==='restaurante'?'selected':''} ${u.role==='admin'?'disabled':''}>Restaurante</option>
+          <option value="admin" ${u.role==='admin'?'selected':''} ${!u.active && u.role!=='admin'?'disabled':''}>Administrador (ADM)</option>
         </select>
         <button class="secondary compact" data-user-action="set_role" data-id="${esc(u.id)}">Salvar perfil</button>
-        <select data-company-for="${esc(u.id)}" aria-label="Empresa de ${esc(u.display_name)}">
+        ${u.role==='admin'?'':`<select data-company-for="${esc(u.id)}" aria-label="Empresa de ${esc(u.display_name)}">
           <option value="RL" ${u.company!=='SOLUTIO'?'selected':''}>RL Construções</option>
           <option value="SOLUTIO" ${u.company==='SOLUTIO'?'selected':''}>Solutio</option>
         </select>
         <button class="secondary compact" data-user-action="set_company" data-id="${esc(u.id)}">Salvar empresa</button>
         <button class="secondary compact" data-user-action="reset_password" data-id="${esc(u.id)}">Redefinir senha</button>
         <button class="${u.active?'danger':'primary'} compact" data-user-action="set_active" data-id="${esc(u.id)}">${u.active?'Desativar':'Reativar'}</button>
-        <button class="danger compact" data-user-action="delete_user" data-id="${esc(u.id)}" title="Exclusão definitiva somente para usuários sem pedidos">Excluir usuário</button>
+        <button class="danger compact" data-user-action="delete_user" data-id="${esc(u.id)}" title="Exclusão definitiva somente para usuários sem pedidos">Excluir usuário</button>`}
       </div>`;
       return `<article class="entry user-account">
         <div class="entry-top"><div><strong>${esc(u.display_name)}</strong>
@@ -426,10 +427,16 @@
     }).join(''):'<div class="empty">Nenhum usuário encontrado.</div>';
     el.querySelectorAll('[data-user-action]').forEach(b=>b.addEventListener('click',async()=>{
       const id=b.dataset.id, u=state.users.find(x=>x.id===id);
-      if(!u || u.role==='admin')return;
       const action=b.dataset.userAction;
+      if(!u || u.id===ownId() || !u.username || (u.role==='admin' && action!=='set_role'))return;
       let params={id};
-      if(action==='set_role')params.role=el.querySelector('[data-role-for="'+id+'"]').value;
+      if(action==='set_role'){
+        const nextRole=el.querySelector('[data-role-for="'+id+'"]').value;
+        if(nextRole===u.role)return inform('O perfil de '+u.display_name+' já está selecionado.');
+        if(nextRole==='admin' && !confirm('Conceder acesso de ADMINISTRADOR a '+u.display_name+'? Este usuário poderá consultar pedidos, relatórios e gerenciar outros cadastros.'))return;
+        if(u.role==='admin' && !confirm('Retirar o acesso de administrador de '+u.display_name+' e voltar para colaborador?'))return;
+        params.role=nextRole;
+      }
       if(action==='set_company')params.company=el.querySelector('[data-company-for="'+id+'"]').value;
       if(action==='set_active'){
         if(!confirm((u.active?'Desativar':'Reativar')+' acesso de '+u.display_name+'?'))return;
