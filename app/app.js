@@ -171,7 +171,7 @@
     const type=meal();
     $('unitPrice').textContent=M.money(M.unitPrice(type,state.dish));
     $('feePreview').textContent=M.money(M.fee(type,$('orderDay').value));
-    $('orderDeadlineInfo').textContent='Entrega: '+$('orderDay').value.split('-').reverse().join('/')+'. Pedidos para hoje e amanhã liberados a qualquer hora no modo de testes. Frete coletivo único de R$ 8 por refeição.';
+    $('orderDeadlineInfo').textContent='MODO DE TESTES: pedidos liberados a qualquer hora para hoje e amanhã. Entrega: '+$('orderDay').value.split('-').reverse().join('/')+'. Frete coletivo único de R$ 8 por refeição.';
     $('orderDeadlineInfo').classList.remove('error');
     $('placeBtn').disabled=false;
   }
