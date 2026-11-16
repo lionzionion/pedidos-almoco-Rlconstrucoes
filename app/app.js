@@ -308,7 +308,7 @@
   }
   function metric(label,value){return '<div class="metric"><small>'+esc(label)+'</small><strong>'+esc(value)+'</strong></div>';}
   function renderRestaurant() {
-    const day=$('restaurantDate').value||today, type=$('restaurantMeal').value;
+    const day=$('restaurantDate').value||M.today(), type=$('restaurantMeal').value;
     // Restaurante único: visualiza TODOS os pedidos de ambas empresas.
     const rows=state.orders.filter(o=>o.order_day===day && !o.archived && (type==='todos'||o.meal===type));
     const s=M.summary(rows,day), companies=M.companyBreakdown(rows,day);
@@ -322,7 +322,7 @@
     bindActions(el);
   }
   function filteredAdmin() {
-    const day=$('adminDate').value||today, type=$('adminMeal').value, company=$('adminCompany').value;
+    const day=$('adminDate').value||M.today(), type=$('adminMeal').value, company=$('adminCompany').value;
     const allRows=state.orders.filter(o=>o.order_day===day && (type==='todos'||o.meal===type));
     const rows=company==='todos'?allRows:allRows.filter(o=>(o.company==='SOLUTIO'?'SOLUTIO':'RL')===company);
     return {day,company,rows,allRows};
