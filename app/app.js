@@ -9,7 +9,7 @@
   const $ = id => document.getElementById(id);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const localKey = 'rl-demo-pedidos-v1';
-  const state = {role: 'colaborador', user: null, profile: null, orders: [], users: [], invitations: [], chatPeople: [], chatRows: [], chatOwner:null, dish:'', sides:[], editing:null, tab:'order', demoName:'Colaborador de teste'};
+  const state = {role: 'colaborador', user: null, profile: null, orders: [], users: [], invitations: [], chatPeople: [], chatRows: [], chatOwner:null, dish:'', sides:[], editing:null, tab:'order', demoName:'Colaborador de teste', restaurantDateInitialized:false};
   const name = () => state.profile?.display_name || state.demoName;
   const ownId = () => state.user?.id || 'demo-user';
   const meal = () => document.querySelector('input[name="meal"]:checked')?.value || 'almoco';
@@ -26,11 +26,11 @@
   function readDemo() { try { const v=JSON.parse(localStorage.getItem(localKey) || '[]'); return Array.isArray(v)?v:[]; } catch { return []; } }
   function writeDemo() { localStorage.setItem(localKey, JSON.stringify(state.orders)); }
   function syncOrderDayChoices() {
-    const select=$('orderDay'), days=M.orderableDays();
+    const select=$('orderDay'), days=M.deliveryDays(meal());
     const editingOrder=state.editing && state.orders.find(o=>o.id===state.editing);
     const wanted=editingOrder?.order_day || select.value;
     select.innerHTML=days.map((day,i)=>'<option value="'+day+'">'+
-      (i===0?'Hoje':'Amanhã')+' — '+day.split('-').reverse().join('/')+'</option>').join('');
+      (day===M.today()?'Hoje':'Amanhã')+' — '+day.split('-').reverse().join('/')+'</option>').join('');
     select.value=days.includes(wanted)?wanted:days[0];
     select.disabled=Boolean(editingOrder);
     return select.value;
@@ -142,6 +142,10 @@
     });
     $('logoutBtn').hidden=!configured;
     $('who').textContent = name() + ' • ' + ({admin:'Gestão RL',restaurante:'Restaurante',colaborador:'Colaborador'}[state.role]||'') + ((state.role==='colaborador'||state.role==='admin')?' • '+(state.profile?.company==='SOLUTIO'?'Solutio':'RL Construções'):'');
+    if(isRestaurant()&&!state.restaurantDateInitialized) {
+      $('restaurantDate').value=M.deliveryDays('almoco')[0];
+      state.restaurantDateInitialized=true;
+    }
     if((['order','mine'].includes(state.tab) && !isStaff()) || (['admin','users'].includes(state.tab) && !isManager()) || (state.tab==='restaurant' && !isRestaurant() && !isManager())) {
       state.tab=isRestaurant() ? 'restaurant' : isManager() ? 'admin' : 'order';
     }
@@ -150,6 +154,8 @@
   function renderMenu() {
     const day=syncOrderDayChoices();
     const type=meal(), available=M.items(type,day);
+    const previous=state.editing&&state.orders.find(o=>o.id===state.editing);
+    if(previous?.order_day===day&&previous?.meal===type&&previous.dish&&!available.includes(previous.dish))available.unshift(previous.dish);
     if(!available.includes(state.dish)) state.dish=available[0];
     $('menuDay').textContent=M.days[M.weekday(day)] + ' — ' + day.split('-').reverse().join('/');
     $('menuCards').innerHTML=available.map((dish,i) =>
@@ -171,7 +177,10 @@
     const type=meal();
     $('unitPrice').textContent=M.money(M.unitPrice(type,state.dish));
     $('feePreview').textContent=M.money(M.fee(type,$('orderDay').value));
-    $('orderDeadlineInfo').textContent='MODO DE TESTES: pedidos liberados a qualquer hora para hoje e amanhã. Entrega: '+$('orderDay').value.split('-').reverse().join('/')+'. Frete coletivo único de R$ 8 por refeição.';
+    $('orderDeadlineInfo').textContent=(type==='cafe'
+      ?'Café da manhã: sempre programado para o dia seguinte, permitindo o preparo antecipado.'
+      :'Almoço: até 11h59 pode escolher hoje; a partir das 12h o sistema programa amanhã.')
+      +' Entrega: '+$('orderDay').value.split('-').reverse().join('/')+'. Frete coletivo único de R$ 8 por refeição.';
     $('orderDeadlineInfo').classList.remove('error');
     $('placeBtn').disabled=false;
   }
@@ -207,8 +216,11 @@
     if(!isStaff()) return;
     const day=$('orderDay').value;
     const type=meal(), dish=state.dish, sides=type==='almoco'?[...state.sides]:[], notes=$('notes').value.trim();
-    if(!M.canOrderFor(day)) return inform('É possível pedir somente para hoje ou amanhã, no horário de Recife.',true);
-    if(!M.items(type,day).includes(dish)) return inform('Escolha uma opção válida do cardápio da data selecionada.',true);
+    if(!M.canSchedule(type,day)) return inform('Café sempre para amanhã; almoço solicitado após 12h também será para amanhã (Recife).',true);
+    const previous=state.editing&&state.orders.find(o=>o.id===state.editing);
+    if(!M.items(type,day).includes(dish) &&
+      !(previous&&previous.order_day===day&&previous.meal===type&&previous.dish===dish))
+      return inform('Escolha uma opção válida do cardápio da data selecionada.',true);
     if(state.editing && state.orders.find(o=>o.id===state.editing)?.order_day!==day)
       return inform('Não é permitido alterar a data de um pedido em edição.',true);
     const feedback=$('orderFeedback');
@@ -255,7 +267,7 @@
   function editOrder(id) {
     const o=state.orders.find(o=>o.id===id);
     if(!o || o.status!=='confirmado' || o.archived || o.owner!==ownId()) return;
-    if(!M.canOrderFor(o.order_day)) return inform('Pedidos de datas anteriores não podem ser editados.',true);
+    if(!M.canSchedule(o.meal,o.order_day)) return inform('Este pedido está fora do período permitido para edição.',true);
     state.editing=id;
     document.querySelector('input[name="meal"][value="'+o.meal+'"]').checked=true;
     state.dish=o.dish; state.sides=[...(o.accompaniments||[])]; $('notes').value=o.notes||'';
@@ -272,14 +284,17 @@
   function orderCard(o, controls) {
     let buttons='';
     if(controls==='mine' && active(o) && o.status==='confirmado' && o.owner===ownId())
-      buttons=(M.canOrderFor(o.order_day)?'<button class="secondary compact" data-act="edit" data-id="'+esc(o.id)+'">Editar</button>':'')+
+      buttons=(M.canSchedule(o.meal,o.order_day)?'<button class="secondary compact" data-act="edit" data-id="'+esc(o.id)+'">Editar</button>':'')+
         '<button class="danger compact" data-act="cancel" data-id="'+esc(o.id)+'">Cancelar pedido</button>';
     if(controls==='restaurant' && !o.archived && o.status==='confirmado')
       buttons='<button class="secondary compact" data-act="prepare" data-id="'+esc(o.id)+'">Iniciar preparo</button>';
     if(controls==='restaurant' && !o.archived && o.status==='preparo')
       buttons='<button class="primary compact" data-act="deliver" data-id="'+esc(o.id)+'">Marcar entregue</button>';
     const sides=(o.accompaniments||[]).join(', ');
-    return '<article class="entry"><div class="entry-top"><div><strong>'+esc(o.employee_name)+'</strong><br><small>'+esc(o.order_day.split('-').reverse().join('/'))+' • '+mealTitle(o.meal)+' • '+(o.company==='SOLUTIO'?'Solutio':'RL Construções')+'</small></div>'+statusBadge(o)+'</div><p><b>'+esc(o.dish)+'</b> — '+M.money(o.price)+'</p>'+(sides?'<p class="small">Acompanhamentos: '+esc(sides)+'</p>':'')+(o.notes?'<p class="small">Observações: '+esc(o.notes)+'</p>':'')+(o.cancel_reason?'<p class="small">Motivo: '+esc(o.cancel_reason)+'</p>':'')+(buttons?'<div class="actions">'+buttons+'</div>':'')+'</article>';
+    const outsideMenu=!M.items(o.meal,o.order_day).includes(o.dish);
+    return '<article class="entry"><div class="entry-top"><div><strong>'+esc(o.employee_name)+'</strong><br><small>'+esc(o.order_day.split('-').reverse().join('/'))+' • '+mealTitle(o.meal)+' • '+(o.company==='SOLUTIO'?'Solutio':'RL Construções')+'</small></div>'+statusBadge(o)+'</div><p><b>'+esc(o.dish)+'</b> — '+M.money(o.price)+'</p>'+
+      (outsideMenu?'<p class="small"><b>⚠ Pedido excepcional: confirmar disponibilidade do prato com o restaurante.</b></p>':'')+
+      (sides?'<p class="small">Acompanhamentos: '+esc(sides)+'</p>':'')+(o.notes?'<p class="small">Observações: '+esc(o.notes)+'</p>':'')+(o.cancel_reason?'<p class="small">Motivo: '+esc(o.cancel_reason)+'</p>':'')+(buttons?'<div class="actions">'+buttons+'</div>':'')+'</article>';
   }
   function bindActions(root) {
     root.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()=>{
@@ -838,7 +853,7 @@
     const d=e.target.closest('[data-demo-role]');
     if(d && !configured){state.role=d.dataset.demoRole;state.profile={display_name:state.role==='colaborador'?state.demoName:state.role==='admin'?'Gestão RL (prévia)':'Restaurante (prévia)',role:state.role};state.tab=state.role==='colaborador'?'order':state.role==='admin'?'admin':'restaurant';renderAll();}
   });
-  document.querySelectorAll('input[name="meal"]').forEach(input => input.addEventListener('change',()=>{state.dish='';state.sides=[];renderMenu();}));
+  document.querySelectorAll('input[name="meal"]').forEach(input => input.addEventListener('change',()=>{state.dish='';state.sides=[];$('orderDay').value='';renderMenu();}));
   $('orderDay').addEventListener('change',()=>{state.dish='';state.sides=[];renderMenu();});
   $('demoName').addEventListener('input',e=>{state.demoName=e.target.value.trim()||'Colaborador de teste';if(state.role==='colaborador'){state.profile.display_name=state.demoName;renderTabs();}});
   $('placeBtn').addEventListener('click',saveOrder);

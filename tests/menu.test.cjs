@@ -67,3 +67,18 @@ test('pode pedir hoje e amanhã, mas não ontem nem depois de amanhã (fuso Reci
 test('cardápio escolhido para terça é diferente do de segunda',()=>{
   assert.notDeepEqual(M.items('almoco','2026-11-16'),M.items('almoco','2026-11-17'));
 });
+
+test('café sempre para amanhã: pedidos da manhã e da tarde',()=>{
+  for(const now of [new Date('2026-11-16T13:00:00Z'),new Date('2026-11-16T19:50:00Z')]){
+    assert.deepEqual(M.deliveryDays('cafe',now),['2026-11-17']);
+    assert.equal(M.canSchedule('cafe','2026-11-16',now),false);
+    assert.equal(M.canSchedule('cafe','2026-11-17',now),true);
+  }
+});
+test('almoço de hoje encerra exatamente às 12h no horário de Recife',()=>{
+  const before=new Date('2026-11-16T14:59:59Z');
+  const atNoon=new Date('2026-11-16T15:00:00Z');
+  assert.deepEqual(M.deliveryDays('almoco',before),['2026-11-16','2026-11-17']);
+  assert.deepEqual(M.deliveryDays('almoco',atNoon),['2026-11-17']);
+  assert.equal(M.canSchedule('almoco','2026-11-16',atNoon),false);
+});

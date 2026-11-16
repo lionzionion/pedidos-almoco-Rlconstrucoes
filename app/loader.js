@@ -72,7 +72,7 @@
       }
       if(!ready)throw new Error('Não foi possível carregar o serviço de autenticação');
     }
-    const appScript = new URL('app.js?v=15', new URL('.', loaderURL)).href;
+    const appScript = new URL('app.js?v=16', new URL('.', loaderURL)).href;
     await loadScript(appScript,10000);
     if(!window.RL_APP_BOOTED)throw new Error('A interface não concluiu a inicialização');
   }

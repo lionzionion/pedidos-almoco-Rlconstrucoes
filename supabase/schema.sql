@@ -122,6 +122,11 @@ begin
       and ((timezone('America/Recife',now()))::date + 1) then
       raise exception 'Só é permitido fazer pedidos para hoje ou amanhã (Recife).';
     end if;
+    if new.meal='cafe' then
+      new.order_day:=(timezone('America/Recife',now()))::date + 1;
+    elsif new.meal='almoco' and (timezone('America/Recife',now()))::time >= time '12:00' then
+      new.order_day:=(timezone('America/Recife',now()))::date + 1;
+    end if;
     new.status:='confirmado';
     new.archived:=false;
     new.created_at:=now();
@@ -166,8 +171,14 @@ begin
     end if;
   end if;
 
-  if new.dish <> all(rl_private.allowed_dishes(new.meal,new.order_day)) then
-    raise exception 'Prato indisponível no cardápio deste dia.';
+  if TG_OP='INSERT' then
+    if new.dish <> all(rl_private.allowed_dishes(new.meal,new.order_day)) then
+      raise exception 'Prato indisponível no cardápio deste dia.';
+    end if;
+  elsif (new.meal,new.dish,new.order_day) is distinct from (old.meal,old.dish,old.order_day) then
+    if new.dish <> all(rl_private.allowed_dishes(new.meal,new.order_day)) then
+      raise exception 'Prato indisponível no cardápio deste dia.';
+    end if;
   end if;
   if new.meal='cafe' and cardinality(new.accompaniments)>0 then
     raise exception 'Acompanhamentos são exclusivos do almoço.';

@@ -9,15 +9,15 @@ test('ambas as páginas mostram data de entrega e carregam versões atualizadas'
  for(const p of ['app/index.html','acesso/index.html']){
   const html=read(p);
   assert.match(html,/id="orderDay"/);
-  assert.match(html,/menu\.js\?v=5/);
-  assert.match(html,/loader\.js\?v=14/);
+  assert.match(html,/menu\.js\?v=6/);
+  assert.match(html,/loader\.js\?v=15/);
  }
 });
 test('pedido passa a data selecionada para a base e para o modo demonstração',()=>{
  assert.match(app,/syncOrderDayChoices\(\)/);
  assert.match(app,/M\.items\(type,day\)/);
  assert.match(app,/order_day:day,meal:type/);
- assert.match(app,/M\.canOrderFor\(day\)/);
+ assert.match(app,/M\.canSchedule\(type,day\)/);
  assert.match(app,/\$\('orderDay'\)\.addEventListener\('change'/);
 });
 test('banco limita pedidos novos a hoje ou amanhã, com data imutável na edição',()=>{
@@ -26,4 +26,14 @@ test('banco limita pedidos novos a hoje ou amanhã, com data imutável na ediç�
  assert.match(schema,/Identificação e data não podem ser alteradas/);
  assert.match(migration,/pg_get_functiondef/);
  assert.match(migration,/Só é permitido fazer pedidos para hoje ou amanhã/);
+});
+
+test('banco aplica política especial para café e almoço do dia seguinte',()=>{
+ const migration=read('supabase/breakfast-delivery-next-day.sql');
+ assert.match(migration,/new.meal='cafe'/);
+ assert.match(migration,/time '12:00'/);
+ assert.match(migration,/pg_get_functiondef/);
+ assert.match(app,/M\.deliveryDays\(meal\(\)\)/);
+ assert.match(app,/M\.canSchedule\(type,day\)/);
+ assert.match(schema,/new.meal='cafe'/);
 });

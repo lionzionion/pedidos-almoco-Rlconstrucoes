@@ -43,15 +43,15 @@ test('limpeza admin exige duas confirmações e apaga apenas registros operacion
 
 test('UI mantém frete coletivo e libera pedidos sem limite de horário durante os testes',()=>{
  assert.match(app,/M\.fee\(type,\$\('orderDay'\)\.value\)/);
- assert.match(app,/MODO DE TESTES: pedidos liberados a qualquer hora/);
+ assert.match(app,/Café da manhã: sempre programado para o dia seguinte/);
  assert.doesNotMatch(app,/if\(M\.closed\(meal\(\),today\)\)/);
  assert.doesNotMatch(app,/Prazo de pedidos encerrado/);
- assert.match(html,/pedidos para hoje e amanhã liberados a qualquer hora/);
- assert.match(access,/pedidos para hoje e amanhã liberados a qualquer hora/);
+ assert.match(html,/Café da manhã preparado para o dia seguinte/);
+ assert.match(access,/Café da manhã preparado para o dia seguinte/);
 });
 
 test('rotas preservam bibliotecas locais e atualização de cache',()=>{
- assert.match(html,/loader\.js\?v=14/);
- assert.match(access,/loader\.js\?v=14/);
- assert.match(read('app/loader.js'),/app\.js\?v=15/);
+ assert.match(html,/loader\.js\?v=15/);
+ assert.match(access,/loader\.js\?v=15/);
+ assert.match(read('app/loader.js'),/app\.js\?v=16/);
 });
