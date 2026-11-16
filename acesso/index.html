@@ -55,11 +55,12 @@
       <div class="sectionhead"><div><div class="eyebrow blue">COLABORADOR</div><h2>Monte sua refeição</h2><p class="muted">Escolha uma refeição por período. Você pode alterar ou cancelar antes do preparo.</p></div></div>
       <div class="card">
         <div class="group"><span class="fieldtitle">Refeição</span><div class="toggle-row"><label class="meal-option"><input name="meal" value="cafe" type="radio"> ☀️ Café da manhã</label><label class="meal-option"><input name="meal" value="almoco" type="radio" checked> 🍛 Almoço</label></div></div>
-        <div class="group"><span class="fieldtitle">Data e cardápio</span><div class="dayname" id="menuDay"></div><div id="menuCards" class="menu-cards"></div></div>
+        <div class="group"><label for="orderDay">Data de entrega</label><select id="orderDay" aria-label="Selecione hoje ou amanhã para entrega"></select><p class="muted small">Você pode reservar agora a refeição de amanhã.</p></div>
+        <div class="group"><span class="fieldtitle">Cardápio da data escolhida</span><div class="dayname" id="menuDay"></div><div id="menuCards" class="menu-cards"></div></div>
         <div id="sideSection" class="group"><span class="fieldtitle">Acompanhamentos</span><p class="muted small">Escolha o que deseja. Selecione apenas um tipo de feijão.</p><div id="sides" class="checkgrid"></div></div>
         <div class="group"><label for="notes">Observações para a cozinha</label><textarea id="notes" rows="3" maxlength="250" placeholder="Ex.: sem cebola, pouco arroz..."></textarea></div>
         <div class="order-total"><div><span>Valor unitário</span><strong id="unitPrice">R$ 22,00</strong></div><div><span>Frete da remessa (cobrado no fechamento)</span><strong id="feePreview">R$ 8,00</strong></div></div>
-        <p class="muted small">Modo de testes: pedidos de café e almoço liberados a qualquer hora. O frete coletivo de R$ 8 por tipo de refeição continua considerado uma única vez na conferência depois das 08h para café e 13h para almoço, sem multiplicar por colaborador.</p>
+        <p class="muted small">Modo de testes: pedidos para hoje e amanhã liberados a qualquer hora. O frete coletivo de R$ 8 por tipo de refeição continua considerado uma única vez na conferência depois das 08h para café e 13h para almoço, sem multiplicar por colaborador.</p>
         <p class="small" id="orderDeadlineInfo" role="status"></p>
         <div id="orderFeedback" class="feedback" role="status" aria-live="polite"></div>
         <div class="actions"><button id="placeBtn" class="primary">Confirmar pedido</button><button id="clearEditBtn" class="secondary" hidden>Cancelar edição</button></div>
@@ -168,8 +169,8 @@
 <footer>RL Engenharia • AMBEV Itapissuma • Horário de Recife/PE</footer>
 <noscript><div class="container notice">Ative o JavaScript no navegador para acessar os pedidos.</div></noscript>
 <script src="../app/config.js?v=2"></script>
-<script src="../app/menu.js?v=4"></script>
+<script src="../app/menu.js?v=5"></script>
 <script src="../app/reports.js?v=4"></script>
-<script src="../app/loader.js?v=13"></script>
+<script src="../app/loader.js?v=14"></script>
 </body>
 </html>

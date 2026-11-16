@@ -20,7 +20,17 @@ window.RL_MENU = (() => {
   };
   const sides = ['Arroz','Feijão mulato','Feijão macassar','Macarrão','Vinagrete','Legumes'];
   const days = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
-  function today() { return new Intl.DateTimeFormat('sv-SE', {timeZone:'America/Recife', year:'numeric', month:'2-digit', day:'2-digit'}).format(new Date()); }
+  function today(now=new Date()) { return new Intl.DateTimeFormat('sv-SE', {timeZone:'America/Recife', year:'numeric', month:'2-digit', day:'2-digit'}).format(now); }
+  function nextDay(date) {
+    const utc=new Date(date+'T12:00:00Z');
+    utc.setUTCDate(utc.getUTCDate()+1);
+    return utc.toISOString().slice(0,10);
+  }
+  function orderableDays(now=new Date()) {
+    const day=today(now);
+    return [day,nextDay(day)];
+  }
+  function canOrderFor(date,now=new Date()) { return orderableDays(now).includes(date); }
   function weekday(date) { return new Date(date + 'T12:00:00Z').getUTCDay(); }
   function items(type, date) {
     return type === 'cafe' ? [...breakfast[weekday(date)], 'Café só com pão'] : [...lunch[weekday(date)]];
@@ -75,5 +85,5 @@ window.RL_MENU = (() => {
     }
     return result;
   }
-  return Object.freeze({breakfast, lunch, sides, days, today, weekday, items, unitPrice, fee, cutoff, closed, money, summary, companyBreakdown});
+  return Object.freeze({breakfast, lunch, sides, days, today, nextDay, orderableDays, canOrderFor, weekday, items, unitPrice, fee, cutoff, closed, money, summary, companyBreakdown});
 })();

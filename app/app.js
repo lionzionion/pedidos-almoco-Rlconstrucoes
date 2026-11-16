@@ -9,7 +9,6 @@
   const $ = id => document.getElementById(id);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const localKey = 'rl-demo-pedidos-v1';
-  const today = M.today();
   const state = {role: 'colaborador', user: null, profile: null, orders: [], users: [], invitations: [], chatPeople: [], chatRows: [], chatOwner:null, dish:'', sides:[], editing:null, tab:'order', demoName:'Colaborador de teste'};
   const name = () => state.profile?.display_name || state.demoName;
   const ownId = () => state.user?.id || 'demo-user';
@@ -26,9 +25,21 @@
   function fail(err) { inform(err?.message || String(err), true); }
   function readDemo() { try { const v=JSON.parse(localStorage.getItem(localKey) || '[]'); return Array.isArray(v)?v:[]; } catch { return []; } }
   function writeDemo() { localStorage.setItem(localKey, JSON.stringify(state.orders)); }
+  function syncOrderDayChoices() {
+    const select=$('orderDay'), days=M.orderableDays();
+    const editingOrder=state.editing && state.orders.find(o=>o.id===state.editing);
+    const wanted=editingOrder?.order_day || select.value;
+    select.innerHTML=days.map((day,i)=>'<option value="'+day+'">'+
+      (i===0?'Hoje':'Amanhã')+' — '+day.split('-').reverse().join('/')+'</option>').join('');
+    select.value=days.includes(wanted)?wanted:days[0];
+    select.disabled=Boolean(editingOrder);
+    return select.value;
+  }
   function initializeDay() {
-    $('todayLabel').textContent = M.days[M.weekday(today)] + ', ' + today.split('-').reverse().join('/');
-    $('restaurantDate').value=today; $('adminDate').value=today;
+    const day=M.today();
+    $('todayLabel').textContent = M.days[M.weekday(day)] + ', ' + day.split('-').reverse().join('/');
+    $('restaurantDate').value=day; $('adminDate').value=day;
+    syncOrderDayChoices();
   }
   function begin() {
     initializeDay();
@@ -137,9 +148,10 @@
     chooseTab(state.tab);
   }
   function renderMenu() {
-    const type=meal(), available=M.items(type,today);
+    const day=syncOrderDayChoices();
+    const type=meal(), available=M.items(type,day);
     if(!available.includes(state.dish)) state.dish=available[0];
-    $('menuDay').textContent=M.days[M.weekday(today)] + ' — ' + today.split('-').reverse().join('/');
+    $('menuDay').textContent=M.days[M.weekday(day)] + ' — ' + day.split('-').reverse().join('/');
     $('menuCards').innerHTML=available.map((dish,i) =>
       '<label class="menu-card"><input type="radio" name="dish" value="'+esc(dish)+'" '+(dish===state.dish?'checked':'')+'><span>'+esc(dish)+'<small>'+M.money(M.unitPrice(type,dish))+(type==='cafe' && dish==='Café só com pão'?' • opção simples':'')+'</small></span></label>'
     ).join('');
@@ -158,8 +170,8 @@
   function renderPrice() {
     const type=meal();
     $('unitPrice').textContent=M.money(M.unitPrice(type,state.dish));
-    $('feePreview').textContent=M.money(M.fee(type,today));
-    $('orderDeadlineInfo').textContent='MODO DE TESTES: pedidos liberados a qualquer hora. Frete único de R$ 8 por tipo de refeição, sem cobrança individual.';
+    $('feePreview').textContent=M.money(M.fee(type,$('orderDay').value));
+    $('orderDeadlineInfo').textContent='MODO DE TESTES: pedidos liberados a qualquer hora para hoje e amanhã. Entrega: '+$('orderDay').value.split('-').reverse().join('/')+'. Frete coletivo único de R$ 8 por refeição.';
     $('orderDeadlineInfo').classList.remove('error');
     $('placeBtn').disabled=false;
   }
@@ -193,15 +205,19 @@
   function renderAll() { renderTabs(); renderMenu(); renderMine(); renderRestaurant(); renderAdmin(); renderUsers(); }
   async function saveOrder() {
     if(!isStaff()) return;
+    const day=$('orderDay').value;
     const type=meal(), dish=state.dish, sides=type==='almoco'?[...state.sides]:[], notes=$('notes').value.trim();
-    if(!M.items(type,today).includes(dish)) return inform('Escolha uma opção válida do cardápio de hoje.',true);
+    if(!M.canOrderFor(day)) return inform('É possível pedir somente para hoje ou amanhã, no horário de Recife.',true);
+    if(!M.items(type,day).includes(dish)) return inform('Escolha uma opção válida do cardápio da data selecionada.',true);
+    if(state.editing && state.orders.find(o=>o.id===state.editing)?.order_day!==day)
+      return inform('Não é permitido alterar a data de um pedido em edição.',true);
     const feedback=$('orderFeedback');
     $('placeBtn').disabled=true;
     try {
       if(configured) {
         let response;
         if(state.editing) response = await client.from('orders').update({meal:type,dish,accompaniments:sides,notes}).eq('id',state.editing).select().single();
-        else response = await client.from('orders').insert({owner:ownId(),meal:type,dish,accompaniments:sides,notes}).select().single();
+        else response = await client.from('orders').insert({owner:ownId(),order_day:day,meal:type,dish,accompaniments:sides,notes}).select().single();
         if(response.error) throw response.error;
       } else {
         if(state.editing){
@@ -209,9 +225,9 @@
           if(!o || o.status!=='confirmado') throw Error('Este pedido não pode mais ser editado.');
           Object.assign(o,{meal:type,dish,accompaniments:sides,notes,price:M.unitPrice(type,dish),updated_at:new Date().toISOString()});
         } else {
-          const duplicate=state.orders.some(o=>o.owner===ownId() && o.order_day===today && o.meal===type && active(o));
+          const duplicate=state.orders.some(o=>o.owner===ownId() && o.order_day===day && o.meal===type && active(o));
           if(duplicate) throw Error('Você já tem um pedido ativo deste período. Edite ou cancele o anterior.');
-          state.orders.unshift({id:crypto.randomUUID(),owner:ownId(),employee_name:name(),order_day:today,meal:type,dish,accompaniments:sides,notes,price:M.unitPrice(type,dish),status:'confirmado',archived:false,created_at:new Date().toISOString()});
+          state.orders.unshift({id:crypto.randomUUID(),owner:ownId(),employee_name:name(),order_day:day,meal:type,dish,accompaniments:sides,notes,price:M.unitPrice(type,dish),status:'confirmado',archived:false,created_at:new Date().toISOString()});
         }
         writeDemo();
       }
@@ -239,6 +255,7 @@
   function editOrder(id) {
     const o=state.orders.find(o=>o.id===id);
     if(!o || o.status!=='confirmado' || o.archived || o.owner!==ownId()) return;
+    if(!M.canOrderFor(o.order_day)) return inform('Pedidos de datas anteriores não podem ser editados.',true);
     state.editing=id;
     document.querySelector('input[name="meal"][value="'+o.meal+'"]').checked=true;
     state.dish=o.dish; state.sides=[...(o.accompaniments||[])]; $('notes').value=o.notes||'';
@@ -255,7 +272,8 @@
   function orderCard(o, controls) {
     let buttons='';
     if(controls==='mine' && active(o) && o.status==='confirmado' && o.owner===ownId())
-      buttons='<button class="secondary compact" data-act="edit" data-id="'+esc(o.id)+'">Editar</button><button class="danger compact" data-act="cancel" data-id="'+esc(o.id)+'">Cancelar pedido</button>';
+      buttons=(M.canOrderFor(o.order_day)?'<button class="secondary compact" data-act="edit" data-id="'+esc(o.id)+'">Editar</button>':'')+
+        '<button class="danger compact" data-act="cancel" data-id="'+esc(o.id)+'">Cancelar pedido</button>';
     if(controls==='restaurant' && !o.archived && o.status==='confirmado')
       buttons='<button class="secondary compact" data-act="prepare" data-id="'+esc(o.id)+'">Iniciar preparo</button>';
     if(controls==='restaurant' && !o.archived && o.status==='preparo')
@@ -290,7 +308,7 @@
   }
   function metric(label,value){return '<div class="metric"><small>'+esc(label)+'</small><strong>'+esc(value)+'</strong></div>';}
   function renderRestaurant() {
-    const day=$('restaurantDate').value||today, type=$('restaurantMeal').value;
+    const day=$('restaurantDate').value||M.today(), type=$('restaurantMeal').value;
     // Restaurante único: visualiza TODOS os pedidos de ambas empresas.
     const rows=state.orders.filter(o=>o.order_day===day && !o.archived && (type==='todos'||o.meal===type));
     const s=M.summary(rows,day), companies=M.companyBreakdown(rows,day);
@@ -304,7 +322,7 @@
     bindActions(el);
   }
   function filteredAdmin() {
-    const day=$('adminDate').value||today, type=$('adminMeal').value, company=$('adminCompany').value;
+    const day=$('adminDate').value||M.today(), type=$('adminMeal').value, company=$('adminCompany').value;
     const allRows=state.orders.filter(o=>o.order_day===day && (type==='todos'||o.meal===type));
     const rows=company==='todos'?allRows:allRows.filter(o=>(o.company==='SOLUTIO'?'SOLUTIO':'RL')===company);
     return {day,company,rows,allRows};
@@ -821,6 +839,7 @@
     if(d && !configured){state.role=d.dataset.demoRole;state.profile={display_name:state.role==='colaborador'?state.demoName:state.role==='admin'?'Gestão RL (prévia)':'Restaurante (prévia)',role:state.role};state.tab=state.role==='colaborador'?'order':state.role==='admin'?'admin':'restaurant';renderAll();}
   });
   document.querySelectorAll('input[name="meal"]').forEach(input => input.addEventListener('change',()=>{state.dish='';state.sides=[];renderMenu();}));
+  $('orderDay').addEventListener('change',()=>{state.dish='';state.sides=[];renderMenu();});
   $('demoName').addEventListener('input',e=>{state.demoName=e.target.value.trim()||'Colaborador de teste';if(state.role==='colaborador'){state.profile.display_name=state.demoName;renderTabs();}});
   $('placeBtn').addEventListener('click',saveOrder);
   $('clearEditBtn').addEventListener('click',clearEdit);
