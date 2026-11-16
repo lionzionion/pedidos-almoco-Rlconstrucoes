@@ -42,7 +42,7 @@ test('limpeza admin exige duas confirmações e apaga apenas registros operacion
 });
 
 test('UI mantém frete coletivo e libera pedidos sem limite de horário durante os testes',()=>{
- assert.match(app,/M\.fee\(type,today\)/);
+ assert.match(app,/M\.fee\(type,\$\('orderDay'\)\.value\)/);
  assert.match(app,/MODO DE TESTES: pedidos liberados a qualquer hora/);
  assert.doesNotMatch(app,/if\(M\.closed\(meal\(\),today\)\)/);
  assert.doesNotMatch(app,/Prazo de pedidos encerrado/);
