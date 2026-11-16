@@ -31,6 +31,16 @@ window.RL_MENU = (() => {
     return [day,nextDay(day)];
   }
   function canOrderFor(date,now=new Date()) { return orderableDays(now).includes(date); }
+  // Café: sempre amanhã. Almoço: a partir de 12h em Recife, somente amanhã.
+  function deliveryDays(type,now=new Date()) {
+    const [day,tomorrow]=orderableDays(now);
+    if(type==='cafe')return [tomorrow];
+    const clock=new Intl.DateTimeFormat('en-GB',{
+      timeZone:'America/Recife',hour:'2-digit',minute:'2-digit',hourCycle:'h23'
+    }).format(now);
+    return clock>='12:00'?[tomorrow]:[day,tomorrow];
+  }
+  function canSchedule(type,date,now=new Date()) { return deliveryDays(type,now).includes(date); }
   function weekday(date) { return new Date(date + 'T12:00:00Z').getUTCDay(); }
   function items(type, date) {
     return type === 'cafe' ? [...breakfast[weekday(date)], 'Café só com pão'] : [...lunch[weekday(date)]];
@@ -85,5 +95,5 @@ window.RL_MENU = (() => {
     }
     return result;
   }
-  return Object.freeze({breakfast, lunch, sides, days, today, nextDay, orderableDays, canOrderFor, weekday, items, unitPrice, fee, cutoff, closed, money, summary, companyBreakdown});
+  return Object.freeze({breakfast, lunch, sides, days, today, nextDay, orderableDays, canOrderFor, deliveryDays, canSchedule, weekday, items, unitPrice, fee, cutoff, closed, money, summary, companyBreakdown});
 })();

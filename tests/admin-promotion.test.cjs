@@ -47,8 +47,8 @@ test('ambas rotas usam scripts atualizados e explicam promoção',()=>{
  for(const p of ['acesso/index.html','app/index.html']){
  const html=read(p);
  assert.match(html,/Administrador \(ADM\)/);
- assert.match(html,/loader\.js\?v=14/);
+ assert.match(html,/loader\.js\?v=15/);
  assert.doesNotMatch(html,/<option value="admin">Administrador<\/option>/);
  }
- assert.match(read('app/loader.js'),/app\.js\?v=15/);
+ assert.match(read('app/loader.js'),/app\.js\?v=16/);
 });

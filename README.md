@@ -223,3 +223,7 @@ Em **Cadastros → Convites de primeiro acesso**, a administração pode escolhe
 ### Pedido antecipado — hoje ou amanhã (16/11/2026)
 
 O colaborador escolhe **Data de entrega: Hoje ou Amanhã** antes da refeição. O cardápio corresponde ao dia escolhido. O Supabase recebe e valida `order_day` no horário de Recife, aceitando apenas o dia atual ou o seguinte e preservando a chave de unicidade por colaborador, data e refeição. A data do pedido confirmado não pode ser alterada: para trocar o dia, cancele o pedido anterior e crie um novo. O restaurante e o ADM selecionam amanhã no campo de data para acompanhar a produção antecipada. Os limites por horário permanecem desativados no modo de testes.
+
+### Programação automática do café e almoço (16/11/2026)
+
+O colaborador que faz um **pedido de café da manhã** programa sempre a refeição do **dia seguinte**, tanto de manhã quanto à tarde. No **almoço**, até 11h59 (horário de Recife) é possível escolher hoje ou amanhã; a partir das 12h, somente amanhã. O banco garante a regra independentemente do celular. O restaurante pode selecionar a data de amanhã para preparar as refeições antecipadamente. O prato antigo de um pedido reprogramado não é substituído automaticamente se não constar no cardápio seguinte: a equipe deve confirmar o item excepcional.
