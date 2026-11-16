@@ -25,7 +25,7 @@ const normalizedUsername = (input: unknown) => {
 };
 const validUsername = (u: string) => /^[a-z][a-z0-9._-]{2,29}$/.test(u);
 const validPassword = (p: unknown) => typeof p === 'string' && p.length >= 8 && p.length <= 72;
-const managedRole = (r: unknown) => r === 'colaborador' || r === 'restaurante';
+const managedRole = (r: unknown) => r === 'colaborador' || r === 'restaurante' || r === 'diretoria';
 // Gerador criptográfico sem persistir senhas recuperáveis no banco.
 const randomPassword = () => {
   const groups=['ABCDEFGHJKLMNPQRSTUVWXYZ','abcdefghijkmnopqrstuvwxyz','23456789','!@#$%&*'];
@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
       const role=body.role;
       if(!validUsername(username))return reply({error:'Use um login de 3 a 30 caracteres começando por uma letra.'},400);
       if(displayName.length<3||displayName.length>80)return reply({error:'Informe o nome com 3 a 80 caracteres.'},400);
-      if(!managedRole(role))return reply({error:'Selecione colaborador ou restaurante.'},400);
+      if(role !== 'colaborador' && role !== 'restaurante')return reply({error:'Para convites, selecione colaborador ou restaurante.'},400);
       const {data:existing,error:findError}=await admin.from('profiles')
         .select('id').eq('username',username).maybeSingle();
       if(findError)throw findError;
@@ -180,7 +180,7 @@ Deno.serve(async (req) => {
       if (!validUsername(username)) return reply({ error: 'Informe um nome de usuário com pelo menos 3 caracteres, por exemplo usuario.teste ou restaurante.teste.' }, 400);
       if (displayName.length < 3 || displayName.length > 80) return reply({ error: 'Informe nome completo com 3–80 caracteres.' }, 400);
       if (!validPassword(password)) return reply({ error: 'A senha deve ter entre 8 e 72 caracteres.' }, 400);
-      if (!managedRole(role)) return reply({ error: 'Perfil deve ser colaborador ou restaurante.' }, 400);
+      if (!managedRole(role)) return reply({ error: 'Perfil deve ser colaborador, restaurante ou diretoria.' }, 400);
       const { data: exists, error: findError } = await admin.from('profiles').select('id').eq('username', username).maybeSingle();
       if (findError) throw findError;
       if (exists) return reply({ error: 'Este nome de usuário já está cadastrado.' }, 409);
