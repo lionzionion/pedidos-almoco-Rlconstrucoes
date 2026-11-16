@@ -54,3 +54,16 @@ test('cancelados e arquivados não entram no fechamento',()=>{
   assert.equal(s.total,0);
   assert.equal(s.delivery,0);
 });
+
+test('pode pedir hoje e amanhã, mas não ontem nem depois de amanhã (fuso Recife)',()=>{
+  const now=new Date('2026-11-16T22:00:00Z');
+  assert.deepEqual(M.orderableDays(now),['2026-11-16','2026-11-17']);
+  assert.equal(M.canOrderFor('2026-11-16',now),true);
+  assert.equal(M.canOrderFor('2026-11-17',now),true);
+  assert.equal(M.canOrderFor('2026-11-15',now),false);
+  assert.equal(M.canOrderFor('2026-11-18',now),false);
+  assert.deepEqual(M.orderableDays(new Date('2026-11-17T03:05:00Z')),['2026-11-17','2026-11-18']);
+});
+test('cardápio escolhido para terça é diferente do de segunda',()=>{
+  assert.notDeepEqual(M.items('almoco','2026-11-16'),M.items('almoco','2026-11-17'));
+});

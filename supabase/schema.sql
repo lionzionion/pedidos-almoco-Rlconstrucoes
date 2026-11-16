@@ -117,7 +117,11 @@ begin
     end if;
     new.owner:=current_id;
     new.employee_name:=v_actor_profile_name;
-    new.order_day:=(timezone('America/Recife',now()))::date;
+    new.order_day:=coalesce(new.order_day,(timezone('America/Recife',now()))::date);
+    if new.order_day not between (timezone('America/Recife',now()))::date
+      and ((timezone('America/Recife',now()))::date + 1) then
+      raise exception 'Só é permitido fazer pedidos para hoje ou amanhã (Recife).';
+    end if;
     new.status:='confirmado';
     new.archived:=false;
     new.created_at:=now();

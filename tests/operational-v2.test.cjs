@@ -46,12 +46,12 @@ test('UI mantém frete coletivo e libera pedidos sem limite de horário durante 
  assert.match(app,/MODO DE TESTES: pedidos liberados a qualquer hora/);
  assert.doesNotMatch(app,/if\(M\.closed\(meal\(\),today\)\)/);
  assert.doesNotMatch(app,/Prazo de pedidos encerrado/);
- assert.match(html,/pedidos de café e almoço liberados a qualquer hora/);
- assert.match(access,/pedidos de café e almoço liberados a qualquer hora/);
+ assert.match(html,/pedidos para hoje e amanhã liberados a qualquer hora/);
+ assert.match(access,/pedidos para hoje e amanhã liberados a qualquer hora/);
 });
 
 test('rotas preservam bibliotecas locais e atualização de cache',()=>{
- assert.match(html,/loader\.js\?v=13/);
- assert.match(access,/loader\.js\?v=13/);
- assert.match(read('app/loader.js'),/app\.js\?v=14/);
+ assert.match(html,/loader\.js\?v=14/);
+ assert.match(access,/loader\.js\?v=14/);
+ assert.match(read('app/loader.js'),/app\.js\?v=15/);
 });
