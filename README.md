@@ -202,11 +202,19 @@ Depois da homologação, o ADM pode usar **Verificar dados → Apagar pedidos e 
 
 ## Operação compartilhada RL Construções + Solutio
 
-O projeto atende **uma única obra e um único restaurante**, mas os pedidos de cada colaborador são associados à sua empresa no momento em que são feitos. O vínculo de empresa é **definido pela administração** e permanece gravado no pedido, evitando que uma alteração posterior no cadastro mude o faturamento histórico.
+O projeto atende **uma única obra e um único restaurante**, e cada refeição é vinculada à empresa cadastrada para o colaborador. **Se o ADM transferir esse usuário entre RL e Solutio, todas as suas refeições anteriores, inclusive canceladas ou arquivadas, são reclassificadas na mesma transação de alteração do cadastro.** Os subtotais de ambas as empresas e o rateio coletivo de cada remessa passam a usar a classificação atualizada; o preço, data e status dos pedidos não mudam.
 
 Na **Conferência RL**, selecione `RL Construções`, `Solutio` ou `RL + Solutio`. Os totais e relatórios PDF/CSV podem ser emitidos individualmente, enquanto o restaurante conserva a **lista conjunta de produção**, com cada empresa identificada.
 
 O frete é **R$ 8 por evento de café** (após 08h) e **R$ 8 por evento de almoço** (após 13h). Cada evento é repartido **proporcionalmente ao número de pedidos ativos de cada empresa** em centavos. Exemplo de 10 almoços RL e 7 Solutio: RL R$ 4,71 e Solutio R$ 3,29, somando exatamente R$ 8. Cancelados e arquivados não participam do rateio.
+
+### Mudança de empresa e recálculo retroativo
+
+Em **ADM → Usuários**, escolha a nova empresa do colaborador e clique em **Salvar empresa**. O sistema pede confirmação porque esta operação **redistribui todas as refeições anteriores**, não apenas as futuras. O banco atualiza o cadastro e todas as refeições do usuário em **uma única transação**, preservando os registros originais de preço, dia, prato e status. Cada alteração de pedido fica documentada em `order_audit`; a mudança administrativa registra quantas refeições foram reclassificadas em `account_audit`.
+
+A interface recarrega os pedidos depois da atualização e recalcula os painéis RL/Solutio, relatórios, CSV e o frete: **R$ 8 por café da manhã coletivo e R$ 8 por almoço coletivo**, distribuídos proporcionalmente à quantidade de pedidos ativos em cada empresa. O total geral por dia não muda quando há apenas transferência de empresa. **PDFs e CSVs baixados antes da mudança são cópias estáticas e precisam ser gerados novamente para refletir os novos valores.**
+
+Migração de banco: `supabase/migrations/20261117_rl_company_reallocate_all_orders.sql`. Edge Function: `supabase/functions/manage-users/index.ts` (`set_company`). O acionamento do trigger do banco impede mudanças parciais: se algum pedido falhar, a troca de empresa é revertida por inteiro.
 
 ### Convites individuais e primeiro acesso
 
