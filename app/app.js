@@ -123,10 +123,12 @@
     } finally {button.disabled=false;}
   }
   function chooseTab(tab) {
+    const previousTab=state.tab;
     if(tab === 'order' && !isStaff()) return;
     if(tab === 'mine' && !isStaff()) return;
     if(tab === 'restaurant' && !isRestaurant() && !isManager()) return;
     if(tab === 'admin' && !isManager()) return;
+    if(tab === 'finance' && !isManager()) return;
     if(tab === 'users' && !isManager()) return;
     if(tab === 'chat' && !configured) return;
     if(tab === 'security' && !configured) return;
@@ -134,11 +136,12 @@
     document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('active',b.dataset.tab===tab));
     document.querySelectorAll('.pane').forEach(p => p.hidden=(p.id!==tab));
     if(tab==='chat') initChat();
+    if(tab==='finance' && previousTab!==tab)window.RL_FINANCE?.refresh();
   }
   function renderTabs() {
     document.querySelectorAll('[data-tab]').forEach(b => {
       const t=b.dataset.tab;
-      b.hidden=(['order','mine'].includes(t) && !isStaff()) || (t==='restaurant' && !isManager() && !isRestaurant()) || (['admin','users'].includes(t) && !isManager()) || (['chat','security'].includes(t) && !configured);
+      b.hidden=(['order','mine'].includes(t) && !isStaff()) || (t==='restaurant' && !isManager() && !isRestaurant()) || (['admin','users','finance'].includes(t) && !isManager()) || (['chat','security'].includes(t) && !configured);
     });
     $('logoutBtn').hidden=!configured;
     $('who').textContent = name() + ' • ' + ({admin:'Gestão RL',restaurante:'Restaurante',colaborador:'Colaborador'}[state.role]||'') + ((state.role==='colaborador'||state.role==='admin')?' • '+(state.profile?.company==='SOLUTIO'?'Solutio':'RL Construções'):'');
@@ -146,7 +149,7 @@
       $('restaurantDate').value=M.deliveryDays('almoco')[0];
       state.restaurantDateInitialized=true;
     }
-    if((['order','mine'].includes(state.tab) && !isStaff()) || (['admin','users'].includes(state.tab) && !isManager()) || (state.tab==='restaurant' && !isRestaurant() && !isManager())) {
+    if((['order','mine'].includes(state.tab) && !isStaff()) || (['admin','users','finance'].includes(state.tab) && !isManager()) || (state.tab==='restaurant' && !isRestaurant() && !isManager())) {
       state.tab=isRestaurant() ? 'restaurant' : isManager() ? 'admin' : 'order';
     }
     chooseTab(state.tab);
@@ -934,5 +937,6 @@
   $('whatsBtn').addEventListener('click',sendSummary);
   try { $('whatsPhone').value=localStorage.getItem('rl-whats-dest')||''; }
   catch { $('whatsPhone').value=''; }
+  window.RL_FINANCE?.init({client,configured,isAdmin:isManager,demoOrders:()=>state.orders});
   begin();
 })();
