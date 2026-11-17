@@ -83,3 +83,51 @@ test('gestor seleciona empresa e registra cargo no cadastro',()=>{
  assert.ok(app.includes("set_company"));
  assert.ok(app.includes("company:kind==='admin'"));
 });
+
+
+test('mudança retroativa de empresa redistribui refeições e frete, sem mudar custo geral',()=>{
+ const targetId='colaborador-migrado';
+ const data=[
+   {...make('RL',1,'cafe',17)[0],id:'hist-cafe',owner:targetId,order_day:'2026-11-15'},
+   {...make('RL',1,'almoco')[0],id:'hist-almoco',owner:targetId,order_day:'2026-11-16'},
+   {...make('RL',1,'almoco')[0],id:'canc',owner:targetId,order_day:'2026-11-16',status:'cancelado'},
+   {...make('RL',1,'almoco')[0],id:'arquiv',owner:targetId,order_day:'2026-11-16',archived:true},
+   {...make('RL',1,'almoco')[0],id:'outro',owner:'outra-pessoa',order_day:'2026-11-16'},
+   {...make('SOLUTIO',1,'almoco')[0],id:'sol',owner:'sol',order_day:'2026-11-16'}
+ ];
+ const after=new Date('2026-11-17T18:00:00Z');
+ const dailyTotal=(orders,day)=>{
+   const b=M.companyBreakdown(orders,day,after);
+   return Math.round((b.RL.total+b.SOLUTIO.total)*100);
+ };
+ const before15=dailyTotal(data,'2026-11-15'),before16=dailyTotal(data,'2026-11-16');
+ const reclassified=data.map(o=>o.owner===targetId?{...o,company:'SOLUTIO'}:o);
+ assert.equal(reclassified.filter(o=>o.owner===targetId&&o.company==='RL').length,0);
+ assert.equal(dailyTotal(reclassified,'2026-11-15'),before15);
+ assert.equal(dailyTotal(reclassified,'2026-11-16'),before16);
+ const day15=M.companyBreakdown(reclassified,'2026-11-15',after);
+ const day16=M.companyBreakdown(reclassified,'2026-11-16',after);
+ assert.equal(day15.RL.total,0);
+ assert.equal(day15.SOLUTIO.delivery,8);
+ assert.equal(day16.RL.coffee+day16.RL.lunch,1);
+ assert.equal(day16.SOLUTIO.coffee+day16.SOLUTIO.lunch,2);
+ assert.equal(day16.RL.delivery+day16.SOLUTIO.delivery,8);
+ assert.equal(day16.RL.subtotal+day16.SOLUTIO.subtotal,66);
+});
+
+test('alterar empresa no Supabase reclassifica todos os pedidos atomicamente e audita',()=>{
+ const sql=read('supabase/migrations/20261117_rl_company_reallocate_all_orders.sql');
+ const edge=read('supabase/functions/manage-users/index.ts');
+ const app=read('app/app.js');
+ assert.match(sql,/AFTER UPDATE OF company ON public\.profiles/);
+ assert.match(sql,/UPDATE public\.orders o\s+SET company=NEW\.company/i);
+ assert.match(sql,/o\.owner=NEW\.id/);
+ assert.match(sql,/rl\.company_move_owner/);
+ assert.match(sql,/pg_trigger_depth\(\) >= 2/);
+ assert.match(sql,/to_jsonb\(NEW\)-'company'/);
+ assert.match(edge,/reallocated_orders:toMove\|\|0/);
+ assert.match(edge,/remaining_mismatches:0/);
+ assert.match(edge,/\.neq\('company',nextCompany\)/);
+ assert.match(app,/if\(action==='set_company'\)\{\s*await reload\(\)/);
+ assert.match(app,/PDFs\/CSVs já baixados precisam ser emitidos novamente/);
+});
