@@ -120,5 +120,5 @@
     for(let p=1;p<=pages;p++){doc.setPage(p);doc.setTextColor(103,123,135);doc.setFontSize(8);doc.text('RL Engenharia | Conferir remessas e entregas efetivas antes do pagamento',13,doc.internal.pageSize.getHeight()-9);doc.text('Página '+p+'/'+pages,W-14,doc.internal.pageSize.getHeight()-9,{align:'right'});}
     doc.save(r.filename);
   }
-  window.RL_REPORTS=Object.freeze({build,download,print});
+  window.RL_REPORTS=Object.freeze({build,download,print,ensurePDF,logoPNG});
 })();
