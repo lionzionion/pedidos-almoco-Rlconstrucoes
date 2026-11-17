@@ -47,3 +47,7 @@
 #orderDeadlineInfo{padding:10px 13px;background:#edf6e8;border-radius:8px;border:1px solid #cae2c3;color:#315b29}
 #orderDeadlineInfo.error{background:#fff0ed;color:#933f2e;border-color:#ecbcae}
 @media(max-width:630px){.chat-bubble{max-width:96%}.chat-messages{min-height:220px;max-height:55vh}}
+
+/* Fallback visível quando o navegador bloqueia a janela do WhatsApp. */
+#inviteWhatsDirect{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;white-space:normal;text-align:center;border:1px solid #b8d7e4}
+#inviteWhatsDirect:not([href]){display:none}
