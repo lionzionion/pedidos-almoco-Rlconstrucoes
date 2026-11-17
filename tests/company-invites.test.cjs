@@ -17,38 +17,38 @@ function make(company,n,meal='almoco',price=22){
   dish:'Filé de frango',accompaniments:[],notes:'',status:'confirmado',archived:false}));
 }
 
-test('rateio 10 RL + 7 Solutio de uma única entrega R$8',()=>{
+test('rateio 10 RL + 7 Solutio de um único almoço diário de R$12',()=>{
  const orders=[...make('RL',10),...make('SOLUTIO',7)];
  const b=M.companyBreakdown(orders,date,afterClose);
  assert.equal(b.RL.subtotal,220);
  assert.equal(b.SOLUTIO.subtotal,154);
- assert.equal(b.RL.delivery,4.71);
- assert.equal(b.SOLUTIO.delivery,3.29);
- assert.equal(b.RL.total,224.71);
- assert.equal(b.SOLUTIO.total,157.29);
- assert.equal(b.RL.total+b.SOLUTIO.total,382);
- assert.equal(M.summary(orders,date,afterClose).total,382);
+ assert.equal(b.RL.delivery,7.06);
+ assert.equal(b.SOLUTIO.delivery,4.94);
+ assert.equal(b.RL.total,227.06);
+ assert.equal(b.SOLUTIO.total,158.94);
+ assert.equal(b.RL.total+b.SOLUTIO.total,386);
+ assert.equal(M.summary(orders,date,afterClose).total,386);
 });
-test('uma única empresa paga somente R$8 pela sua entrega',()=>{
+test('uma única empresa paga somente R$12 pelo almoço do dia',()=>{
  const b=M.companyBreakdown(make('SOLUTIO',3),date,afterClose);
  assert.equal(b.RL.delivery,0);
- assert.equal(b.SOLUTIO.delivery,8);
+ assert.equal(b.SOLUTIO.delivery,12);
 });
-test('antes das 13h frete de almoço é zero para ambas',()=>{
+test('taxa diária prevista já aparece antes do fechamento, uma só vez',()=>{
  const rows=[...make('RL',2),...make('SOLUTIO',2)];
  const b=M.companyBreakdown(rows,date,new Date('2026-11-16T15:00:00Z'));
- assert.equal(b.RL.delivery,0);assert.equal(b.SOLUTIO.delivery,0);
+ assert.equal(b.RL.delivery,6);assert.equal(b.SOLUTIO.delivery,6);
 });
 test('relatório filtrado por empresa mantém rateio calculado no conjunto',()=>{
  const orders=[...make('RL',10),...make('SOLUTIO',7)];
  const r=R.build({date,orders,company:'RL',now:afterClose,kind:'admin'});
  assert.equal(r.rows.length,10);
- assert.equal(r.summary.delivery,4.71);
- assert.equal(r.summary.total,224.71);
+ assert.equal(r.summary.delivery,7.06);
+ assert.equal(r.summary.total,227.06);
  assert.ok(r.columns.includes('Empresa'));
  assert.ok(r.filename.includes('_RL_'));
  const sol=R.build({date,orders,company:'SOLUTIO',now:afterClose,kind:'admin'});
- assert.equal(sol.summary.delivery,3.29);
+ assert.equal(sol.summary.delivery,4.94);
 });
 test('relatório do restaurante permanece conjunto com ambas empresas',()=>{
  const r=R.build({date,orders:[...make('RL',2),...make('SOLUTIO',3)],company:'RL',now:afterClose,kind:'restaurante'});
@@ -111,7 +111,7 @@ test('mudança retroativa de empresa redistribui refeições e frete, sem mudar 
  assert.equal(day15.SOLUTIO.delivery,8);
  assert.equal(day16.RL.coffee+day16.RL.lunch,1);
  assert.equal(day16.SOLUTIO.coffee+day16.SOLUTIO.lunch,2);
- assert.equal(day16.RL.delivery+day16.SOLUTIO.delivery,8);
+ assert.equal(day16.RL.delivery+day16.SOLUTIO.delivery,12);
  assert.equal(day16.RL.subtotal+day16.SOLUTIO.subtotal,66);
 });
 
@@ -130,4 +130,22 @@ test('alterar empresa no Supabase reclassifica todos os pedidos atomicamente e a
  assert.match(edge,/\.neq\('company',nextCompany\)/);
  assert.match(app,/if\(action==='set_company'\)\{\s*await reload\(\)/);
  assert.match(app,/PDFs\/CSVs já baixados precisam ser emitidos novamente/);
+});
+
+// Os mesmos R$ 8 e R$ 12 diários são divididos entre empresas, sem duplicidade.
+test('20 cafés e 30 almoços: uma taxa por tipo e rateio exato entre RL/Solutio',()=>{
+ const rows=[
+   ...make('RL',15,'cafe',17),...make('SOLUTIO',5,'cafe',17),
+   ...make('RL',10,'almoco',22),...make('SOLUTIO',20,'almoco',22)
+ ];
+ const totals=M.companyBreakdown(rows,date,afterClose);
+ assert.equal(totals.RL.coffee,15);
+ assert.equal(totals.SOLUTIO.coffee,5);
+ assert.equal(totals.RL.lunch,10);
+ assert.equal(totals.SOLUTIO.lunch,20);
+ // Café: RL R$6 + Solutio R$2; almoço: RL R$4 + Solutio R$8.
+ assert.equal(totals.RL.delivery,10);
+ assert.equal(totals.SOLUTIO.delivery,10);
+ assert.equal(totals.RL.delivery+totals.SOLUTIO.delivery,20);
+ assert.equal(totals.RL.total+totals.SOLUTIO.total,M.summary(rows,date,afterClose).total);
 });
