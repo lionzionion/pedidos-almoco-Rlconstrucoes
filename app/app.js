@@ -471,7 +471,13 @@
         if(u.role==='admin' && !confirm('Retirar o acesso de administrador de '+u.display_name+' e voltar para colaborador?'))return;
         params.role=nextRole;
       }
-      if(action==='set_company')params.company=el.querySelector('[data-company-for="'+id+'"]').value;
+      if(action==='set_company'){
+        const nextCompany=el.querySelector('[data-company-for="'+id+'"]').value;
+        if(nextCompany===u.company)return inform('O colaborador já pertence a essa empresa. Nenhuma alteração necessária.');
+        if(!confirm('Transferir '+u.display_name+' para '+(nextCompany==='RL'?'RL Construções':'Solutio')+
+          '? TODAS as refeições anteriores deste usuário, inclusive arquivadas, serão vinculadas à nova empresa. O frete único por entrega será rateado novamente. PDFs/CSVs já baixados precisam ser emitidos novamente.'))return;
+        params.company=nextCompany;
+      }
       if(action==='set_active'){
         if(!confirm((u.active?'Desativar':'Reativar')+' acesso de '+u.display_name+'?'))return;
         params.active=!u.active;
@@ -497,6 +503,10 @@
         inform(result.message||'Alteração concluída.');
         if(action==='reset_password')showOneTime(u.username,result.password||(params.password==='AUTO'?'':params.password),'Senha redefinida para '+u.display_name);
         await loadUsers();
+        if(action==='set_company'){
+          await reload(); // Atualiza imediatamente RL, Solutio, rateio e relatorios.
+          inform(result.message||'Empresa alterada. Todas as refeições foram recalculadas.');
+        }
       }catch(error){fail(error);}finally{b.disabled=false;}
     }));
     el.querySelectorAll('[data-share-login]').forEach(button=>button.addEventListener('click',()=>{
