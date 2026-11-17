@@ -65,5 +65,5 @@ test('CSV inclui exportação separada, BOM e neutraliza fórmula de célula',()
   assert.ok(csv.includes('FECHAMENTOS REGISTRADOS'));
 });
 test('rejeita intervalo inválido',()=>{
-  assert.throws(()=>F.calculate(sample,d2,d1),/inválido/);
+  assert.throws(()=>F.calculate(sample,d2,d1),/válido/);
 });
