@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#073a60">
 <meta name="description" content="AMBEV | Pedidos RL — gestão de refeições, restaurante e conferência diária.">
 <title>Área de acesso | RL Engenharia — Pedidos</title>
-<link rel="stylesheet" href="../app/styles.css?v=4">
+<link rel="stylesheet" href="../app/styles.css?v=5">
 <link rel="icon" type="image/webp" href="../assets/rl-logo.webp">
 <meta name="robots" content="noindex,nofollow">
 <link rel="canonical" href="https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/acesso/">
@@ -46,6 +46,7 @@
       <button class="tab" data-tab="mine">🧾 Meus pedidos</button>
       <button class="tab" data-tab="restaurant">👩‍🍳 Restaurante</button>
       <button class="tab" data-tab="admin">📊 Conferência RL</button>
+      <button class="tab" data-tab="finance">💰 Financeiro</button>
       <button class="tab" data-tab="users">👥 Cadastros</button>
       <button class="tab" data-tab="chat">💬 Chat do restaurante</button>
       <button class="tab" data-tab="security">🔐 Minha senha</button>
@@ -85,6 +86,78 @@
       <div class="actions report-actions"><button id="pdfBtn" class="primary">📄 Baixar PDF</button><button id="printBtn" class="secondary">🖨️ Imprimir relatório</button><button id="csvBtn" class="secondary">Exportar CSV</button><button id="whatsBtn" class="secondary">Resumo para WhatsApp</button></div>
       <label for="whatsPhone">WhatsApp do destinatário (DDI + DDD + número)</label><input id="whatsPhone" type="tel" inputmode="numeric" placeholder="55DDDNUMERO"><p class="small muted">Por enquanto, o resumo abre uma conversa para confirmação manual do envio.</p></div>
       <div class="card"><h3>Pedidos cancelados e arquivados</h3><div id="adminAudit" class="stack"></div></div>
+    </section>
+    <section id="finance" class="pane" hidden>
+      <div class="sectionhead"><div><div class="eyebrow blue">FINANCEIRO DA OBRA</div>
+        <h2>Relatórios e pagamentos por empresa</h2>
+        <p class="muted">Veja RL e Solutio separadamente, filtre datas e confira valores previstos, entregues, fechados e pagos.</p>
+      </div></div>
+      <div class="toolbar finance-filters">
+        <div><label for="financePeriod">Período</label><select id="financePeriod">
+          <option value="dia">Hoje</option><option value="semana">Esta semana</option>
+          <option value="mes" selected>Este mês</option><option value="custom">Personalizado</option>
+        </select></div>
+        <div><label for="financeStartDate">De</label><input id="financeStartDate" type="date"></div>
+        <div><label for="financeEndDate">Até</label><input id="financeEndDate" type="date"></div>
+        <div><label for="financeCompany">Empresa</label><select id="financeCompany">
+          <option value="todos">RL + Solutio</option><option value="RL">RL Construções</option>
+          <option value="SOLUTIO">Solutio</option></select></div>
+        <div><label for="financeMeal">Refeição</label><select id="financeMeal">
+          <option value="todos">Todas</option><option value="cafe">Café</option>
+          <option value="almoco">Almoço</option></select></div>
+        <button id="financeApply" class="primary" type="button">🔎 Consultar</button>
+      </div>
+      <p id="financeStatus" class="finance-status" role="status" aria-live="polite">Selecione um período para consultar os valores.</p>
+      <div id="financeStats" class="metricrow"></div>
+      <div class="actions report-actions">
+        <button id="financePdfBtn" class="primary" type="button">📄 Baixar PDF financeiro</button>
+        <button id="financeCsvBtn" class="secondary" type="button">📊 Exportar Excel / CSV</button>
+        <button id="financePrintBtn" class="secondary" type="button">🖨️ Imprimir</button>
+      </div>
+      <div class="card">
+        <h3>Totais por dia e empresa</h3>
+        <p class="small muted">O valor previsto considera pedidos válidos. O valor entregue considera apenas refeições marcadas como entregues.</p>
+        <div class="table-scroll"><table><thead><tr><th>Data</th><th>Empresa</th><th>Cafés</th><th>Almoços</th><th>Refeições</th><th>Frete rateado</th><th>Previsto</th><th>Entregue</th></tr></thead>
+          <tbody id="financeDailyRows"></tbody></table></div>
+      </div>
+      <div class="card">
+        <h3>Relação nominal de pedidos</h3>
+        <div class="table-scroll"><table><thead><tr><th>Data</th><th>Empresa</th><th>Colaborador</th><th>Refeição</th><th>Prato</th><th>Status</th><th>Preço</th></tr></thead>
+          <tbody id="financeNominalRows"></tbody></table></div>
+      </div>
+      <div class="card">
+        <h3>Fechamentos e saldos pendentes</h3>
+        <p class="small muted">Cada empresa possui seu próprio fechamento. Valores registrados são históricos e não mudam quando funcionários são transferidos. Períodos fechados não podem se sobrepor.</p>
+        <div id="financePaymentStats" class="metricrow"></div>
+        <div class="table-scroll"><table><thead><tr><th>Empresa</th><th>Período</th><th>Café / Almoço</th><th>Refeições</th><th>Frete</th><th>Fechado</th><th>Pago</th><th>Saldo</th><th>Situação</th><th>Ação</th></tr></thead>
+          <tbody id="financeClosureRows"></tbody></table></div>
+      </div>
+      <div class="finance-two-col">
+        <div class="card">
+          <h3>🔒 Registrar fechamento</h3>
+          <p class="small muted">Utiliza o intervalo De/Até selecionado e todas as refeições. O servidor confere as entregas antes de registrar os valores.</p>
+          <label for="financeCloseCompany">Empresa a fechar</label><select id="financeCloseCompany">
+            <option value="RL">RL Construções</option><option value="SOLUTIO">Solutio</option>
+          </select>
+          <p id="financeCloseHelp" class="small muted"></p>
+          <div class="actions"><button id="financeCloseBtn" type="button" class="primary" disabled>Registrar fechamento</button></div>
+        </div>
+        <div class="card">
+          <h3>💳 Registrar pagamento</h3>
+          <p class="small muted">Selecione um fechamento já salvo. Pagamentos parciais são permitidos; cada lançamento entra no histórico e não pode ser apagado pela interface.</p>
+          <label for="financeClosureSelect">Fechamento</label><select id="financeClosureSelect"><option value="">Selecione</option></select>
+          <div class="user-form-grid">
+            <div><label for="financePaymentAmount">Valor pago (R$)</label><input id="financePaymentAmount" type="number" step="0.01" min="0.01" inputmode="decimal" placeholder="0,00"></div>
+            <div><label for="financePaymentDay">Data do pagamento</label><input id="financePaymentDay" type="date"></div>
+            <div><label for="financePaymentMethod">Forma de pagamento</label><select id="financePaymentMethod">
+              <option value="pix">PIX</option><option value="transferencia">Transferência</option>
+              <option value="dinheiro">Dinheiro</option><option value="outro">Outro</option>
+            </select></div>
+            <div><label for="financePaymentNotes">Referência / comprovante</label><input id="financePaymentNotes" type="text" maxlength="240" placeholder="Ex.: comprovante 012"></div>
+          </div>
+          <div class="actions"><button id="financePaymentBtn" type="button" class="primary" disabled>Confirmar pagamento</button></div>
+        </div>
+      </div>
     </section>
     <section id="users" class="pane" hidden>
       <div class="sectionhead"><div><div class="eyebrow blue">ADMINISTRAÇÃO DE ACESSOS</div><h2>Colaboradores RL e Solutio</h2><p class="muted">Crie acessos sem exigir e-mail pessoal. Todos os cadastros ficam na nuvem e são protegidos por senha.</p></div><button id="usersRefresh" class="secondary compact">Atualizar</button></div>
@@ -172,7 +245,8 @@
 <noscript><div class="container notice">Ative o JavaScript no navegador para acessar os pedidos.</div></noscript>
 <script src="../app/config.js?v=2"></script>
 <script src="../app/menu.js?v=7"></script>
-<script src="../app/reports.js?v=5"></script>
+<script src="../app/reports.js?v=6"></script>
+<script src="../app/finance.js?v=2"></script>
 <script src="../app/loader.js?v=19"></script>
 </body>
 </html>
