@@ -36,7 +36,7 @@ test('convites ativados não permitem criar link novo e antigo é substituído',
 
 test('liberação de horários não altera cálculo do frete de remessa',()=>{
  const M=read('app/menu.js');
- assert.match(M,/function fee\(_type, _date\) \{ return 8;/);
+ assert.match(M,/function fee\(type, _date\) \{ return type==='cafe' \? 8 : type==='almoco' \? 12 : 0;/);
  assert.match(M,/function closed\(/);
  assert.match(M,/companyBreakdown\(/);
  assert.doesNotMatch(app,/if\(M\.closed\(meal\(\),today\)\)/);
