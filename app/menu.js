@@ -46,7 +46,7 @@ window.RL_MENU = (() => {
     return type === 'cafe' ? [...breakfast[weekday(date)], 'Café só com pão'] : [...lunch[weekday(date)]];
   }
   function unitPrice(type, dish) { return type === 'almoco' ? 22 : dish === 'Café só com pão' ? 10 : 17; }
-  function fee(_type, _date) { return 8; } // Um único frete coletivo de R$ 8 por remessa.
+  function fee(type, _date) { return type==='cafe' ? 8 : type==='almoco' ? 12 : 0; } // Uma taxa por tipo e por data para toda a obra.
   function cutoff(type) { return type==='cafe' ? '08:00' : '13:00'; }
   function closed(type, date, now=new Date()) {
     const parts=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{
@@ -61,11 +61,12 @@ window.RL_MENU = (() => {
     const active = orders.filter(o => o.order_day === date && !o.archived && o.status !== 'cancelado');
     const count = type => active.filter(o => o.meal === type).length;
     const subtotal = active.reduce((sum,o) => sum + Number(o.price), 0);
-    const delivery = (count('cafe') && closed('cafe',date,now) ? fee('cafe',date) : 0) + (count('almoco') && closed('almoco',date,now) ? fee('almoco',date) : 0);
+    const delivery = (count('cafe') ? fee('cafe',date) : 0) + (count('almoco') ? fee('almoco',date) : 0);
     return {active, coffee:count('cafe'), lunch:count('almoco'), subtotal, delivery, total:subtotal + delivery};
   }
-  // Rateio do frete único por quantidade de pedidos de cada empresa, em centavos.
-  // Arredondamento é aplicado à RL e o saldo à Solutio, garantindo soma exata de R$8.
+  // Frete coletivo diário: R$ 8/café + R$ 12/almoço (apenas se houver pedidos ativos).
+  // Rateio por número de pedidos de cada empresa, com arredondamento em centavos.
+  // A soma RL + Solutio permanece exatamente igual à taxa única de cada tipo.
   function companyBreakdown(orders,date,now=new Date()) {
     const active=orders.filter(o=>o.order_day===date && !o.archived && o.status!=='cancelado');
     const result={RL:{company:'RL',coffee:0,lunch:0,subtotal:0,delivery:0,total:0,active:[]},
@@ -83,10 +84,10 @@ window.RL_MENU = (() => {
       const rl=result.RL.active.filter(o=>o.meal===type).length;
       const sol=result.SOLUTIO.active.filter(o=>o.meal===type).length;
       if(!rl&&!sol)continue;
-      if(!closed(type,date,now))continue;
-      const rlShare=Math.round(800*rl/(rl+sol));
+      const totalCents=Math.round(fee(type,date)*100);
+      const rlShare=Math.round(totalCents*rl/(rl+sol));
       deliveries.RL+=rlShare;
-      deliveries.SOLUTIO+=800-rlShare;
+      deliveries.SOLUTIO+=totalCents-rlShare;
     }
     for(const company of ['RL','SOLUTIO']){
       result[company].subtotal=cents[company]/100;
