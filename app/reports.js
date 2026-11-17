@@ -35,7 +35,7 @@
   }
   function totalsHTML(r) {
     return '<section class="totals"><div><b>Cafés ativos</b> '+r.summary.coffee+'</div><div><b>Almoços ativos</b> '+r.summary.lunch+'</div>'+
-      (r.restaurant?'':'<div><b>Subtotal refeições</b> '+M.money(r.summary.subtotal)+'</div><div><b>Frete proporcional</b> '+M.money(r.summary.delivery)+'</div><div class="grand"><b>Total a conferir</b> '+M.money(r.summary.total)+'</div>')+
+      (r.restaurant?'':'<div><b>Subtotal refeições</b> '+M.money(r.summary.subtotal)+'</div><div><b>Frete diário único (rateado)</b> '+M.money(r.summary.delivery)+'</div><div class="grand"><b>Total a conferir</b> '+M.money(r.summary.total)+'</div>')+
       '</section>';
   }
   function reportHTML(r){
@@ -113,7 +113,7 @@
     });
     let y=(doc.lastAutoTable?.finalY||65)+10;
     const items=[['Cafés ativos',String(r.summary.coffee)],['Almoços ativos',String(r.summary.lunch)]];
-    if(!r.restaurant)items.push(['Subtotal refeições',M.money(r.summary.subtotal)],['Frete proporcional',M.money(r.summary.delivery)],['TOTAL A CONFERIR',M.money(r.summary.total)]);
+    if(!r.restaurant)items.push(['Subtotal refeições',M.money(r.summary.subtotal)],['Frete diário único (rateado)',M.money(r.summary.delivery)],['TOTAL A CONFERIR',M.money(r.summary.total)]);
     if(y+items.length*7+16>doc.internal.pageSize.getHeight()){doc.addPage();y=18;}
     for(const [label,value] of items){doc.setFontSize(10);doc.setFont('helvetica',label==='TOTAL A CONFERIR'?'bold':'normal');doc.text(label,13,y);doc.text(value,W-14,y,{align:'right'});y+=7;}
     const pages=doc.internal.getNumberOfPages();
