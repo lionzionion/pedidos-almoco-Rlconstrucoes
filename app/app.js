@@ -535,7 +535,8 @@
     if(!inviteUrlPattern.test(String(result?.link||'')))throw Error('O servidor não retornou um link de convite válido. Atualize e tente novamente.');
     generatedInvite={link:result.link,name:result.display_name,username:result.username,role:result.role};
     $('generatedInviteLink').value=result.link;
-    $('inviteWhatsDirect').href=whatsappComposeUrl(inviteMessage(generatedInvite));
+    const whatsDirect=$('inviteWhatsDirect');
+    if(whatsDirect)whatsDirect.href=whatsappComposeUrl(inviteMessage(generatedInvite));
     $('generatedInviteInfo').textContent=result.display_name+' • '+result.username+
       ' • '+(result.role==='restaurante'?'Restaurante':'Colaborador')+
       '. Válido até '+new Date(result.expires_at).toLocaleDateString('pt-BR',{timeZone:'America/Recife'})+'.';
@@ -650,7 +651,7 @@
   function clearGeneratedInvite(){
     generatedInvite=null;
     $('generatedInviteLink').value='';
-    $('inviteWhatsDirect').removeAttribute('href');
+    $('inviteWhatsDirect')?.removeAttribute('href');
     $('generatedInviteInfo').textContent='';
     $('generatedInviteBox').hidden=true;
   }
@@ -690,7 +691,7 @@
     openWhatsappMessage(inviteMessage(generatedInvite));
     inform('O WhatsApp foi solicitado. Se não abriu, use "Abrir WhatsApp (link direto)" ou "Copiar mensagem".');
   });
-  $('copyInviteMessage').addEventListener('click',async()=>{
+  $('copyInviteMessage')?.addEventListener('click',async()=>{
     if(!generatedInvite)return inform('Gere um convite primeiro.',true);
     const message=inviteMessage(generatedInvite);
     try{
