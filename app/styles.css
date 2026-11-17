@@ -51,3 +51,23 @@
 /* Fallback visível quando o navegador bloqueia a janela do WhatsApp. */
 #inviteWhatsDirect{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;white-space:normal;text-align:center;border:1px solid #b8d7e4}
 #inviteWhatsDirect:not([href]){display:none}
+
+
+/* Novo painel financeiro RL + Solutio */
+.finance-filters{align-items:flex-end;gap:13px}
+.finance-filters>div{display:flex;flex-direction:column;gap:4px;flex:1 1 145px;min-width:126px}
+.finance-filters label{font-size:12px;font-weight:750;color:#476174;margin:0}
+.finance-filters input,.finance-filters select{width:100%;max-width:none!important}
+.finance-filters>button{align-self:flex-end;white-space:nowrap}
+.finance-status{background:#eaf2f7;color:#12486b;border-left:4px solid #1682a8;padding:12px 14px;border-radius:8px;font-size:13px}
+.finance-status.error{background:#fff0ef;color:#9d3326;border-left-color:#b4372b}
+#financeStats{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.finance-section-title{grid-column:1/-1;font-size:12px;font-weight:850;letter-spacing:.05em;color:#476174}
+.finance-company-card{background:linear-gradient(125deg,#063750,#0b5b80);color:white;border-radius:14px;padding:17px;display:flex;flex-direction:column;gap:7px}
+.finance-company-card span{font-size:12px;letter-spacing:.04em;font-weight:850;text-transform:uppercase}
+.finance-company-card strong{font-size:26px}
+.finance-company-card small{font-size:12px;color:#d6e7ee}
+.finance-two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.finance-two-col .card{min-width:0}
+.finance-two-col input,.finance-two-col select{max-width:100%}
+@media(max-width:800px){.finance-two-col{grid-template-columns:1fr}.finance-filters>button{width:100%}}
