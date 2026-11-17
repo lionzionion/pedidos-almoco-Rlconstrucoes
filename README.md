@@ -67,7 +67,7 @@ flowchart LR
 - **Painel do restaurante:** lista de produção, status de preparo/entrega e visualização de cancelamentos.
 - **Chat privado em tempo real:** colaborador ↔ restaurante/gestão e uma conversa reservada entre RL e restaurante.
 - **Limpeza protegida de testes:** ADM pode zerar pedidos, histórico operacional de pedidos e mensagens após prévia e dupla confirmação, sem apagar contas ou logs de segurança.
-- **Conferência financeira:** total das refeições e **uma única taxa de R$ 8 por remessa**, aplicada somente após o fechamento do café às **08h** e do almoço às **13h**, horário de Recife.
+- **Conferência financeira:** total das refeições e **uma única taxa diária de R$ 8 para café e R$ 12 para almoço**, contabilizada quando houver pedidos válidos de cada tipo, mesmo antes do fechamento, e rateada entre RL/Solutio.
 - **Relatórios:** PDF A4 com logo RL, impressão, CSV e resumo consolidado para envio manual por WhatsApp.
 - **Dados centralizados:** PostgreSQL na nuvem, autenticação Supabase, políticas de acesso por linha (RLS), auditoria e atualização em tempo real.
 
@@ -78,10 +78,10 @@ flowchart LR
 | Café completo | R$ 17,00 |
 | Café simples com pão | R$ 10,00 |
 | Almoço | R$ 22,00 |
-| Entrega coletiva de café (uma vez no fechamento às 08h) | R$ 8,00 |
-| Entrega coletiva de almoço (uma vez no fechamento às 13h) | R$ 8,00 |
+| Entrega coletiva de café (uma vez por dia) | R$ 8,00 |
+| Entrega coletiva de almoço (uma vez por dia) | R$ 12,00 |
 
-*Valores da operação de referência em novembro de 2026. Exemplo: 10 almoços a R$ 22 = R$ 220 + **somente R$ 8 de entrega** = R$ 228. Os pedidos são bloqueados após seu horário de corte; a taxa não é multiplicada por colaborador. Remessas extras exigem definição separada.*
+*Valores da operação de referência em novembro de 2026. Exemplo: 10 almoços a R$ 22 = R$ 220 + **uma única taxa diária de R$ 12** = R$ 232. Havendo café e almoço no mesmo dia, o frete total é R$ 20, independentemente da quantidade de pessoas. Os pedidos em teste seguem a política atual de horários; o frete previsto aparece desde o primeiro pedido válido de cada tipo. Não há taxa para tipos sem pedidos ativos.*
 
 ## Arquitetura e tecnologias
 
@@ -206,13 +206,13 @@ O projeto atende **uma única obra e um único restaurante**, e cada refeição 
 
 Na **Conferência RL**, selecione `RL Construções`, `Solutio` ou `RL + Solutio`. Os totais e relatórios PDF/CSV podem ser emitidos individualmente, enquanto o restaurante conserva a **lista conjunta de produção**, com cada empresa identificada.
 
-O frete é **R$ 8 por evento de café** (após 08h) e **R$ 8 por evento de almoço** (após 13h). Cada evento é repartido **proporcionalmente ao número de pedidos ativos de cada empresa** em centavos. Exemplo de 10 almoços RL e 7 Solutio: RL R$ 4,71 e Solutio R$ 3,29, somando exatamente R$ 8. Cancelados e arquivados não participam do rateio.
+O frete é **R$ 8 por dia com café da manhã** e **R$ 12 por dia com almoço**. São taxas **únicas para a obra inteira**, não por pessoa nem por empresa. Cada taxa é repartida **proporcionalmente ao número de pedidos ativos de RL e Solutio** em centavos. Exemplo de 10 almoços RL e 7 Solutio: RL R$ 7,06 e Solutio R$ 4,94, somando exatamente R$ 12. Café e almoço no mesmo dia somam R$ 20 de frete na obra. Cancelados e arquivados não participam do rateio. Os valores são previstos desde o primeiro pedido ativo e atualizados conforme o número de pedidos muda.
 
 ### Mudança de empresa e recálculo retroativo
 
 Em **ADM → Usuários**, escolha a nova empresa do colaborador e clique em **Salvar empresa**. O sistema pede confirmação porque esta operação **redistribui todas as refeições anteriores**, não apenas as futuras. O banco atualiza o cadastro e todas as refeições do usuário em **uma única transação**, preservando os registros originais de preço, dia, prato e status. Cada alteração de pedido fica documentada em `order_audit`; a mudança administrativa registra quantas refeições foram reclassificadas em `account_audit`.
 
-A interface recarrega os pedidos depois da atualização e recalcula os painéis RL/Solutio, relatórios, CSV e o frete: **R$ 8 por café da manhã coletivo e R$ 8 por almoço coletivo**, distribuídos proporcionalmente à quantidade de pedidos ativos em cada empresa. O total geral por dia não muda quando há apenas transferência de empresa. **PDFs e CSVs baixados antes da mudança são cópias estáticas e precisam ser gerados novamente para refletir os novos valores.**
+A interface recarrega os pedidos depois da atualização e recalcula os painéis RL/Solutio, relatórios, CSV e o frete: **R$ 8 por dia de café da manhã e R$ 12 por dia de almoço**, distribuídos proporcionalmente à quantidade de pedidos ativos em cada empresa. O total geral por dia não muda quando há apenas transferência de empresa. **PDFs e CSVs baixados antes da mudança são cópias estáticas e precisam ser gerados novamente para refletir os novos valores.**
 
 Migração de banco: `supabase/migrations/20261117_rl_company_reallocate_all_orders.sql`. Edge Function: `supabase/functions/manage-users/index.ts` (`set_company`). O acionamento do trigger do banco impede mudanças parciais: se algum pedido falhar, a troca de empresa é revertida por inteiro.
 
@@ -224,7 +224,7 @@ Convites pendentes não equivalem a contas já ativadas: a conta só aparece com
 
 ### Modo de testes: pedidos sem restrição de horário (15/11/2026)
 
-Durante a homologação, **não existe horário de bloqueio para criar, editar ou cancelar pedidos confirmados**. O corte original das 08h (café) e 13h (almoço) está temporariamente desativado no gatilho do Supabase e na interface. **A taxa única de R$ 8 por evento permanece**, contabilizada na conferência a partir de 08h/13h e rateada proporcionalmente entre RL/Solutio. Portanto, durante os testes, pedidos feitos mais tarde podem alterar o total da remessa. Antes da operação oficial, restabeleça o bloqueio de horários e confirme a regra de frete.
+Durante a homologação, **não existe horário de bloqueio para criar, editar ou cancelar pedidos confirmados**. O corte original das 08h (café) e 13h (almoço) está temporariamente desativado no gatilho do Supabase e na interface. **O frete único agora é R$ 8 por dia de café e R$ 12 por dia de almoço**, exibido desde que haja pedidos ativos para o dia, independentemente do fechamento das 08h/13h. O total pode mudar enquanto novos pedidos são feitos, cancelados ou transferidos de empresa, mas nunca multiplica a taxa pela quantidade de refeições. Antes da operação oficial, restabeleça o bloqueio de horários e confirme a regra de frete.
 
 Em **Cadastros → Convites de primeiro acesso**, a administração pode escolher um nome já listado (por exemplo, `jackeline.tecnica`) e clicar em **Gerar link para WhatsApp**. Isso **substitui o código anterior** por outro, sem expor senha, e abre as opções **Copiar link** e **Enviar por WhatsApp**. Convites ativados não podem ser regenerados; para esses usuários, use a redefinição de senha.
 
