@@ -180,7 +180,7 @@
     $('orderDeadlineInfo').textContent=(type==='cafe'
       ?'Café da manhã: sempre programado para o dia seguinte, permitindo o preparo antecipado.'
       :'Almoço: até 11h59 pode escolher hoje; a partir das 12h o sistema programa amanhã.')
-      +' Entrega: '+$('orderDay').value.split('-').reverse().join('/')+'. Frete coletivo único de R$ 8 por refeição.';
+      +' Entrega: '+$('orderDay').value.split('-').reverse().join('/')+'. Frete único por dia: café R$ 8,00; almoço R$ 12,00, compartilhado entre RL e Solutio.';
     $('orderDeadlineInfo').classList.remove('error');
     $('placeBtn').disabled=false;
   }
@@ -350,11 +350,15 @@
     const info=filteredAdmin(), {rows,day,company}=info;
     const s=adminSummary(info), b=M.companyBreakdown(info.allRows,day);
     const companyTotals=company==='todos'
-      ?metric('RL Construções (com frete rateado)',M.money(b.RL.total))
-       +metric('Solutio (com frete rateado)',M.money(b.SOLUTIO.total))
+      ?metric('RL · refeições',M.money(b.RL.subtotal))
+       +metric('RL · frete rateado',M.money(b.RL.delivery))
+       +metric('RL · total',M.money(b.RL.total))
+       +metric('Solutio · refeições',M.money(b.SOLUTIO.subtotal))
+       +metric('Solutio · frete rateado',M.money(b.SOLUTIO.delivery))
+       +metric('Solutio · total',M.money(b.SOLUTIO.total))
       :'';
     $('adminStats').innerHTML=metric('Cafés',s.coffee)+metric('Almoços',s.lunch)+
-      metric('Refeições',M.money(s.subtotal))+metric('Frete proporcional',M.money(s.delivery))+
+      metric('Refeições',M.money(s.subtotal))+metric('Frete único diário (rateado)',M.money(s.delivery))+
       metric(company==='todos'?'TOTAL GERAL':'TOTAL '+(company==='RL'?'RL':'SOLUTIO'),M.money(s.total))
       +companyTotals;
     const body=$('adminRows'),billing=rows.filter(active);
@@ -377,7 +381,7 @@
     const lines=[header,...rows.map(o=>[o.order_day,o.company==='SOLUTIO'?'Solutio':'RL Construções',
       o.employee_name,mealTitle(o.meal),o.dish,(o.accompaniments||[]).join(' / '),o.notes||'',
       statusLabels[o.status]||o.status,o.archived?'Sim':'Não',Number(o.price).toFixed(2).replace('.',',')])];
-    for(const [label,value] of [['Subtotal',s.subtotal],['Frete proporcional',s.delivery],['TOTAL',s.total]]){
+    for(const [label,value] of [['Subtotal de refeições',s.subtotal],['Frete diário (café R$ 8 / almoço R$ 12), rateado',s.delivery],['TOTAL',s.total]]){
       const row=Array(10).fill('');row[0]=label;row[9]=Number(value).toFixed(2).replace('.',',');lines.push(row);
     }
     const csv='\ufeff'+lines.map(row=>row.map(cell=>'"'+String(cell??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');
@@ -395,8 +399,8 @@
     const companyLabel=company==='todos'?'RL + Solutio':company==='RL'?'RL Construções':'Solutio';
     const msg='*PEDIDOS RL | '+companyLabel.toUpperCase()+'*\nData: '+day.split('-').reverse().join('/')+
       '\n\n'+entries.join('\n')+'\n\nCafés: '+s.coffee+' | Almoços: '+s.lunch+
-      '\nRefeições: '+M.money(s.subtotal)+'\nFrete proporcional: '+M.money(s.delivery)+
-      '\n*TOTAL: '+M.money(s.total)+'*\n\nEntrega cobrada uma vez por evento, rateada por quantidade de pedidos.';
+      '\nRefeições: '+M.money(s.subtotal)+'\nFrete único do dia (rateado): '+M.money(s.delivery)+
+      '\n*TOTAL: '+M.money(s.total)+'*\n\nTaxa coletiva única por dia: café R$ 8,00; almoço R$ 12,00. Rateio por quantidade de pedidos RL/Solutio.';
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener,noreferrer');
   }
 
@@ -475,7 +479,7 @@
         const nextCompany=el.querySelector('[data-company-for="'+id+'"]').value;
         if(nextCompany===u.company)return inform('O colaborador já pertence a essa empresa. Nenhuma alteração necessária.');
         if(!confirm('Transferir '+u.display_name+' para '+(nextCompany==='RL'?'RL Construções':'Solutio')+
-          '? TODAS as refeições anteriores deste usuário, inclusive arquivadas, serão vinculadas à nova empresa. O frete único por entrega será rateado novamente. PDFs/CSVs já baixados precisam ser emitidos novamente.'))return;
+          '? TODAS as refeições anteriores deste usuário, inclusive arquivadas, serão vinculadas à nova empresa. O frete diário único de R$ 8 para café e R$ 12 para almoço será rateado novamente. PDFs/CSVs já baixados precisam ser emitidos novamente.'))return;
         params.company=nextCompany;
       }
       if(action==='set_active'){
