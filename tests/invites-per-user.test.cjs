@@ -41,3 +41,21 @@ test('liberação de horários não altera cálculo do frete de remessa',()=>{
  assert.match(M,/companyBreakdown\(/);
  assert.doesNotMatch(app,/if\(M\.closed\(meal\(\),today\)\)/);
 });
+
+test('geração do link exibe WhatsApp direto e cópia da mensagem',()=>{
+ const html=read('app/index.html');
+ assert.match(html,/id="copyInviteMessage"/);
+ assert.match(html,/id="inviteWhatsDirect"/);
+ assert.match(app,/function whatsappComposeUrl/);
+ assert.match(app,/function openWhatsappMessage/);
+ assert.match(app,/inviteUrlPattern/);
+ assert.match(app,/inviteMessage\(generatedInvite\)/);
+ assert.match(app,/navigator\.clipboard\.writeText\(message\)/);
+});
+
+test('contas ativadas possuem compartilhamento de acesso sem novo convite',()=>{
+ assert.match(app,/data-share-login/);
+ assert.match(app,/Enviar acesso pelo WhatsApp/);
+ assert.match(app,/const appAccessUrl=/);
+ assert.match(app,/O WhatsApp foi solicitado/);
+});
