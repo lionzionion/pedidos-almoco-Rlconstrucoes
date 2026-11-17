@@ -456,6 +456,7 @@
         <br><small>Usuário: ${esc(u.username||'e-mail do primeiro ADM')} • ${esc(role)} • ${u.company==='SOLUTIO'?'Solutio':'RL Construções'} • ${esc(u.job_title||'')}</small></div>
         <span class="status ${u.active?'entregue':'cancelado'}">${u.active?'Ativo':'Inativo'}</span></div>
         ${controls}
+        ${u.active&&u.username?'<div class="actions"><button class="secondary compact" type="button" data-share-login="'+esc(u.id)+'">📲 Enviar acesso pelo WhatsApp</button></div>':''}
       </article>`;
     }).join(''):'<div class="empty">Nenhum usuário encontrado.</div>';
     el.querySelectorAll('[data-user-action]').forEach(b=>b.addEventListener('click',async()=>{
@@ -497,6 +498,17 @@
         if(action==='reset_password')showOneTime(u.username,result.password||(params.password==='AUTO'?'':params.password),'Senha redefinida para '+u.display_name);
         await loadUsers();
       }catch(error){fail(error);}finally{b.disabled=false;}
+    }));
+    el.querySelectorAll('[data-share-login]').forEach(button=>button.addEventListener('click',()=>{
+      const u=state.users.find(user=>user.id===button.dataset.shareLogin);
+      if(!u?.active||!u.username)return inform('Este usuário não possui acesso ativo. Gere um convite de primeiro acesso.',true);
+      const message='*RL CONSTRUÇÕES | ACESSO AO APP DE REFEIÇÕES*'+
+        '\n\nOlá, '+u.display_name+'! Seu usuário já está cadastrado no aplicativo da obra AMBEV Itapissuma.'+
+        '\n\n*Usuário:* '+u.username+
+        '\n*Entre pelo link:*\n'+appAccessUrl+
+        '\n\nUtilize sua senha pessoal. Caso não lembre, solicite a redefinição ao administrador da RL.';
+      openWhatsappMessage(message);
+      inform('O WhatsApp foi solicitado com o acesso deste usuário. Não é necessário criar outro convite.');
     }));
   }
   const appAccessUrl='https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/acesso/';
