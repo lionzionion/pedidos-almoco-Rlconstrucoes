@@ -20,10 +20,11 @@ test('café do rodízio R$17, pão simples R$10, almoço R$22',()=>{
   assert.equal(M.unitPrice('cafe','Cuscuz com salsichinha'),17);
   assert.equal(M.unitPrice('almoco','Parmegiana de carne'),22);
 });
-test('frete coletivo único de R$8 tanto no café quanto no almoço, inclusive finais de semana',()=>{
-  assert.equal(M.fee('almoco','2026-11-16'),8);
-  assert.equal(M.fee('almoco','2026-11-15'),8);
+test('frete coletivo único diário: R$ 8 café e R$ 12 almoço, inclusive finais de semana',()=>{
+  assert.equal(M.fee('almoco','2026-11-16'),12);
+  assert.equal(M.fee('almoco','2026-11-15'),12);
   assert.equal(M.fee('cafe','2026-11-16'),8);
+  assert.equal(M.fee('cafe','2026-11-15'),8);
 });
 test('fechamento começa exatamente às 08h e 13h, hora de Recife',()=>{
   const d='2026-11-16';
@@ -41,8 +42,8 @@ test('taxa é somada uma vez por refeição, nunca por pessoa',()=>{
   ];
   const s=M.summary(rows,'2026-11-15',new Date('2026-11-15T17:00:00Z'));
   assert.equal(s.subtotal,71);
-  assert.equal(s.delivery,16);
-  assert.equal(s.total,87);
+  assert.equal(s.delivery,20);
+  assert.equal(s.total,91);
   assert.equal(s.coffee,2);
   assert.equal(s.lunch,2);
 });
@@ -81,4 +82,23 @@ test('almoço de hoje encerra exatamente às 12h no horário de Recife',()=>{
   assert.deepEqual(M.deliveryDays('almoco',before),['2026-11-16','2026-11-17']);
   assert.deepEqual(M.deliveryDays('almoco',atNoon),['2026-11-17']);
   assert.equal(M.canSchedule('almoco','2026-11-16',atNoon),false);
+});
+
+// O número de refeições nunca multiplica o valor de entrega diário.
+test('30 cafés + 40 almoços em um dia somam só R$ 20 de frete',()=>{
+  const date='2026-11-16';
+  const rows=[
+    ...Array.from({length:30},()=>({order_day:date,meal:'cafe',price:17,status:'confirmado',archived:false})),
+    ...Array.from({length:40},()=>({order_day:date,meal:'almoco',price:22,status:'entregue',archived:false}))
+  ];
+  const s=M.summary(rows,date,new Date('2026-11-15T15:00:00Z'));
+  assert.equal(s.coffee,30);
+  assert.equal(s.lunch,40);
+  assert.equal(s.delivery,20);
+  assert.equal(s.total,s.subtotal+20);
+});
+test('pedido cancelado não cria frete diário sozinho',()=>{
+  const date='2026-11-16';
+  const s=M.summary([{order_day:date,meal:'almoco',price:22,status:'cancelado',archived:false}],date);
+  assert.equal(s.delivery,0);
 });
