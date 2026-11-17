@@ -257,12 +257,36 @@ Deno.serve(async (req) => {
     if (action === 'set_company') {
       if (body.company !== 'RL' && body.company !== 'SOLUTIO')
         return reply({error:'Selecione RL ou Solutio.'},400);
-      // Histórico permanece com empresa original no momento do pedido.
-      const {error}=await admin.from('profiles').update({company:body.company}).eq('id',id);
-      if(error)throw error;
-      await admin.from('account_audit').insert({actor:caller,target:id,
-        action:'change_company',details:{from:target.company,to:body.company}});
-      return reply({message:'Empresa atualizada. Pedidos anteriores não foram alterados.'});
+      const nextCompany=body.company;
+      // Conta todas as refeições existentes, inclusive canceladas e arquivadas.
+      const {count:toMove,error:countError}=await admin.from('orders')
+        .select('id',{head:true,count:'exact'}).eq('owner',id).neq('company',nextCompany);
+      if(countError)throw countError;
+
+      // A mudança do perfil dispara, na MESMA transação, o trigger que
+      // atualiza a empresa de TODAS as refeições deste funcionário.
+      const {data:updated,error:changeError}=await admin.from('profiles')
+        .update({company:nextCompany}).eq('id',id).select('id,company').single();
+      if(changeError)throw changeError;
+      if(updated?.company!==nextCompany)throw Error('Não foi possível confirmar a nova empresa.');
+
+      const {count:remaining,error:verifyError}=await admin.from('orders')
+        .select('id',{head:true,count:'exact'}).eq('owner',id).neq('company',nextCompany);
+      if(verifyError)throw verifyError;
+      if(remaining!==0)throw Error('Reclassificação incompleta: existem refeições na empresa anterior. Procure o suporte.');
+
+      const {error:auditError}=await admin.from('account_audit').insert({
+        actor:caller,target:id,action:'change_company',
+        details:{from:target.company,to:nextCompany,reallocated_orders:toMove||0}
+      });
+      if(auditError)console.error('Falha na auditoria de mudança de empresa:',auditError.message);
+      return reply({
+        message:'Empresa atualizada para '+(nextCompany==='RL'?'RL Construções':'Solutio')+
+          '. '+(toMove||0)+' refeição(ões) histórica(s) reclassificada(s). Os totais e o frete coletivo foram atualizados na base.',
+        reallocated_orders:toMove||0,
+        company:nextCompany,
+        remaining_mismatches:0
+      });
     }
     if (action === 'set_role') {
       const nextRole = body.role;
