@@ -499,9 +499,31 @@
       }catch(error){fail(error);}finally{b.disabled=false;}
     }));
   }
+  const appAccessUrl='https://lionzionion.github.io/pedidos-almoco-Rlconstrucoes/acesso/';
+  const inviteUrlPattern=/^https:\/\/lionzionion\.github\.io\/pedidos-almoco-Rlconstrucoes\/convite\/#convite=[a-f0-9]{64}$/i;
+  function inviteMessage(invite){
+    const person=invite.role==='restaurante'?'equipe do restaurante':invite.name;
+    return '*RL CONSTRUÇÕES | PRIMEIRO ACESSO*\n\nOlá, '+person+
+      '! Este é seu convite individual para o aplicativo de refeições da obra AMBEV Itapissuma.'+
+      '\n\n*Login:* '+invite.username+
+      '\n*Ative seu acesso e crie sua senha pelo link:*\n'+invite.link+
+      '\n\nO convite é individual, funciona uma vez e expira em 7 dias. Não encaminhe.';
+  }
+  function whatsappComposeUrl(message){
+    return 'https://wa.me/?text='+encodeURIComponent(message);
+  }
+  function openWhatsappMessage(message){
+    const url=whatsappComposeUrl(message);
+    const anchor=document.createElement('a');
+    anchor.href=url;anchor.target='_blank';anchor.rel='noopener noreferrer';
+    document.body.appendChild(anchor);anchor.click();anchor.remove();
+    return url;
+  }
   function displayNewInvite(result){
+    if(!inviteUrlPattern.test(String(result?.link||'')))throw Error('O servidor não retornou um link de convite válido. Atualize e tente novamente.');
     generatedInvite={link:result.link,name:result.display_name,username:result.username,role:result.role};
     $('generatedInviteLink').value=result.link;
+    $('inviteWhatsDirect').href=whatsappComposeUrl(inviteMessage(generatedInvite));
     $('generatedInviteInfo').textContent=result.display_name+' • '+result.username+
       ' • '+(result.role==='restaurante'?'Restaurante':'Colaborador')+
       '. Válido até '+new Date(result.expires_at).toLocaleDateString('pt-BR',{timeZone:'America/Recife'})+'.';
@@ -515,7 +537,6 @@
     if(!confirm('Gerar link individual para '+invitation.display_name+
       '? O link anterior desta pessoa deixará de funcionar. Continuar?'))return;
     button.disabled=true;
-    clearGeneratedInvite();
     try{
       const result=await userApi('renew_invite',{username:invitation.username});
       displayNewInvite(result);
@@ -617,6 +638,7 @@
   function clearGeneratedInvite(){
     generatedInvite=null;
     $('generatedInviteLink').value='';
+    $('inviteWhatsDirect').removeAttribute('href');
     $('generatedInviteInfo').textContent='';
     $('generatedInviteBox').hidden=true;
   }
@@ -629,16 +651,20 @@
     $('newUsername').value=username;
     if(display_name.length<3 || !/^[a-z][a-z0-9._-]{2,29}$/.test(username))
       return inform('Informe o nome e o login válido para gerar o convite.',true);
-    clearGeneratedInvite();
     const button=$('createInviteBtn');button.disabled=true;
     try{
       const result=await userApi('create_invite',{display_name,username,role,company,job_title});
       displayNewInvite(result);
       await loadUsers();
     }catch(error){
-      $('usersFeedback').textContent=error.message;
+      const known=state.users.find(u=>u.username===username);
+      const pending=state.invitations.find(i=>i.username===username&&!i.redeemed_at);
+      const hint=known?' Este colaborador já possui conta. Use "Enviar acesso WhatsApp" no cadastro, ou redefina a senha.'
+        :pending?' O convite desse login está pendente. Use "Gerar link para WhatsApp" na lista de convites.'
+        :'';
+      $('usersFeedback').textContent=error.message+hint;
       $('usersFeedback').classList.add('error');
-      fail(error);
+      inform(error.message+hint,true);
     }finally{button.disabled=false;}
   }
   $('createInviteBtn').addEventListener('click',createInvite);
@@ -648,14 +674,20 @@
     catch{ $('generatedInviteLink').select();inform('Selecione o link e copie manualmente.',true); }
   });
   $('shareInviteWhatsApp').addEventListener('click',()=>{
-    if(!generatedInvite)return;
-    const person=generatedInvite.role==='restaurante'?'equipe do restaurante':generatedInvite.name;
-    const text='*RL CONSTRUÇÕES | PRIMEIRO ACESSO*\n\nOlá, '+person+
-      '! Este é seu convite individual para o aplicativo de refeições da obra AMBEV Itapissuma.'+
-      '\n\n*Login:* '+generatedInvite.username+
-      '\n*Ative seu acesso e crie sua senha pelo link:*\n'+generatedInvite.link+
-      '\n\nO convite é individual, funciona uma vez e expira em 7 dias. Não encaminhe.';
-    window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank','noopener,noreferrer');
+    if(!generatedInvite)return inform('Gere o link de convite antes de abrir o WhatsApp.',true);
+    openWhatsappMessage(inviteMessage(generatedInvite));
+    inform('O WhatsApp foi solicitado. Se não abriu, use "Abrir WhatsApp (link direto)" ou "Copiar mensagem".');
+  });
+  $('copyInviteMessage').addEventListener('click',async()=>{
+    if(!generatedInvite)return inform('Gere um convite primeiro.',true);
+    const message=inviteMessage(generatedInvite);
+    try{
+      await navigator.clipboard.writeText(message);
+      inform('Mensagem com o convite copiada. Abra o WhatsApp e cole na conversa privada.');
+    }catch{
+      $('generatedInviteLink').focus();$('generatedInviteLink').select();
+      inform('Cópia automática indisponível. Copie o link selecionado e envie em conversa privada.',true);
+    }
   });
   $('hideGeneratedInvite').addEventListener('click',clearGeneratedInvite);
 
