@@ -36,3 +36,19 @@ test('PDF é carregado apenas quando solicitado',()=>{
  assert.match(js,/async function ensurePDF/);
  assert.match(js,/await ensurePDF\(\)/);
 });
+
+
+test('ambas rotas têm todos os botões vinculados na inicialização do aplicativo',()=>{
+ const app=read('app/index.html');
+ const access=read('acesso/index.html');
+ const script=read('app/app.js');
+ const required=[...script.matchAll(/\$\(['"]([^'"]+)['"]\)(?:\?\.|\.)addEventListener\(/g)].map(m=>m[1]);
+ for(const id of new Set(required)){
+   assert.ok(app.includes('id="'+id+'"'), 'Falta em /app/: '+id);
+   assert.ok(access.includes('id="'+id+'"'), 'Falta em /acesso/: '+id);
+ }
+ for(const id of ['copyInviteMessage','inviteWhatsDirect','shareInviteWhatsApp']){
+   assert.ok(app.includes('id="'+id+'"'), 'WhatsApp ausente em /app/: '+id);
+   assert.ok(access.includes('id="'+id+'"'), 'WhatsApp ausente em /acesso/: '+id);
+ }
+});
