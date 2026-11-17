@@ -9,8 +9,8 @@ test('ambas as páginas mostram data de entrega e carregam versões atualizadas'
  for(const p of ['app/index.html','acesso/index.html']){
   const html=read(p);
   assert.match(html,/id="orderDay"/);
-  assert.match(html,/menu\.js\?v=6/);
-  assert.match(html,/loader\.js\?v=17/);
+  assert.match(html,/menu\.js\?v=7/);
+  assert.match(html,/loader\.js\?v=18/);
  }
 });
 test('pedido passa a data selecionada para a base e para o modo demonstração',()=>{
