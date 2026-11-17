@@ -235,3 +235,24 @@ O colaborador escolhe **Data de entrega: Hoje ou Amanhã** antes da refeição. 
 ### Programação automática do café e almoço (16/11/2026)
 
 O colaborador que faz um **pedido de café da manhã** programa sempre a refeição do **dia seguinte**, tanto de manhã quanto à tarde. No **almoço**, até 11h59 (horário de Recife) é possível escolher hoje ou amanhã; a partir das 12h, somente amanhã. O banco garante a regra independentemente do celular. O restaurante pode selecionar a data de amanhã para preparar as refeições antecipadamente. O prato antigo de um pedido reprogramado não é substituído automaticamente se não constar no cardápio seguinte: a equipe deve confirmar o item excepcional.
+
+## Financeiro — fechamento e pagamento por empresa (17/11/2026)
+
+A administração possui a nova aba **💰 Financeiro**, separada da conferência diária, para apurar o valor do restaurante em um período:
+
+1. Entre com um usuário **ADM** e abra **Financeiro**.
+2. Escolha **Hoje**, **Esta semana**, **Este mês** ou **Personalizado**, podendo selecionar uma empresa ou ambas.
+3. Clique em **Consultar** para ver os cartões RL/Solutio, totais diários, pedidos nominais e **valores previstos versus efetivamente entregues**.
+4. Use **Baixar PDF financeiro**, **Exportar Excel / CSV** ou **Imprimir** para fazer a conferência.
+5. Após o restaurante marcar os pedidos como **entregues**, selecione a empresa em **Registrar fechamento**. O banco confirma que **não há pedidos ativos pendentes de entrega** no período (inclusive da outra empresa), recalcula o valor no servidor e grava um snapshot histórico. A mesma empresa não pode fechar intervalos sobrepostos.
+6. Em **Registrar pagamento**, selecione o fechamento, preencha valor, data, método e referência. São aceitos pagamentos parciais, com situação **Pendente / Parcial / Quitado** e saldo em aberto. O servidor impede pagar acima do saldo.
+
+**Regras financeiras de segurança:**
+- Previsão inclui pedidos ativos (confirmados, em preparo ou entregues); total entregue considera somente status **Entregue**. Cancelados/arquivados não são cobrados.
+- Frete único por data e refeição: R$ 8 para café e R$ 12 para almoço, rateado por quantidade entre RL e Solutio, com soma exata em centavos.
+- O fechamento armazena valores, quantidades e lista de pedidos, preservando os valores históricos.
+- Com fechamento já registrado naquela data, o banco **bloqueia mudanças que afetem valores** (empresa, status, valor, refeição, dia, arquivamento) e exclusões. Transferências retroativas que afetem datas fechadas exigem tratamento administrativo específico.
+- Somente ADM ativo pode consultar fechamentos e registrar pagamentos. Colaboradores/restaurante não acessam esses registros.
+- Pagamentos são lançamentos históricos permanentes: a interface não permite exclusão ou estorno. **Não registrar pagamentos fictícios em produção.**
+
+**Banco:** migrações 20261117_rl_meal_financial_closures.sql e 20261117_rl_meal_closed_period_integrity.sql aplicadas no projeto **AMBEV Pedidos RL**.
