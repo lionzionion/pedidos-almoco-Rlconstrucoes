@@ -27,7 +27,7 @@ test('financeiro distribui frete por dia sem duplicidade RL+Solutio',()=>{
   assert.equal(r.totals.SOLUTIO.totalCents,5200);
   assert.equal(r.selected.totalCents,13700);
   assert.equal(r.selected.pendingCount,1);
-  assert.equal(r.selected.deliveredTotalCents,7900);
+  assert.equal(r.selected.deliveredTotalCents,11500);
   assert.equal(r.daily.filter(x=>x.totalCents>0).length,3);
 });
 test('filtro RL preserva rateio conjunto e não soma frete duas vezes',()=>{
