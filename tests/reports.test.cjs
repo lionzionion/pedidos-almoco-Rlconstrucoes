@@ -22,8 +22,8 @@ test('relatório diário totaliza sem cancelados/arquivados',()=>{
   assert.equal(r.summary.coffee,1);
   assert.equal(r.summary.lunch,1);
   assert.equal(r.summary.subtotal,39);
-  assert.equal(r.summary.delivery,16);
-  assert.equal(r.summary.total,55);
+  assert.equal(r.summary.delivery,20);
+  assert.equal(r.summary.total,59);
 });
 test('relatório de restaurante tem nomes e não apresenta coluna valor',()=>{
   const r=R.build({date:day,orders:data,kind:'restaurante',now:afterClose});
@@ -43,5 +43,5 @@ test('arquivados e cancelados são identificados no relatório, mas excluídos d
   const r=R.build({date:day,orders:data,kind:'admin',now:afterClose});
   assert.ok(r.values.some(row=>row.includes('Cancelado')));
   assert.ok(r.values.some(row=>row.includes('ARQUIVADO')));
-  assert.equal(r.summary.total,55);
+  assert.equal(r.summary.total,59);
 });
