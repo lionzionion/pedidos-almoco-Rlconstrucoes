@@ -237,6 +237,9 @@ window.RL_FINANCE = (() => {
   async function createClosure(){
     if(!deps.isAdmin()||!deps.configured||!current)return;
     const key=$('financeCloseCompany').value;
+    const actual=readFilters();
+    if(actual.from!==current.from||actual.to!==current.to||actual.meal!==current.meal||actual.company!==current.company)
+      return status('Os filtros foram alterados. Clique em Consultar antes de registrar o fechamento.',true);
     if(current.meal!=='todos'||current.to>M.today())return status('Feche somente períodos encerrados com todas as refeições.',true);
     if(!['RL','SOLUTIO'].includes(key))return status('Escolha RL ou Solutio.',true);
     if(current.selected.pendingCount>0)return status('Existem pedidos sem entrega confirmada. Finalize-os antes de fechar.',true);
@@ -253,7 +256,7 @@ window.RL_FINANCE = (() => {
     const id=$('financeClosureSelect').value,c=currentClosures.find(c=>c.id===id);
     if(!c)return status('Selecione um fechamento pendente.',true);
     const raw=$('financePaymentAmount').value.trim(),amt=Number(raw.replace(',','.'));
-    if(!raw||!Number.isFinite(amt)||amt<=0||Math.round(amt*100)!==amt*100)
+    if(!raw||!/^\d+(?:[.,]\d{1,2})?$/.test(raw)||!Number.isFinite(amt)||amt<=0)
       return status('Informe um valor positivo com até duas casas decimais.',true);
     const value=Math.round(amt*100),due=c.total_cents-paymentTotal(c);
     if(value>due)return status('Valor maior que o saldo de '+moneyCent(due)+'.',true);
@@ -274,6 +277,9 @@ window.RL_FINANCE = (() => {
     $('financePaymentDay').value=M.today();
     syncRange();
     $('financePeriod').addEventListener('change',()=>{syncRange();});
+    $('financeCompany').addEventListener('change',()=>{
+      if($('financeCompany').value!=='todos')$('financeCloseCompany').value=$('financeCompany').value;
+    });
     $('financeStartDate').addEventListener('change',()=>{$('financePeriod').value='custom';});
     $('financeEndDate').addEventListener('change',()=>{$('financePeriod').value='custom';});
     $('financeApply').addEventListener('click',refresh);
@@ -290,7 +296,6 @@ window.RL_FINANCE = (() => {
       $('financePaymentAmount').value=((c.total_cents-paymentTotal(c))/100).toFixed(2);
       $('financePaymentAmount').focus();
     });
-    $('financeCloseCompany').addEventListener('change',()=>{});
   }
   return Object.freeze({calculate,toCSV,closureStatus,paymentTotal,init,refresh});
 })();
